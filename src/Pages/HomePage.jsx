@@ -1,5 +1,8 @@
 // Pages/HomePage.jsx
 import HeroSection from '../HomeComponents/HeroSection'
+import HowWorks from '../HomeComponents/HowWorks'
+import Stats from '../HomeComponents/Stats'
+import Testimonials from '../HomeComponents/Testimonials'
 
 const HomePage = () => {
   console.log('HomePage is rendering') // Check if this logs in browser console
@@ -14,6 +17,12 @@ const HomePage = () => {
        */}
       {/* Comment out HeroSection for now */}
       <HeroSection />
+      
+     
+      <HowWorks/>
+       <Stats/>
+       <br></br>
+      <Testimonials/>
     </div>
   )
 }

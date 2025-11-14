@@ -41,7 +41,7 @@ const HeroSection = () => {
             <span className="category-tag">Web Development</span>
             <span className="category-tag">UI/UX Design</span>
             <span className="category-tag">Digital Marketing</span>
-            <span className="category-tag">Content Strategy</span>
+            <span className="category-tag">Content Writing</span>
             <span className="category-tag">Data Analytics</span>
           </div>
 
