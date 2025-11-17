@@ -1,7 +1,10 @@
 // Pages/HomePage.jsx
 import HeroSection from '../HomeComponents/HeroSection'
 import HowWorks from '../HomeComponents/HowWorks'
+import IndustryInnovation from '../HomeComponents/IndustryInnovation'
+import ProjectMatchmaker from '../HomeComponents/ProjectMatchMaker'
 import Stats from '../HomeComponents/Stats'
+import SuccessStories from '../HomeComponents/SuccessStories'
 import Testimonials from '../HomeComponents/Testimonials'
 
 const HomePage = () => {
@@ -17,12 +20,13 @@ const HomePage = () => {
        */}
       {/* Comment out HeroSection for now */}
       <HeroSection />
-      
-     
       <HowWorks/>
        <Stats/>
        <br></br>
       <Testimonials/>
+      <ProjectMatchmaker/>
+      <IndustryInnovation/>
+      <SuccessStories/>
     </div>
   )
 }

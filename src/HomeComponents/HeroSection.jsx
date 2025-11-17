@@ -12,9 +12,9 @@ const HeroSection = () => {
         <div className="hero-content">
           <h1 className="hero-title">
             Where 
-            <span className="accent-text"> Visionary Projects </span>
+            <span className="accent-texts"> Visionary Projects </span>
             Meet
-            <span className="accent-text"> Exceptional Talent</span>
+            <span className="accent-texts"> Exceptional Talent</span>
           </h1>
           
           <p className="hero-subtitle">

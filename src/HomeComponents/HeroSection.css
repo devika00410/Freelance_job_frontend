@@ -10,6 +10,7 @@
   --sage-400: #2dd4bf;
   --indigo-400: #8b5cf6;
   --indigo-500: #7c3aed;
+  --indigo-800:#4c1d95;
   --white: #ffffff;
 }
 
@@ -88,7 +89,7 @@
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.accent-text {
+.accent-texts {
   background: linear-gradient(135deg, var(--sage-400) 0%, var(--indigo-800) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

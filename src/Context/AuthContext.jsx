@@ -35,9 +35,10 @@ export const AuthProvider = ({ children }) => {
     const registerUser = async (userData) => {
         setLoading(true);
         try {
-            const response = await axios.post(`${API_BASE}/user/register`, userData);
+            const response = await axios.post(`${API_BASE}/auth/register`, userData);
             const { user, token } = response.data;
             localStorage.setItem('token', token)
+            localStorage.setItem('user',JSON.stringify(user))
             setUser(user);
             setToken(token)
 
@@ -57,7 +58,7 @@ export const AuthProvider = ({ children }) => {
     const registerAdmin = async (adminData) => {
         setLoading(true)
         try {
-            const response = await axios.post(`${API_BASE}/admin/register`, adminData)
+            const response = await axios.post(`${API_BASE}/auth/admin/register`, adminData)
             const { user, token } = response.data;
 
             localStorage.setItem('admin_token', token)
@@ -89,6 +90,9 @@ const loginUser=async(loginData)=>{
             }
         }
         localStorage.setItem('token',token)
+        localStorage.setItem('user',JSON.stringify(user))
+
+        // update context
         setUser(user)
         setToken(token)
 

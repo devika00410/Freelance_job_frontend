@@ -1,11 +1,18 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import './RoleSelection.css'
+import { useAuth } from "../Context/AuthContext";
+import { FaUserTie, FaCode } from "react-icons/fa";
 
 const RoleSelection = () => {
     const navigate = useNavigate()
 
-
+    const {token,user} = useAuth();
+    useEffect(()=>{
+        if(token && user){
+            navigate('/dashboard')
+        }
+    },[token,user,navigate])
     const handleRoleSelect = (role) => {
         localStorage.setItem('selectedRole', role)
         navigate('/register')
@@ -18,12 +25,16 @@ const RoleSelection = () => {
                 <h2>Join as a client or freelancer</h2>
                 <div className="role-options">
                     <div className="role-card client-card" onClick={() => handleRoleSelect('client')}>
-                        <div className="role-icon">👔</div>
+                        <div className="role-icon">
+<FaUserTie size={32} color="#28a745"/>
+                        </div>
                         <h3>I'm a client, hiring for a project</h3>
                         <p>Find skilled freelancers for your project</p>
                     </div>
-                    <div className="role-card freelancer-card" onClick={handleRoleSelect('freelancer')}>
-                        <div className="role-icon">💼 </div>
+                    <div className="role-card freelancer-card" onClick={()=>handleRoleSelect('freelancer')}>
+                        <div className="role-icon">
+                            <FaCode size={32} color="#ff6b00"/>
+                        </div>
                         <h3>I'm a freelancer, looking for work</h3>
                         <p>Find prjects and build your career</p>
                     </div>

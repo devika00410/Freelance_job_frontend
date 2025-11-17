@@ -11,6 +11,7 @@ import ClientDashboard from './Client/ClientDashboard'
 import AdminDashboard from './Admin/AdminDashboard'
 import FreelancerDashboard from './Freelancer/FreelancerDashboard'
 import HomePage from './Pages/HomePage'
+import Navbar from './Components/Navbar'
 
 
 
@@ -73,6 +74,7 @@ function App() {
     <AuthProvider>
       <Router>
         <div className="App">
+          <Navbar/>
           <Routes>
                 <Route path='/' element={<HomePage/>}/>
             {/* Public routes */}
@@ -87,14 +89,14 @@ function App() {
                 <UserRegister />
               </PublicRoute>
             } />
-{/* 
+
             <Route
             path='/login'
             element={
               <PublicRoute>
                 <Login/>
               </PublicRoute>
-            }/> */}
+            }/>
 
           {/* Generic dashboard route*/}
           <Route
