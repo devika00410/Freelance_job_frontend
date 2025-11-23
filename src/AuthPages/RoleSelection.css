@@ -1,107 +1,172 @@
-/* Cleaner RoleSelection.css */
-.role-selection-container {
+/* Main Container */
+.role-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 1rem;
+  background: #f5f7fa;
+  padding: 1.5rem;
 }
 
-.role-selection-card {
+/* Card */
+.role-card-wrapper {
   background: white;
-  padding: 2.5rem;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  padding: 3rem 2.5rem;
+  border-radius: 18px;
+  max-width: 520px;
   width: 100%;
-  max-width: 500px;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
+  animation: fadeUp 0.5s ease;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Branding */
+.brand-title {
   text-align: center;
+  font-size: 2.3rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+  color: #222;
+  letter-spacing: -1px;
 }
 
-.logo {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 0.5rem;
-}
-
-.role-selection-card h2 {
+.subtitle {
+  text-align: center;
   color: #666;
   margin-bottom: 2rem;
-  font-weight: 400;
+  font-size: 1.05rem;
 }
 
-.role-options {
+/* Role Section */
+.roles-section {
   display: flex;
   flex-direction: column;
+  gap: 1.2rem;
+}
+
+/* Each Role Card */
+.role-box {
+  display: flex;
   gap: 1rem;
-}
-
-.role-card {
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 1.5rem;
+  padding: 1.4rem;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 2px solid #e8e8e8;
   cursor: pointer;
-  transition: all 0.3s ease;
-  text-align: left;
+  transition: 0.25s ease;
+  align-items: center;
 }
 
-.role-card:hover {
-  border-color: #667eea;
+.role-box:hover {
+  border-color: #60a5fa;
+  background: #f9fbff;
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 6px 20px rgba(96, 165, 250, 0.15);
 }
 
-.role-icon {
-  margin-bottom: 1rem;
+/* Active state */
+.active-role {
+  border-color: #1e7e34;
+  background: #ecfdf5;
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.15);
+}
+
+/* Icon Styling */
+.icon-wrap {
+  height: 60px;
+  width: 60px;
+  border-radius: 12px;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 60px;
+  background: #eef1f5;
 }
 
-.role-card h3 {
-  margin-bottom: 0.5rem;
-  color: #333;
+.icon-wrap.client {
+  background: #e6f7ec;
+  color: #28a745;
 }
 
-.role-card p {
+.icon-wrap.freelancer {
+  background: #fff2e6;
+  color: #ff6b00;
+}
+
+.role-box h3 {
+  font-size: 1.1rem;
+  color: #222;
+  margin-bottom: 0.2rem;
+}
+
+.role-box p {
   color: #666;
-  margin: 0;
+  font-size: 0.95rem;
 }
 
-.create-account-btn {
+/* CTA Button */
+.cta-btn {
   width: 100%;
-  padding: 0.75rem;
-  background: #667eea;
+  margin-top: 1.5rem;
+  padding: 0.85rem;
+  background: #28a745;
   color: white;
   border: none;
-  border-radius: 6px;
-  font-size: 1rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
-  margin: 1rem 0;
-  transition: background 0.3s;
+  transition: 0.25s ease;
 }
 
-.create-account-btn:hover {
-  background: #5a6fd8;
+.cta-btn:hover {
+  background: #218838;
 }
 
-.footer-links {
+/* Login Text */
+.login-text {
+  text-align: center;
   margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e0e0e0;
+  color: #444;
+}
+
+.login-text a {
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+/* Footer */
+.footer-links {
+  margin-top: 1.2rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
 }
 
 .footer-links span {
-  color: #666;
-  margin: 0 0.5rem;
   cursor: pointer;
+  color: #666;
   font-size: 0.9rem;
 }
 
 .footer-links span:hover {
-  color: #333;
   text-decoration: underline;
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+  .role-card-wrapper {
+    padding: 2rem 1.5rem;
+  }
+
+  .brand-title {
+    font-size: 1.9rem;
+  }
+
+  .role-box {
+    padding: 1.2rem;
+  }
 }

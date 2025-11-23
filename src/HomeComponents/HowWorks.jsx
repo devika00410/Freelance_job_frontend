@@ -86,8 +86,8 @@ return ()=>{
 
   return(
     <section className="how-it-works">
-<div className="container">
-    <h2 className="section-title">How It Works</h2>
+<div className="how-works-container">
+    <h2 className="how-works-title">How It Works</h2>
 
     <div className="view-toggle">
         <button className={`toggle-btn ${activeView === 'client' ? 'active': ''}`}
@@ -100,7 +100,7 @@ return ()=>{
 
     <div className="steps-container">
         {(activeView === 'client' ? clientSteps:freelancerSteps).map((step,index)=>(
-            <div  key={index} className="step-card">
+            <div  key={index} className="how-works-step-card">
 {/* <div className="steps-number">{index+1}</div> */}
 <div className="steps-icon-wrapper">
     {step.icon}
@@ -117,7 +117,7 @@ return ()=>{
         </div>
         <h3>Special Offer for New Clients</h3>
         <p> Get $800 in credit when you spend $1000 as a new Business Plus member.</p>
-        <button className="cta-button">Get Started</button>
+        <button className="how-works-cta-button">Get Started</button>
         <div className="promo-content">
             
         </div>

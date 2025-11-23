@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../Context/AuthContext";
 import { useNavigate,Link } from "react-router-dom";
+import './Login.css'
 
 const Login=()=>{
     const[formData,setFormData]=useState({
@@ -34,44 +35,52 @@ const Login=()=>{
         }
     }
 
-    
-
-
-
     return (
-        <div className="auth-container">
-            <div className="auth-form">
-                <h2>Sign in</h2>
-                <form onSubmit={handleSubmit}>
-                   
-                   
-
-                    <div className="form-group">
-                        <label>Email</label>
+        <div className="login-wrapper">
+            <div className="login-content">
+                <div className="brand-header">
+                    <div className="brand-logo">⚡</div>
+                    <h1 className="brand-name">FreelanceHub</h1>
+                </div>
+                <h2 className="login-title">Welcome back</h2>
+                <p className="login-subtitle">Sign in to your account to continue</p>
+                
+                <form className="login-form" onSubmit={handleSubmit}>
+                    <div className="input-field">
+                        <label className="field-label">Email</label>
                         <input type="email" name="email" value={formData.email}
                             onChange={handleChange} placeholder="your.email@example.com" required />
                     </div>
-                    <div className="form-group">
-                        <label>Password</label>
+                    <div className="input-field">
+                        <label className="field-label">Password</label>
                         <input type="password"
                             name="password"
                             value={formData.password}
                             onChange={handleChange}
-                            placeholder="Create a strong password" required minLength='6' />
-                            <small className="field-note">Must be atleast 6 characters</small>
+                            placeholder="Enter your password" required minLength='6' />
+                            <small className="input-hint">Must be at least 6 characters</small>
                     </div>
-                    <button type="submit" disabled={loading}>{loading ? 'Signing In...':'Sign in'}</button>
+                    <button type="submit" className="submit-btn" disabled={loading}>
+                        {loading ? 'Signing In...' : 'Sign in'}
+                    </button>
                 </form>
                 {message && (
-                    <div className='message'>{message}</div>
+                    <div className='status-message'>{message}</div>
                 )}
-                <div className="auth-links">
-                    <p>Don't have an account?<Link to='/register'>Signup</Link></p>
+                <div className="auth-redirect">
+                    <p>Don't have an account? <Link to='/register' className="redirect-link">Sign up</Link></p>
+                </div>
+            </div>
+            <div className="login-graphics">
+                <div className="graphics-overlay">
+                    <div className="overlay-content">
+                        <h3 className="graphics-text">Join thousands of satisfied users</h3>
+                        <p className="graphics-subtext">Secure, fast, and reliable authentication</p>
+                    </div>
                 </div>
             </div>
         </div>
     )
-
 }
 
 export default Login;

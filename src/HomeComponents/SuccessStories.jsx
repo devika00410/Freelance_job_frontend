@@ -138,7 +138,7 @@ const SuccessStories = () => {
 
   return (
     <section className="success-stories-section" ref={sliderRef}>
-      <div className="container">
+      <div className="success-container">
         <div className="section-header">
           <h2>Success Stories in Motion</h2>
           <p>Real results from our community of freelancers and clients</p>

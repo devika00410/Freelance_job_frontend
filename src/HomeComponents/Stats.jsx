@@ -85,54 +85,54 @@ const Stats = () => {
   }, []);
 
   return (
-    <section className="stats" ref={sectionRef}>
-      <div className="stats-background">
-        <div className="floating-shape shape-1"></div>
-        <div className="floating-shape shape-2"></div>
-        <div className="floating-shape shape-3"></div>
-        <div className="floating-shape shape-4"></div>
+    <section className="metrics-section" ref={sectionRef}>
+      <div className="metrics-background">
+        <div className="floating-element elem-1"></div>
+        <div className="floating-element elem-2"></div>
+        <div className="floating-element elem-3"></div>
+        <div className="floating-element elem-4"></div>
       </div>
       
-      <div className="container">
-        <div className="stats-header">
-          <h2 className="title">Our Impact in Numbers</h2>
-          <p className="subtitle">Driving success through measurable results that speak louder than words</p>
+      <div className="metrics-wrapper">
+        <div className="metrics-heading">
+          <h2 className="main-headline">Our Impact in Numbers</h2>
+          <p className="headline-subtext">Driving success through measurable results that speak louder than words</p>
         </div>
 
-        <div className="stats-grid">
+        <div className="metrics-grid">
           {stats.map((stat, index) => (
             <div 
               key={stat.id} 
-              className="stat-card"
+              className="metric-item"
               style={{ 
-                '--delay': index * 0.1 + 's', 
-                '--color': stat.color,
-                '--gradient': `linear-gradient(135deg, ${stat.color}20, ${stat.color}40)`
+                '--animation-delay': index * 0.1 + 's', 
+                '--accent-color': stat.color,
+                '--accent-gradient': `linear-gradient(135deg, ${stat.color}20, ${stat.color}40)`
               }}
             >
-              <div className="card-glow"></div>
+              <div className="item-glow"></div>
               
-              <div className="stat-icon-wrapper">
+              <div className="metric-icon-container">
                 {stat.icon}
-                <div className="icon-pulse"></div>
+                <div className="icon-ripple"></div>
               </div>
 
-              <div className="stat-content">
-                <div className="stat-number">
+              <div className="metric-content">
+                <div className="metric-value">
                   <CountUp end={stat.number} suffix={stat.suffix} isVisible={isVisible} />
                 </div>
-                <h3 className="stat-label">{stat.label}</h3>
-                <p className="stat-description">{stat.description}</p>
+                <h3 className="metric-title">{stat.label}</h3>
+                <p className="metric-desc">{stat.description}</p>
               </div>
 
-              <div className="stat-wave"></div>
+              <div className="metric-underline"></div>
             </div>
           ))}
         </div>
 
-        <div className="stats-highlight">
-          <div className="highlight-content">
-            <span className="highlight-badge"> Growing Fast</span>
+        <div className="metrics-banner">
+          <div className="banner-content">
+            <span className="banner-tag">Growing Fast</span>
             <p>Trusted by industry leaders worldwide to deliver exceptional results</p>
           </div>
         </div>

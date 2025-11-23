@@ -1,0 +1,595 @@
+
+/* Main Container */
+.hpf-modal-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Header Section */
+.hpf-modal-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.hpf-modal-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.hpf-modal-subtitle {
+  color: #64748b;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.hpf-warning-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  color: #92400e;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+}
+
+.hpf-warning-icon {
+  color: #f59e0b;
+}
+
+/* Loading State */
+.hpf-loading-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #64748b;
+}
+
+.hpf-spinner-icon {
+  animation: hpf-spin 1s linear infinite;
+  font-size: 3rem;
+  color: #14A800;
+  margin-bottom: 1.5rem;
+}
+
+@keyframes hpf-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.hpf-loading-title {
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+}
+
+.hpf-loading-text {
+  color: #64748b;
+}
+
+/* Error State */
+.hpf-error-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #64748b;
+}
+
+.hpf-error-icon {
+  font-size: 3rem;
+  color: #ef4444;
+  margin-bottom: 1.5rem;
+}
+
+.hpf-error-title {
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+}
+
+.hpf-error-text {
+  margin-bottom: 1.5rem;
+}
+
+.hpf-retry-button {
+  background: #14A800;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hpf-retry-button:hover {
+  background: #0F7300;
+  transform: translateY(-1px);
+}
+
+/* Filters Section */
+.hpf-filters-section {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.hpf-search-container {
+  position: relative;
+  flex: 1;
+  min-width: 300px;
+}
+
+.hpf-search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  z-index: 1;
+}
+
+.hpf-search-input {
+  width: 100%;
+  padding: 0.875rem 1rem 0.875rem 3rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.hpf-search-input:focus {
+  outline: none;
+  border-color: #14A800;
+  box-shadow: 0 0 0 3px rgba(20, 168, 0, 0.1);
+}
+
+.hpf-skills-filter {
+  flex: 2;
+  min-width: 400px;
+}
+
+.hpf-filter-label {
+  display: block;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.hpf-skills-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.hpf-skill-filter-tag {
+  padding: 0.5rem 1rem;
+  border: 2px solid #e2e8f0;
+  background: white;
+  border-radius: 2rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.hpf-skill-filter-tag:hover {
+  border-color: #14A800;
+  color: #14A800;
+}
+
+.hpf-skill-selected {
+  background: #14A800;
+  color: white;
+  border-color: #14A800;
+}
+
+/* Results Info */
+.hpf-results-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.hpf-results-count {
+  font-weight: 600;
+  color: #374151;
+}
+
+.hpf-clear-filters-button {
+  background: none;
+  border: none;
+  color: #14A800;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.hpf-clear-filters-button:hover {
+  color: #0F7300;
+}
+
+/* Freelancers Grid */
+.hpf-freelancers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.hpf-freelancer-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  background: white;
+  position: relative;
+}
+
+.hpf-freelancer-card:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  border-color: #14A800;
+  transform: translateY(-4px);
+}
+
+/* Card Header */
+.hpf-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.hpf-avatar-container {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid #e2e8f0;
+}
+
+.hpf-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hpf-avatar-placeholder {
+  color: #94a3b8;
+  font-size: 1.5rem;
+}
+
+.hpf-freelancer-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.hpf-freelancer-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.25rem;
+  line-height: 1.2;
+}
+
+.hpf-rating-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #64748b;
+  font-size: 0.875rem;
+  flex-wrap: wrap;
+}
+
+.hpf-star-icon {
+  color: #f59e0b;
+}
+
+.hpf-rating-value {
+  font-weight: 600;
+}
+
+.hpf-reviews-count {
+  color: #94a3b8;
+}
+
+.hpf-availability-badge {
+  padding: 0.375rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.hpf-availability-available {
+  background: #f0fdf4;
+  color: #10b981;
+  border: 1px solid #10b981;
+}
+
+.hpf-availability-busy {
+  background: #fef2f2;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+}
+
+/* Skills Section */
+.hpf-skills-section {
+  margin-bottom: 1rem;
+}
+
+.hpf-section-label {
+  display: block;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.hpf-skills-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.hpf-skill-display-tag {
+  padding: 0.25rem 0.75rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.hpf-more-skills-text {
+  color: #64748b;
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+/* Performance Stats */
+.hpf-performance-stats {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem 0;
+  border-top: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.hpf-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.hpf-stat-icon {
+  color: #14A800;
+  font-size: 0.9rem;
+}
+
+.hpf-stat-text {
+  font-weight: 500;
+}
+
+/* Project History */
+.hpf-project-history {
+  margin-bottom: 1.5rem;
+}
+
+.hpf-project-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.hpf-project-name {
+  font-weight: 500;
+  color: #1e293b;
+  font-size: 0.9rem;
+}
+
+.hpf-project-date {
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* Card Footer */
+.hpf-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.hpf-rate-container {
+  display: flex;
+  align-items: center;
+}
+
+.hpf-hourly-rate {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 1.125rem;
+}
+
+.hpf-hire-button {
+  background: #14A800;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.hpf-hire-button:hover:not(.hpf-button-disabled) {
+  background: #0F7300;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(20, 168, 0, 0.3);
+}
+
+.hpf-button-disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.hpf-button-disabled:hover {
+  background: #94a3b8;
+  transform: none;
+}
+
+.hpf-button-icon {
+  font-size: 0.8rem;
+}
+
+/* No Results */
+.hpf-no-results {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #64748b;
+  grid-column: 1 / -1;
+}
+
+.hpf-no-results-title {
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 1.25rem;
+}
+
+.hpf-no-results-text {
+  margin-bottom: 1.5rem;
+}
+
+.hpf-clear-search-button {
+  background: #14A800;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hpf-clear-search-button:hover {
+  background: #0F7300;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .hpf-modal-container {
+    padding: 1.5rem;
+  }
+  
+  .hpf-freelancers-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .hpf-modal-container {
+    padding: 1rem;
+  }
+
+  .hpf-modal-title {
+    font-size: 1.75rem;
+  }
+
+  .hpf-filters-section {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .hpf-search-container,
+  .hpf-skills-filter {
+    min-width: 100%;
+  }
+
+  .hpf-freelancers-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hpf-card-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .hpf-availability-badge {
+    align-self: center;
+  }
+
+  .hpf-performance-stats {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .hpf-project-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .hpf-card-footer {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .hpf-hire-button {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .hpf-modal-title {
+    font-size: 1.5rem;
+  }
+  
+  .hpf-modal-subtitle {
+    font-size: 1rem;
+  }
+  
+  .hpf-freelancer-card {
+    padding: 1.25rem;
+  }
+}

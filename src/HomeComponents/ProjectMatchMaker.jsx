@@ -1,395 +1,301 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  FaCode, 
-  FaPalette, 
-  FaVideo, 
-  FaSearch, 
+import React, { useState, useRef, useEffect } from "react";
+import {
+  FaLaptopCode,
+  FaPalette,
+  FaVideo,
+  FaSearch,
   FaPenAlt,
   FaChartLine,
   FaMobile,
   FaHashtag,
   FaUserTie,
-  FaLaptopCode,
   FaArrowRight,
   FaArrowLeft,
-  FaRobot,
-  FaStar,
-  FaCheckCircle,
-  FaClock
-} from 'react-icons/fa';
-import './ProjectMatchmaker.css';
+  FaClock,
+  FaChevronDown,
+  FaCheck,
+  FaBolt,
+  FaCheckCircle
+} from "react-icons/fa";
+import "./ProjectMatchMaker.css";
 
-const ProjectMatchmaker = () => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [userAnswers, setUserAnswers] = useState({});
-  const [showResults, setShowResults] = useState(false);
-  const [matchedFreelancers, setMatchedFreelancers] = useState([]);
-  const [loading, setLoading] = useState(false);
+const ProjectMatchMaker = () => {
+  const heroImg =
+    "https://img.pikbest.com/photo/20240918/cute-freelance-girl-using-laptop-sitting-on-floor-and-smiling_10858688.jpg!sw800";
 
-  // Your 10 services mapped to icons
-  const services = [
-    { value: "web-dev", label: "Full Stack Web Development", icon: <FaLaptopCode /> },
-    { value: "graphic-design", label: "Graphic Design", icon: <FaPalette /> },
-    { value: "video-editing", label: "Video Editing", icon: <FaVideo /> },
-    { value: "seo", label: "SEO", icon: <FaSearch /> },
-    { value: "content-writing", label: "Content Writing", icon: <FaPenAlt /> },
-    { value: "digital-marketing", label: "Digital Marketing", icon: <FaChartLine /> },
-    { value: "ui-ux", label: "UI/UX Design", icon: <FaMobile /> },
-    { value: "mobile-dev", label: "Mobile App Development", icon: <FaCode /> },
-    { value: "social-media", label: "Social Media Management", icon: <FaHashtag /> },
-    { value: "virtual-assistant", label: "Virtual Assistance", icon: <FaUserTie /> }
+  // Freelancer images (spread style)
+  const freelancers = [
+    "https://randomuser.me/api/portraits/women/44.jpg",
+    "https://randomuser.me/api/portraits/men/52.jpg",
+    "https://randomuser.me/api/portraits/women/68.jpg",
+    "https://randomuser.me/api/portraits/men/14.jpg",
+    "https://randomuser.me/api/portraits/men/28.jpg",
+    "https://randomuser.me/api/portraits/women/19.jpg",
+    "https://randomuser.me/api/portraits/men/55.jpg",
+    "https://randomuser.me/api/portraits/women/37.jpg",
   ];
 
   const steps = [
     {
       id: 1,
       question: "What service do you need?",
-      options: services
+      options: [
+        { value: "web-dev", label: "Web Development", icon: <FaLaptopCode /> },
+        { value: "graphic-design", label: "Graphic Design", icon: <FaPalette /> },
+        { value: "video-editing", label: "Video Editing", icon: <FaVideo /> },
+        { value: "seo", label: "SEO Optimization", icon: <FaSearch /> },
+        { value: "content-writing", label: "Content Writing", icon: <FaPenAlt /> },
+        { value: "digital-marketing", label: "Digital Marketing", icon: <FaChartLine /> },
+        { value: "ui-ux", label: "UI/UX Design", icon: <FaMobile /> },
+        { value: "social-media", label: "Social Media Mgmt", icon: <FaHashtag /> },
+        { value: "virtual-assistant", label: "Virtual Assistant", icon: <FaUserTie /> }
+      ]
     },
     {
       id: 2,
-      question: "What's your project timeline?",
+      question: "What's your timeline?",
       options: [
-        { value: "urgent", label: "Urgent (1-3 days)", icon: <FaClock className="urgent" /> },
-        { value: "standard", label: "Standard (1-2 weeks)", icon: <FaCheckCircle className="standard" /> },
-        { value: "flexible", label: "Flexible (1+ month)", icon: <FaClock className="flexible" /> }
+        { value: "urgent", label: "Urgent (1–3 days)", icon: <FaBolt /> },
+        { value: "standard", label: "Standard (1–2 weeks)", icon: <FaClock /> },
+        { value: "flexible", label: "Flexible (1+ month)", icon: <FaCheckCircle /> }
       ]
     },
     {
       id: 3,
-      question: "What's your budget range?",
+      question: "What’s your budget?",
       options: [
-        { value: "budget", label: "$500 - $2,000", icon: <FaStar className="budget" /> },
-        { value: "medium", label: "$2,000 - $5,000", icon: <FaStar className="medium" /> },
-        { value: "enterprise", label: "$5,000+", icon: <FaStar className="enterprise" /> }
+        { value: "budget", label: "$500 – $2,000", icon: <FaCheckCircle /> },
+        { value: "medium", label: "$2,000 – $5,000", icon: <FaCheckCircle /> },
+        { value: "enterprise", label: "$5,000+", icon: <FaCheckCircle /> }
       ]
     },
     {
       id: 4,
-      question: "Preferred freelancer experience level?",
+      question: "Experience level?",
       options: [
-        { value: "entry", label: "Entry Level (1-2 years)", icon: <FaUserTie className="entry" /> },
-        { value: "mid", label: "Mid Level (3-5 years)", icon: <FaUserTie className="mid" /> },
-        { value: "expert", label: "Expert (5+ years)", icon: <FaUserTie className="expert" /> }
+        { value: "entry", label: "Entry (1–2 yrs)", icon: <FaUserTie /> },
+        { value: "mid", label: "Mid (3–5 yrs)", icon: <FaUserTie /> },
+        { value: "expert", label: "Expert (5+ yrs)", icon: <FaUserTie /> }
       ]
     }
   ];
 
-  const handleOptionSelect = (stepId, value) => {
-    setUserAnswers(prev => ({
-      ...prev,
-      [`step${stepId}`]: value
-    }));
+  const [currentStep, setCurrentStep] = useState(1);
+  const [answers, setAnswers] = useState({});
+  const [openDrop, setOpenDrop] = useState(null);
+  const [dropPos, setDropPos] = useState(null);
+  const triggerRefs = useRef({});
+  const dropdownRef = useRef(null);
+
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState([]);
+  const [showResults, setShowResults] = useState(false);
+
+  // Dropdown logic (absolute inside frame)
+  const openDropdown = (id) => {
+    const trigger = triggerRefs.current[id];
+    const frame = document.querySelector(".pm-frame");
+
+    const tRect = trigger.getBoundingClientRect();
+    const fRect = frame.getBoundingClientRect();
+
+    setDropPos({
+      top: tRect.bottom - fRect.top + 6,
+      left: tRect.left - fRect.left,
+      width: tRect.width
+    });
+
+    setOpenDrop(id);
   };
 
-  const nextStep = async () => {
-    if (!userAnswers[`step${currentStep}`]) {
-      alert('Please select an option to continue');
-      return;
-    }
+  const toggleDrop = (id) => {
+    if (openDrop === id) return setOpenDrop(null);
+    openDropdown(id);
+  };
+
+  useEffect(() => {
+    const closeOnClickOutside = (e) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target) &&
+        !Object.values(triggerRefs.current).some((el) => el.contains(e.target))
+      ) {
+        setOpenDrop(null);
+      }
+    };
+
+    window.addEventListener("click", closeOnClickOutside);
+    return () => window.removeEventListener("click", closeOnClickOutside);
+  }, []);
+
+  // Next action
+  const next = async () => {
+    if (!answers[`s${currentStep}`]) return;
 
     if (currentStep < steps.length) {
-      setCurrentStep(prev => prev + 1);
+      setCurrentStep(currentStep + 1);
     } else {
-      await findMatches();
+      setLoading(true);
+      await new Promise((r) => setTimeout(r, 1000));
+
+      setResults([
+        { initials: "RA", name: "Riya A.", role: "Frontend Developer", rating: 4.9, success: 92, rate: 45 },
+        { initials: "MK", name: "Manav K.", role: "UI Designer", rating: 4.7, success: 89, rate: 38 },
+        { initials: "SS", name: "Sana S.", role: "SEO Expert", rating: 4.8, success: 90, rate: 30 }
+      ]);
+
+      setShowResults(true);
+      setLoading(false);
+
+      setTimeout(() => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+      }, 300);
     }
   };
 
-  const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
-    }
+  const back = () => setCurrentStep((s) => Math.max(1, s - 1));
+
+  const selectedLabel = (id) => {
+    const step = steps.find((s) => s.id === id);
+    const val = answers[`s${id}`];
+    const option = step.options.find((o) => o.value === val);
+    return option ? option.label : "";
   };
 
-  // Simulate API call to your backend
-  const findMatches = async () => {
-    setLoading(true);
-    
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // This is where you would connect to your actual backend
-    // const response = await fetch('/api/match-freelancers', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(userAnswers)
-    // });
-    // const data = await response.json();
-    
-    // For now, using mock data based on user selections
-    const mockMatches = generateMockMatches(userAnswers);
-    setMatchedFreelancers(mockMatches);
-    setShowResults(true);
-    setLoading(false);
-  };
-
-  const generateMockMatches = (answers) => {
-    const service = answers.step1;
-    const experience = answers.step4;
-    
-    // Mock data structure matching your user model
-    const baseProfiles = [
-      {
-        id: 1,
-        name: "Sarah Chen",
-        title: "Senior Full Stack Developer",
-        avatar: "👩‍💻",
-        rating: 4.9,
-        completedProjects: 127,
-        successRate: 98,
-        hourlyRate: 85,
-        skills: ["React", "Node.js", "TypeScript", "MongoDB"],
-        experience: "expert",
-        service: "web-dev",
-        matchScore: 95,
-        responseTime: "1 hour",
-        location: "San Francisco, CA",
-        description: "Specialized in building scalable web applications with modern tech stacks.",
-        verified: true
-      },
-      {
-        id: 2,
-        name: "Mike Rodriguez",
-        title: "UI/UX Design Expert",
-        avatar: "👨‍🎨",
-        rating: 4.8,
-        completedProjects: 89,
-        successRate: 96,
-        hourlyRate: 75,
-        skills: ["Figma", "Adobe XD", "Prototyping", "User Research"],
-        experience: "expert",
-        service: "ui-ux",
-        matchScore: 88,
-        responseTime: "2 hours",
-        location: "New York, NY",
-        description: "Creating intuitive user experiences that drive engagement and conversion.",
-        verified: true
-      },
-      {
-        id: 3,
-        name: "Alex Thompson",
-        title: "Digital Marketing Specialist",
-        avatar: "👨‍💼",
-        rating: 4.7,
-        completedProjects: 156,
-        successRate: 94,
-        hourlyRate: 65,
-        skills: ["SEO", "PPC", "Social Media", "Content Strategy"],
-        experience: "mid",
-        service: "digital-marketing",
-        matchScore: 82,
-        responseTime: "3 hours",
-        location: "Austin, TX",
-        description: "Driving growth through data-driven marketing strategies.",
-        verified: true
-      }
-    ];
-
-    // Filter and sort based on user preferences
-    return baseProfiles
-      .filter(profile => 
-        profile.service === service && 
-        profile.experience === experience
-      )
-      .sort((a, b) => b.matchScore - a.matchScore)
-      .slice(0, 3);
-  };
-
-  const calculateSuccessProbability = () => {
-    let baseScore = 85;
-    
-    // Adjust based on user selections
-    if (userAnswers.step2 === 'standard') baseScore += 5;
-    if (userAnswers.step3 === 'medium') baseScore += 3;
-    if (userAnswers.step4 === 'expert') baseScore += 7;
-    
-    return Math.min(baseScore, 98);
-  };
-
-  const progress = (currentStep / steps.length) * 100;
-
-  const getServiceIcon = (serviceValue) => {
-    return services.find(s => s.value === serviceValue)?.icon;
-  };
-
-  if (loading) {
-    return (
-      <section className="matchmaker-section">
-        <div className="container">
-          <div className="loading-state">
-            <FaRobot className="loading-icon" />
-            <h3>Finding your perfect matches...</h3>
-            <p>Analyzing your requirements with our AI engine</p>
-            <div className="loading-bar">
-              <div className="loading-progress"></div>
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  }
+  const progress = (currentStep / 4) * 100;
 
   return (
-    <section className="matchmaker-section">
-      <div className="container">
-        <div className="section-header">
-          <h2>Find Your Perfect Freelancer</h2>
-          <p>Tell us about your project and we'll match you with the ideal talent from our network</p>
-        </div>
+    <section className="pm-root">
 
-        <div className="matchmaker-container">
-          {/* Quiz Section */}
-          <div className="quiz-container">
-            <div className="quiz-progress">
-              <div className="progress-bar">
-                <div 
-                  className="progress-fill" 
-                  style={{ width: `${progress}%` }}
-                ></div>
+      {/* SPREAD BACKGROUND FREELANCERS */}
+      <div className="pm-spread-bg">
+        {freelancers.map((src, i) => (
+          <img key={i} src={src} className={`pm-spread-img i${i}`} />
+        ))}
+      </div>
+
+      {/* Float circles */}
+      <div className="pm-float-circle circle-1"></div>
+      <div className="pm-float-circle circle-2"></div>
+      <div className="pm-float-circle circle-3"></div>
+
+      {/* HERO FRAME */}
+      <div className="pm-frame">
+        <div className="pm-hero">
+
+          {/* LEFT SIDE */}
+          <div className="pm-left">
+            <h1 className="pm-title">Find Your Perfect Freelancer Match</h1>
+            <p className="pm-sub">
+              Get personalized project matches in less than 60 seconds — powered by smart recommendations.
+            </p>
+
+            <div className="pm-progress">
+              <div className="pm-progress-track">
+                <div className="pm-progress-bar" style={{ width: `${progress}%` }} />
               </div>
-              <span className="progress-text">Step {currentStep} of {steps.length}</span>
+              <p className="pm-step-text">Step {currentStep}/4</p>
             </div>
 
-            {steps.map(step => (
-              <div 
-                key={step.id}
-                className={`quiz-step ${currentStep === step.id ? 'active' : ''}`}
+            <div className="pm-q-card">
+              <h3 className="pm-q">{steps[currentStep - 1].question}</h3>
+
+              {/* SELECT TRIGGER */}
+              <button
+                className="pm-select"
+                ref={(el) => (triggerRefs.current[currentStep] = el)}
+                onClick={() => toggleDrop(currentStep)}
               >
-                <h3>{step.question}</h3>
-                <div className="option-grid">
-                  {step.options.map(option => (
+                {selectedLabel(currentStep) || <span className="pm-placeholder">Select an option</span>}
+                <FaChevronDown className={openDrop === currentStep ? "rot" : ""} />
+              </button>
+
+              {/* DROPDOWN FIXED INSIDE FRAME */}
+              {openDrop === currentStep && dropPos && (
+                <div
+                  className="pm-dropdown"
+                  ref={dropdownRef}
+                  style={{
+                    top: dropPos.top,
+                    left: dropPos.left,
+                    width: dropPos.width
+                  }}
+                >
+                  {steps[currentStep - 1].options.map((opt) => (
                     <div
-                      key={option.value}
-                      className={`option-card ${
-                        userAnswers[`step${step.id}`] === option.value ? 'selected' : ''
-                      }`}
-                      onClick={() => handleOptionSelect(step.id, option.value)}
+                      key={opt.value}
+                      className={
+                        answers[`s${currentStep}`] === opt.value
+                          ? "pm-opt selected"
+                          : "pm-opt"
+                      }
+                      onClick={() =>
+                        setAnswers((p) => ({ ...p, [`s${currentStep}`]: opt.value }))
+                      }
                     >
-                      <div className="option-icon">
-                        {option.icon}
-                      </div>
-                      <span>{option.label}</span>
+                      <span className="pm-icon">{opt.icon}</span>
+                      {opt.label}
+                      {answers[`s${currentStep}`] === opt.value && (
+                        <FaCheck className="pm-check" />
+                      )}
                     </div>
                   ))}
+                </div>
+              )}
+
+              <div className="pm-actions">
+                <button onClick={back} disabled={currentStep === 1} className="btn-outline">
+                  <FaArrowLeft /> Back
+                </button>
+
+                <button onClick={next} className="btn-solid">
+                  {currentStep === 4 ? "Find Matches" : "Next"} <FaArrowRight />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT IMAGE */}
+          <div className="pm-right">
+            <div className="pm-img-frame">
+              <img src={heroImg} className="pm-img" />
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* RESULTS */}
+      {loading && <div className="pm-loading">Matching freelancers…</div>}
+
+      {showResults && !loading && (
+        <div className="pm-results">
+          <h2 className="pm-res-title">Top Freelancer Matches</h2>
+          <div className="pm-res-grid">
+            {results.map((r, i) => (
+              <div key={i} className="pm-res-card">
+                <div className="pm-res-user">
+                  <div className="pm-avatar">{r.initials}</div>
+                  <div>
+                    <h4 className="pm-name">{r.name}</h4>
+                    <p className="pm-role">{r.role}</p>
+                  </div>
+                </div>
+
+                <div className="pm-res-meta">
+                  <p>{r.rating}★</p>
+                  <p>{r.success}% Success</p>
+                  <p>${r.rate}/hr</p>
+                  <button className="small-btn">View</button>
                 </div>
               </div>
             ))}
-
-            <div className="quiz-nav">
-              <button 
-                className="btn-secondary" 
-                onClick={prevStep}
-                disabled={currentStep === 1}
-              >
-                <FaArrowLeft /> Previous
-              </button>
-              <button className="btn-primary" onClick={nextStep}>
-                {currentStep === steps.length ? 'Find Matches' : 'Next'} <FaArrowRight />
-              </button>
-            </div>
-          </div>
-
-          {/* Results Section */}
-          <div className="results-panel">
-            {!showResults ? (
-              <div className="results-placeholder">
-                <div className="ai-thinking">
-                  <FaRobot className="ai-icon" />
-                  <h4>Complete the quiz to see your matches</h4>
-                  <p>Our AI will analyze your requirements and connect you with pre-vetted professionals</p>
-                  <div className="features-list">
-                    <div className="feature">
-                      <FaCheckCircle /> Pre-vetted professionals
-                    </div>
-                    <div className="feature">
-                      <FaCheckCircle /> AI-powered matching
-                    </div>
-                    <div className="feature">
-                      <FaCheckCircle /> 95% success rate
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="results-content">
-                <div className="results-header">
-                  <h3>Your Perfect Matches</h3>
-                  <div className="success-predictor-mini">
-                    <div className="prediction-badge">
-                      <span>{calculateSuccessProbability()}%</span>
-                      Success Probability
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="match-cards">
-                  {matchedFreelancers.map((freelancer) => (
-                    <div key={freelancer.id} className="match-card">
-                      <div className="match-card-header">
-                        <div className="freelancer-avatar">
-                          {freelancer.avatar}
-                          {freelancer.verified && <span className="verified-badge">✓</span>}
-                        </div>
-                        <div className="match-score">
-                          {freelancer.matchScore}% Match
-                        </div>
-                      </div>
-                      
-                      <div className="freelancer-info">
-                        <h4>{freelancer.name}</h4>
-                        <p className="title">{freelancer.title}</p>
-                        <div className="rating">
-                          <FaStar className="star" />
-                          <span>{freelancer.rating}</span>
-                          <span className="projects">({freelancer.completedProjects} projects)</span>
-                        </div>
-                      </div>
-
-                      <div className="skills">
-                        {freelancer.skills.slice(0, 3).map((skill, index) => (
-                          <span key={index} className="skill-tag">{skill}</span>
-                        ))}
-                      </div>
-
-                      <div className="statss">
-                        <div className="stat">
-                          <span className="value">{freelancer.successRate}%</span>
-                          <span className="label">Success Rate</span>
-                        </div>
-                        <div className="stat">
-                          <span className="value">${freelancer.hourlyRate}/hr</span>
-                          <span className="label">Rate</span>
-                        </div>
-                        <div className="stat">
-                          <span className="value">{freelancer.responseTime}</span>
-                          <span className="label">Response</span>
-                        </div>
-                      </div>
-
-                      <p className="description">{freelancer.description}</p>
-
-                      <div className="match-card-actions">
-                        <button className="btn-primary btn-sm">View Profile</button>
-                        <button className="btn-outline btn-sm">Message</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {matchedFreelancers.length === 0 && (
-                  <div className="no-matches">
-                    <h4>No perfect matches found</h4>
-                    <p>Try adjusting your requirements or browse all freelancers</p>
-                    <button className="btn-primary">Browse All Freelancers</button>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
-      </div>
+      )}
+
     </section>
   );
 };
 
-export default ProjectMatchmaker;
+export default ProjectMatchMaker;

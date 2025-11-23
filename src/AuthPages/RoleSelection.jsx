@@ -1,63 +1,81 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import './RoleSelection.css'
+import "./RoleSelection.css";
 import { useAuth } from "../Context/AuthContext";
 import { FaUserTie, FaCode } from "react-icons/fa";
 
 const RoleSelection = () => {
-    const navigate = useNavigate()
+  const navigate = useNavigate();
+  const { token, user } = useAuth();
+  const [selected, setSelected] = useState(localStorage.getItem("selectedRole"));
 
-    const {token,user} = useAuth();
-    useEffect(()=>{
-        if(token && user){
-            navigate('/dashboard')
-        }
-    },[token,user,navigate])
-    const handleRoleSelect = (role) => {
-        localStorage.setItem('selectedRole', role)
-        navigate('/register')
+  useEffect(() => {
+    if (token && user) {
+      navigate("/dashboard");
     }
+  }, [token, user, navigate]);
 
-    return (
-        <div className="role-selection-container">
-            <div className="role-selection-card">
-                <h1 className="logo">Website</h1>
-                <h2>Join as a client or freelancer</h2>
-                <div className="role-options">
-                    <div className="role-card client-card" onClick={() => handleRoleSelect('client')}>
-                        <div className="role-icon">
-<FaUserTie size={32} color="#28a745"/>
-                        </div>
-                        <h3>I'm a client, hiring for a project</h3>
-                        <p>Find skilled freelancers for your project</p>
-                    </div>
-                    <div className="role-card freelancer-card" onClick={()=>handleRoleSelect('freelancer')}>
-                        <div className="role-icon">
-                            <FaCode size={32} color="#ff6b00"/>
-                        </div>
-                        <h3>I'm a freelancer, looking for work</h3>
-                        <p>Find prjects and build your career</p>
-                    </div>
-                    <button className="create-account-btn"
-                        onClick={() => {
-                            const role = localStorage.getItem('selectedRole')
-                            if (role) {
-                                navigate('/register')
-                            } else {
-                                alert('Please select your role first')
-                            }
-                        }}>Create Account</button>
-                    <div className="auth-links">
-                        <p>Already have an account?<Link to='/login'>Log In</Link></p>
-                    </div>
-                    <div className="footer-links">
-                        <span>Privacy</span>
-                        <span>Terms</span>
-                    </div>
-                </div>
+  const selectRole = (role) => {
+    setSelected(role);
+    localStorage.setItem("selectedRole", role);
+  };
+
+  const handleCreateAccount = () => {
+    if (!selected) return alert("Please select your role first");
+    navigate("/register");
+  };
+
+  return (
+    <div className="role-container">
+      <div className="role-card-wrapper">
+        <h1 className="brand-title">FreelanceHub</h1>
+        <p className="subtitle">Join as a client or freelancer</p>
+
+        <div className="roles-section">
+
+          <div
+            className={`role-box ${selected === "client" ? "active-role" : ""}`}
+            onClick={() => selectRole("client")}
+          >
+            <div className="icon-wrap client">
+              <FaUserTie size={35} />
             </div>
+            <div>
+              <h3>I'm a client, hiring for a project</h3>
+              <p>Hire top talent for quality and speed</p>
+            </div>
+          </div>
+
+          <div
+            className={`role-box ${selected === "freelancer" ? "active-role" : ""}`}
+            onClick={() => selectRole("freelancer")}
+          >
+            <div className="icon-wrap freelancer">
+              <FaCode size={35} />
+            </div>
+            <div>
+              <h3>I'm a freelancer, looking for work</h3>
+              <p>Get projects and grow your career</p>
+            </div>
+          </div>
+
         </div>
-    )
-}
+
+        <button className="cta-btn" onClick={handleCreateAccount}>
+          Create Account
+        </button>
+
+        <p className="login-text">
+          Already have an account? <Link to="/login">Log In</Link>
+        </p>
+
+        <div className="footer-links">
+          <span>Privacy</span>
+          <span>Terms</span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default RoleSelection;

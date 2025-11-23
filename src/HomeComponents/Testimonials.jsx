@@ -136,7 +136,7 @@ return ()=>{
 
   return (
     <section className="testimonials">
-      <div className="container">
+      <div className="testimonials-container">
         <h2 className="section-titles">What Our Clients Say</h2>
         <p className="section-subtitle">Real stories from businesses we've helped grow</p>
         
