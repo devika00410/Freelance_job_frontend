@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { videoCallService } from './videocallService';
+import { videoCallService } from '../Service/videocallService';
 
 const VideoCallComponent = ({ callId, userName, userId, onCallEnd, isOwner = false }) => {
   const videoRef = useRef(null);

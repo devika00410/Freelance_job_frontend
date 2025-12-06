@@ -99,13 +99,18 @@ const UserRegister = () => {
 
     const result = await registerUser(submitData);
 
-    if (result.success) {
-      setMessage("Registration successful! Redirecting...");
-      localStorage.removeItem("selectedRole");
-      setTimeout(() => navigate("/dashboard"), 1500);
-    } else {
-      setMessage(result.error);
-    }
+   if (result.success) {
+  setMessage("Registration successful! Redirecting...");
+  localStorage.removeItem("selectedRole");
+  // After successful login/register
+localStorage.setItem('userId', data.user._id);
+localStorage.setItem('userName', data.user.name);  
+localStorage.setItem('userEmail', data.user.email);
+localStorage.setItem('userRole', data.user.role);
+
+  const dashboardPath = formData.role === 'client' ? '/client/dashboard' : '/freelancer/dashboard';
+  setTimeout(() => navigate(dashboardPath), 1500);
+}
   };
 
   return (

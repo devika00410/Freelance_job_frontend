@@ -1,0 +1,956 @@
+.create-contract-page {
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    padding: 20px;
+    width: 1400px;
+}
+
+.contract-container {
+    width: 1400px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+/* Header */
+
+.contract-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 30px;
+    background: linear-gradient(135deg, #001f3f 0%, #00264d 100%);
+    color: white;
+    border-bottom: 1px solid #003366;
+}
+
+.back-navigation {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    cursor: pointer;
+    padding: 10px 16px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.back-navigation:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+.header-content {
+    flex: 1;
+    display: block;
+
+}
+
+.page-title {
+    font-size: 2.3rem;
+    font-weight: 700;
+    color: white;
+    margin: 0 0 8px 0;
+    line-height: 1.2;
+    display: block;
+    width: 100%;
+    text-align: center; 
+}
+
+
+.page-subtitle {
+    color: rgba(255, 255, 255, 0.85);
+    margin-left: 200px;
+    font-size: 1.1rem;
+    line-height: 1.4;
+    font-weight: 400;
+    display: block;
+    width: 100%;
+    text-align: left; 
+}
+/* Professional Progress Tracker */
+.progress-tracker {
+    padding: 30px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #dee2e6;
+}
+
+.tracker-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.tracker-steps {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.tracker-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+    z-index: 2;
+}
+
+.step-connector {
+    position: absolute;
+    top: 24px;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    z-index: 1;
+}
+
+.connector-line {
+    flex: 1;
+    height: 3px;
+    background: #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.tracker-step.completed .connector-line {
+    background: #27ae60;
+}
+
+.tracker-step.active .connector-line {
+    background: #3498db;
+}
+
+.step-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    z-index: 2;
+}
+
+.step-indicator {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.step-icon {
+    color: #6c757d;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+}
+
+.step-checkmark {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #27ae60;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Active Step */
+.tracker-step.active .step-indicator {
+    border-color: #3498db;
+    background: #3498db;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.tracker-step.active .step-icon {
+    color: white;
+}
+
+.tracker-step.active .step-number {
+    color: #3498db;
+    font-weight: 600;
+}
+
+.tracker-step.active .step-label {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+/* Completed Step */
+.tracker-step.completed .step-indicator {
+    border-color: #27ae60;
+    background: #27ae60;
+    transform: scale(1.05);
+}
+
+.tracker-step.completed .step-icon {
+    color: white;
+}
+
+.tracker-step.completed .step-number {
+    color: #27ae60;
+}
+
+.tracker-step.completed .step-label {
+    color: #27ae60;
+}
+
+/* Upcoming Step */
+.tracker-step.upcoming .step-indicator {
+    border-color: #dee2e6;
+    background: white;
+}
+
+.tracker-step.upcoming .step-icon {
+    color: #adb5bd;
+}
+
+.tracker-step.upcoming .step-number {
+    color: #adb5bd;
+}
+
+.tracker-step.upcoming .step-label {
+    color: #adb5bd;
+}
+
+.step-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+}
+
+.step-number {
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.step-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+/* Progress Bar */
+.progress-bar-container {
+    width: 100%;
+    height: 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3498db, #2980b9);
+    border-radius: 3px;
+    transition: width 0.5s ease-in-out;
+    box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+}
+
+
+
+/* Form Steps */
+.contract-form {
+    padding: 30px;
+}
+
+.form-step h2 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-size: 1.8rem;
+}
+
+.step-description {
+    color: #6c757d;
+    margin-bottom: 30px;
+    font-size: 1.1rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+    font-family: inherit;
+    line-height: 1.5;
+}
+
+.input-with-symbol {
+    position: relative;
+}
+
+.currency-symbol {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #495057;
+    font-weight: 600;
+}
+
+.input-with-symbol input {
+    padding-left: 30px;
+    width: 100%;
+}
+
+/* Freelancer Info Card */
+.freelancer-info-card {
+    background: #e8f4fd;
+    border: 1px solid #b3d7ff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.freelancer-info-card h4 {
+    margin: 0 0 15px 0;
+    color: #004085;
+}
+
+.freelancer-info-card p {
+    margin: 8px 0;
+    color: #004085;
+}
+
+/* Standard Clauses */
+.standard-clauses {
+    margin-top: 30px;
+}
+
+.standard-clauses h4 {
+    margin-bottom: 15px;
+    color: #495057;
+}
+
+.clauses-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.clause-btn {
+    background: #e9ecef;
+    border: 1px solid #dee2e6;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.clause-btn:hover {
+    background: #3498db;
+    color: white;
+    border-color: #3498db;
+}
+
+/* Phases Section */
+.phases-section {
+    margin-top: 30px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.btn-add-phase {
+    background: #27ae60;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    transition: background-color 0.3s ease;
+}
+
+.btn-add-phase:hover {
+    background: #219653;
+}
+
+.phase-card {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 15px;
+}
+
+.phase-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.phase-header h5 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.btn-remove-phase {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+}
+
+.btn-remove-phase:hover {
+    background: #c0392b;
+}
+
+.phase-fields {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 15px;
+}
+
+.payment-summary {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.payment-summary h4 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+}
+
+.payment-summary p {
+    margin: 8px 0;
+    color: #495057;
+}
+
+/* Contract Preview */
+.contract-preview {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 0;
+}
+
+.preview-section {
+    padding: 25px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.preview-section:last-child {
+    border-bottom: none;
+}
+
+.preview-section h4 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+}
+
+.preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.phase-preview {
+    padding: 10px 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.phase-preview:last-child {
+    border-bottom: none;
+}
+
+.terms-preview {
+    background: white;
+    padding: 20px;
+    border-radius: 6px;
+    max-height: 400px;
+    overflow-y: auto;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e9ecef;
+    gap: 15px;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+   
+}
+
+.btn-primary {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: #2980b9;
+}
+
+.btn-draft {
+    background: #95a5a6;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.btn-draft:hover {
+    background: #7f8c8d;
+}
+
+.btn-primary:disabled,
+.btn-draft:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Signature Modal */
+/* ===== EMERGENCY MODAL FIXES ===== */
+
+/* Ensure modal is on TOP of everything */
+.modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: rgba(0, 0, 0, 0.7) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 999999 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    padding: 20px !important;
+}
+
+.signature-modal {
+    background: white !important;
+    border-radius: 12px !important;
+    padding: 30px !important;
+    max-width: 500px !important;
+    width: 100% !important;
+    z-index: 1000000 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+    position: relative !important;
+}
+
+/* Force show if hidden by anything */
+.create-contract-page .modal-overlay {
+    display: flex !important;
+}
+
+/* Remove any conflicting styles */
+* {
+    box-sizing: border-box;
+}
+
+/* Ensure nothing covers the modal */
+body > .modal-overlay {
+    z-index: 999999 !important;
+}
+
+.signature-modal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    border-bottom: 1px solid #e9ecef;
+    background: white;
+    color: #2c3e50;
+}
+
+.signature-modal .modal-header h3 {
+    margin: 0;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-button:hover {
+    color: #495057;
+    
+}
+
+.modal-content {
+    padding: 25px;
+}
+
+.signature-pad {
+    margin: 20px 0;
+}
+
+.signature-input {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    text-align: center;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-top: 10px;
+}
+
+.signature-input:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+.signature-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 25px;
+}
+/* Alert styling */
+.alert {
+    padding: 12px 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+.alert-info {
+    background: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
+
+/* Button styling */
+.btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0069d9;
+}
+
+.btn-primary:disabled {
+    background: #b3d7ff;
+    cursor: not-allowed;
+}
+
+/* Spinner animation */
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+/* Alert styling for signature modal */
+.signature-alert {
+    background: #d1ecf1;
+    border: 1px solid #bee5eb;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 20px;
+    color: #0c5460;
+}
+
+.signature-alert strong {
+    color: #0c5460;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.signature-alert p {
+    margin: 8px 0;
+    color: #0c5460;
+}
+
+/* Button styles - ensure they match what you have */
+.btn-primary {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.3s;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #0056b3;
+}
+
+.btn-primary:disabled {
+    background: #b3d7ff;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.3s;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: #5a6268;
+}
+
+.btn-secondary:disabled {
+    background: #a0a5aa;
+    cursor: not-allowed;
+}
+
+/* Spinner icon */
+.spinner-icon {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Signature hint */
+.signature-hint {
+    font-size: 14px;
+    color: #6c757d;
+    margin-top: 8px;
+    display: block;
+}
+
+/* Ensure modal is on top */
+.modal-overlay {
+    z-index: 9999 !important;
+}
+/* Debug button */
+.btn-debug {
+    background: #ffc107;
+    color: #212529;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    margin: 10px 0;
+}
+
+.btn-debug:hover {
+    background: #e0a800;
+}
+
+.emergency-debug {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    z-index: 999999;
+}
+
+.emergency-debug .btn-debug {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.emergency-debug .btn-debug:hover {
+    background: #c82333;
+}
+/* Responsive Design */
+@media (max-width: 768px) {
+    .create-contract-page {
+        padding: 10px;
+    }
+    
+    .contract-header {
+        flex-direction: column;
+        gap: 15px;
+        padding: 20px;
+    }
+    
+    .progress-steps {
+        flex-direction: column;
+        padding: 0 20px;
+    }
+    
+    .step {
+        padding: 15px 0;
+    }
+    
+    .step:not(:last-child)::after {
+        display: none;
+    }
+    
+    .contract-form {
+        padding: 20px;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .phase-fields {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions button {
+        width: 100%;
+    }
+    
+    .signature-actions {
+        flex-direction: column;
+    }
+}

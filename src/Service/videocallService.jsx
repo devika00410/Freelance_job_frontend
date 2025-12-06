@@ -61,7 +61,7 @@ export const videoCallService = {
     }
   },
 
-  // Start video call
+  // Start video call (using PATCH endpoint)
   startCall: async (callId) => {
     try {
       const response = await api.patch(`/videocalls/${callId}/start`);
@@ -71,7 +71,7 @@ export const videoCallService = {
     }
   },
 
-  // End video call
+  // End video call (using PATCH endpoint)
   endCall: async (callId, endData) => {
     try {
       const response = await api.patch(`/videocalls/${callId}/end`, endData);
@@ -181,7 +181,7 @@ export const videoCallService = {
     } catch (error) {
       throw error.response?.data || error.message;
     }
-  }, // ← This comma should be here
+  },
 
   // Get call details with meeting token
   getCallWithToken: async (callId) => {
@@ -197,26 +197,6 @@ export const videoCallService = {
   createInstantCall: async (workspaceId) => {
     try {
       const response = await api.post(`/videocalls/${workspaceId}/instant-call`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error.message;
-    }
-  },
-
-  // Start call (mark as in progress)
-  startCall: async (callId) => {
-    try {
-      const response = await api.put(`/videocalls/calls/${callId}/start`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error.message;
-    }
-  },
-
-  // End call (mark as completed)
-  endCall: async (callId, notes = '') => {
-    try {
-      const response = await api.put(`/videocalls/calls/${callId}/end`, { notes });
       return response.data;
     } catch (error) {
       throw error.response?.data || error.message;
