@@ -1,0 +1,172 @@
+.workspace-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+  border: 1px solid #e9ecef;
+}
+
+.workspace-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  border-color: #007bff;
+}
+
+.workspace-card-header {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.workspace-icon {
+  background: #f8f9fa;
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  color: #007bff;
+  font-size: 20px;
+}
+
+.workspace-title-section {
+  flex: 1;
+}
+
+.workspace-title {
+  margin: 0 0 6px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #212529;
+}
+
+.workspace-meta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.workspace-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6c757d;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.workspace-phase {
+  font-size: 12px;
+  color: #6c757d;
+  background: #f8f9fa;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.workspace-actions {
+  color: #adb5bd;
+}
+
+.workspace-card-body {
+  margin-bottom: 16px;
+}
+
+.workspace-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.workspace-client, .workspace-budget {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-icon {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.info-label {
+  display: block;
+  font-size: 11px;
+  color: #adb5bd;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.info-value {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #212529;
+}
+
+.progress-section {
+  background: #f8f9fa;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.progress-label {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.progress-percentage {
+  font-size: 14px;
+  font-weight: 600;
+  color: #007bff;
+}
+
+.progress-bar {
+  height: 6px;
+  background: #e9ecef;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #007bff, #0056b3);
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.workspace-card-footer {
+  border-top: 1px solid #e9ecef;
+  padding-top: 12px;
+}
+
+.last-updated {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #adb5bd;
+}
+
+.clock-icon {
+  font-size: 10px;
+}

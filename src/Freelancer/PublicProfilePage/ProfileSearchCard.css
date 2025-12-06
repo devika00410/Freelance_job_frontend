@@ -1,0 +1,362 @@
+.search-card-container {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  padding: 24px;
+  position: relative;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(10, 26, 60, 0.08);
+}
+
+.search-card-container:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(10, 26, 60, 0.15);
+  border-color: #1e3a8a;
+}
+
+.search-featured-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #1e3a8a;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.search-online-status {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #10b981;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.search-status-dot {
+  width: 8px;
+  height: 8px;
+  background: white;
+  border-radius: 50%;
+  animation: search-pulse 2s infinite;
+}
+
+@keyframes search-pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.search-card-header {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.search-avatar-container {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.search-card-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 3px solid #f0f6ff;
+}
+
+.search-avatar-placeholder {
+  background: #f0f6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1e3a8a;
+  font-size: 1.5rem;
+}
+
+.search-verified-badge {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: #10b981;
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  font-size: 0.7rem;
+}
+
+.search-card-content {
+  flex: 1;
+}
+
+.search-card-name {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #0a1a3c;
+  margin: 0 0 4px 0;
+}
+
+.search-card-title {
+  font-size: 1rem;
+  color: #1e3a8a;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+}
+
+.search-rating-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.search-star-icon {
+  color: #f59e0b;
+  font-size: 1rem;
+}
+
+.search-rating-value {
+  font-weight: 700;
+  color: #0a1a3c;
+}
+
+.search-rating-count {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.search-location-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.search-location-icon {
+  color: #ef4444;
+  font-size: 0.9rem;
+}
+
+.search-rate-container {
+  margin-bottom: 16px;
+}
+
+.search-rate-amount {
+  font-size: 1.1rem;
+  color: #1e3a8a;
+  font-weight: 700;
+}
+
+.search-stats-container {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.search-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.search-stat-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0a1a3c;
+}
+
+.search-stat-label {
+  font-size: 0.8rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.search-skills-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.search-skill-tag {
+  background: #f0f6ff;
+  color: #1e3a8a;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid #dbeafe;
+}
+
+.search-skill-more {
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 6px 12px;
+}
+
+.search-actions-container {
+  display: flex;
+  gap: 12px;
+}
+
+.search-primary-btn {
+  flex: 1;
+  padding: 12px 20px;
+  background: #1e3a8a;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.search-primary-btn:hover {
+  background: #0a1a3c;
+  transform: translateY(-2px);
+}
+
+.search-secondary-btn {
+  padding: 12px 20px;
+  background: white;
+  color: #1e3a8a;
+  border: 2px solid #1e3a8a;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+}
+
+.search-secondary-btn:hover {
+  background: #f0f6ff;
+  transform: translateY(-2px);
+}
+
+/* Skeleton Loader */
+.search-skeleton-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  padding: 24px;
+}
+
+.search-skeleton-header {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.search-skeleton-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  background: #f1f5f9;
+  animation: search-skeleton-pulse 1.5s infinite;
+}
+
+.search-skeleton-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.search-skeleton-line {
+  height: 16px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  animation: search-skeleton-pulse 1.5s infinite;
+}
+
+.search-skeleton-long {
+  width: 80%;
+}
+
+.search-skeleton-medium {
+  width: 60%;
+}
+
+.search-skeleton-short {
+  width: 40%;
+}
+
+.search-skeleton-actions {
+  display: flex;
+  gap: 12px;
+}
+
+@keyframes search-skeleton-pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .search-card-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+  
+  .search-avatar-container {
+    align-self: center;
+  }
+  
+  .search-stats-container {
+    justify-content: center;
+  }
+  
+  .search-actions-container {
+    flex-direction: column;
+  }
+  
+  .search-skeleton-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+  
+  .search-skeleton-avatar {
+    align-self: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-card-container {
+    padding: 20px;
+  }
+  
+  .search-stats-container {
+    gap: 12px;
+  }
+  
+  .search-stat-item {
+    flex: 1;
+  }
+}

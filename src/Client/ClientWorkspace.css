@@ -1502,6 +1502,15 @@ body {
   overflow: hidden;
 }
 
+
+.online-dot-icon.online {
+  background: #4CAF50;
+}
+
+.online-dot-icon.offline {
+  background: #ff4444;
+}
+
 /* Loading states */
 .loading-overlay {
   position: fixed;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { videoCallService } from './videocallService';
-import VideoCallComponent from './videocallComponent';
+import { videoCallService } from '../Service/videocallService';
+import VideoCallComponent from './VideocallComponent';
 
 const CallListComponent = ({ workspaceId }) => {
   const [calls, setCalls] = useState([]);

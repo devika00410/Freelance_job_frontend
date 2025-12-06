@@ -12,8 +12,6 @@ const Login=()=>{
     const { loginUser, loading } = useAuth('')
     const navigate = useNavigate()
 
-    
-
     const handleChange = (e) => {
         setFormData({
             ...formData,
@@ -24,14 +22,23 @@ const Login=()=>{
     const handleSubmit = async (e) => {
         e.preventDefault()
         setMessage('')
+        
+        // Clear any existing role data before login
+        const roleKeys = ['client', 'freelancer', 'admin'];
+        roleKeys.forEach(role => {
+            localStorage.removeItem(`${role}_token`);
+            localStorage.removeItem(`${role}_user`);
+        });
+        
         const result = await loginUser(formData)
 
         if (result.success) {
-            setMessage("Login successful! Redirecting...")
+            setMessage(`✅ Login successful! Welcome ${result.user.profile.name}`)
             localStorage.removeItem('selectedRole')
+            
             setTimeout(() => navigate('/dashboard'), 2000)
         } else {
-            setMessage(result.error)
+            setMessage(`❌ ${result.error}`)
         }
     }
 
@@ -65,7 +72,9 @@ const Login=()=>{
                     </button>
                 </form>
                 {message && (
-                    <div className='status-message'>{message}</div>
+                    <div className={`status-message ${message.includes('✅') ? 'success' : 'error'}`}>
+                        {message}
+                    </div>
                 )}
                 <div className="auth-redirect">
                     <p>Don't have an account? <Link to='/register' className="redirect-link">Sign up</Link></p>

@@ -1,6 +1,6 @@
-// DashboardPage.jsx - Updated Quick Actions section
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import axios from 'axios';
 import {
   // Layout & Navigation
   FaHome, FaBriefcase, FaFileContract, FaCreditCard, FaChartBar,
@@ -12,10 +12,14 @@ import {
   // Action Icons
   FaPlus, FaEnvelope, FaCalendarAlt, FaDownload
 } from 'react-icons/fa';
+import { useAuth } from '../Context/AuthContext';
+import ClientWorkspaceCard from './ClientWorkspaceCard';
 import './DashboardPage.css'
+
 
 const DashboardPage = () => {
   const navigate = useNavigate();
+  const { user: authUser, token } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [stats, setStats] = useState({
     totalProjects: 24,
@@ -27,10 +31,16 @@ const DashboardPage = () => {
   });
   const [recentActivity, setRecentActivity] = useState([]);
   const [user, setUser] = useState({
-    name: 'John Doe',
-    email: 'john.doe@company.com',
-    role: 'Client'
+    name: '',
+    email: '',
+    role: ''
   });
+  const [proposalCount, setProposalCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [workspaces, setWorkspaces] = useState([]);
+
+  // Add state for proposals loading
+  const [proposalsLoading, setProposalsLoading] = useState(true);
 
   useEffect(() => {
     setRecentActivity([
@@ -41,32 +51,95 @@ const DashboardPage = () => {
     ]);
   }, []);
 
+  // Fetch user data
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        // Use authUser from context if available
+        if (authUser && authUser.name) {
+          setUser({
+            name: authUser.name,
+            email: authUser.email || '',
+            role: authUser.role || 'Client'
+          });
+          console.log('✅ Using auth context user:', authUser.name);
+        } else {
+          // Fallback: Try to fetch from API
+          const token = localStorage.getItem('token');
+          if (token) {
+            const response = await axios.get('http://localhost:3000/api/auth/me', {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.data.success) {
+              setUser({
+                name: response.data.user.name,
+                email: response.data.user.email,
+                role: response.data.user.role
+              });
+              console.log('✅ Fetched user from API:', response.data.user.name);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error fetching user data:', error);
+        // Set default
+        setUser({
+          name: 'Client',
+          email: '',
+          role: 'Client'
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [authUser]);
+
+  // Fetch proposal count
+  useEffect(() => {
+    const fetchProposalCount = async () => {
+      setProposalsLoading(true);
+      try {
+        // Temporary mock data
+        setProposalCount(5);
+      } catch (error) {
+        console.error('Error fetching proposals:', error);
+      } finally {
+        setProposalsLoading(false);
+      }
+    };
+    if (token) {
+      fetchProposalCount();
+    }
+  }, [token]);
+
   const quickActions = [
-    { 
-      icon: FaPlus, 
-      label: 'Create New Project', 
-      description: 'Post a new job and hire freelancers', 
+    {
+      icon: FaPlus,
+      label: 'Create New Project',
+      description: 'Post a new job and hire freelancers',
       action: () => navigate('/projects/new'),
       path: '/projects/new'
     },
-    { 
-      icon: FaSearch, 
-      label: 'Browse Freelancers', 
-      description: 'Find skilled professionals', 
-      action: () => navigate('/freelancers'),
-      path: '/freelancers'
+    {
+      icon: FaSearch,
+      label: 'Browse Freelancers',
+      description: 'Find skilled professionals',
+      action: () => navigate('/find-work'), // Changed from '/freelancers' to existing route
+      path: '/find-work' // Changed to existing route
     },
-    { 
-      icon: FaRobot, 
-      label: 'AI Project Assistant', 
-      description: 'Get help planning your project', 
-      action: () => navigate('/ai-assistant'),
-      path: '/ai-assistant'
+    {
+      icon: FaRobot,
+      label: 'View Proposals',
+      description: proposalsLoading ? 'Loading proposals...' : `You have ${proposalCount} new proposals`,
+      action: () => navigate('/proposals'),
+      path: '/proposals'
     },
-    { 
-      icon: FaFileContract, 
-      label: 'Review Contracts', 
-      description: 'Manage your active contracts', 
+    {
+      icon: FaFileContract,
+      label: 'Review Contracts',
+      description: 'Manage your active contracts',
       action: () => navigate('/contracts'),
       path: '/contracts'
     }
@@ -80,10 +153,9 @@ const DashboardPage = () => {
     <div className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
       <div className="sidebar-header">
         <h2>WorkHub</h2>
-        <button 
+        <button
           className="sidebar-toggle"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-        >
+          onClick={() => setSidebarOpen(!sidebarOpen)}>
           {sidebarOpen ? <FaTimes /> : <FaBars />}
         </button>
       </div>
@@ -99,7 +171,9 @@ const DashboardPage = () => {
             <FaBriefcase />
             <span>Projects</span>
           </Link>
-          <Link to="/workspace" className="nav-item">
+          {/* FIXED: Workspace link - Since we can't navigate to generic workspace without ID, 
+              link to contracts page where they can access specific workspaces */}
+          <Link to="/client/workspace" className="nav-item">
             <FaProjectDiagram />
             <span>Workspace</span>
           </Link>
@@ -165,7 +239,7 @@ const DashboardPage = () => {
             <FaCog />
             <span>Settings</span>
           </Link>
-          <button className="nav-item logout" onClick={() => {/* handle logout */}}>
+          <button className="nav-item logout" onClick={() => {/* handle logout */ }}>
             <FaSignOutAlt />
             <span>Logout</span>
           </button>
@@ -194,7 +268,7 @@ const DashboardPage = () => {
     const radius = 50;
     const circumference = 2 * Math.PI * radius;
     const strokeDasharray = `${(percentage / 100) * circumference} ${circumference}`;
-    
+
     return (
       <div className="chart-card">
         <div className="chart-header">
@@ -230,7 +304,7 @@ const DashboardPage = () => {
   return (
     <div className="dashboard-container">
       <Sidebar />
-      
+
       <main className="dashboard-main">
         <header className="dashboard-header">
           <div className="header-left">
@@ -258,44 +332,42 @@ const DashboardPage = () => {
           </div>
         </header>
 
-       
-<div className="dashboard-content">
-  {/* Charts and Quick Actions in Single Column */}
-  <div className="charts-grid">
-    {/* Charts Row - 4 charts in one row */}
-    <div className="charts-row">
-      <CircularChart percentage={78} label="Acceptance Rate" color="circle-success" />
-      <CircularChart percentage={85} label="Project Completion" color="circle-projects" />
-      <CircularChart percentage={65} label="Budget Utilization" color="circle-budget" />
-      <CircularChart percentage={25} label="Pending Tasks" color="circle-pending" />
-    </div>
-    
-    {/* Quick Actions Section - Right below the charts */}
-    <div className="quick-actions-section">
-  <div className="section-header">
-    <h3>Quick Actions</h3>
-  </div>
-  <div className="action-buttons">
-    {quickActions.map((action, index) => (
-      <Link
-        key={index}
-        to={action.path}
-        className="action-button"
-        onClick={action.action}>
-        <div className="action-icon">
-          <action.icon />
-        </div>
-        <div className="action-text">
-          <h4>{action.label}</h4>
-          <p>{action.description}</p>
-        </div>
-      </Link>
-    ))}
-  </div>
-</div>
-</div>
+        <div className="dashboard-content">
+          {/* Charts and Quick Actions in Single Column */}
+          <div className="charts-grid">
+            {/* Charts Row - 4 charts in one row */}
+            <div className="charts-row">
+              <CircularChart percentage={78} label="Acceptance Rate" color="circle-success" />
+              <CircularChart percentage={85} label="Project Completion" color="circle-projects" />
+              <CircularChart percentage={65} label="Budget Utilization" color="circle-budget" />
+              <CircularChart percentage={25} label="Pending Tasks" color="circle-pending" />
+            </div>
 
-  
+            {/* Quick Actions Section - Right below the charts */}
+            <div className="quick-actions-container">
+              <div className="quick-actions-header">
+                <h3>Quick Actions</h3>
+              </div>
+              <div className="quick-actions-grid">
+                {quickActions.map((action, index) => (
+                  <Link
+                    key={index}
+                    to={action.path}
+                    className="quick-action-item"
+                    onClick={action.action}>
+                    <div className="quick-action-icon">
+                      <action.icon />
+                    </div>
+                    <div className="quick-action-content">
+                      <h4>{action.label}</h4>
+                      <p>{action.description}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {/* Stats Section */}
           <section className="stats-section">
             <div className="section-header">
@@ -320,7 +392,7 @@ const DashboardPage = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="stat-card">
                 <div className="stat-header">
                   <div className="stat-icon">
@@ -336,7 +408,7 @@ const DashboardPage = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="stat-card">
                 <div className="stat-header">
                   <div className="stat-icon">
@@ -352,7 +424,7 @@ const DashboardPage = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="stat-card">
                 <div className="stat-header">
                   <div className="stat-icon">
@@ -360,7 +432,7 @@ const DashboardPage = () => {
                   </div>
                 </div>
                 <div className="stat-content">
-                  <h3>{stats.pendingProposals}</h3>
+                  <h3>{proposalsLoading ? '...' : proposalCount}</h3>
                   <p>Pending Proposals</p>
                   <div className="stat-trend negative">
                     <FaArrowDown />
@@ -368,7 +440,7 @@ const DashboardPage = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="stat-card">
                 <div className="stat-header">
                   <div className="stat-icon">
@@ -384,7 +456,7 @@ const DashboardPage = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="stat-card">
                 <div className="stat-header">
                   <div className="stat-icon">
@@ -428,12 +500,40 @@ const DashboardPage = () => {
                 <h3>Need help with your project?</h3>
                 <p>Use our AI Assistant to generate project requirements, create milestones, and get expert suggestions tailored to your needs.</p>
               </div>
-              <button 
+              <button
                 className="ai-button"
                 onClick={() => navigate('/ai-assistant')}>
                 Try AI Assistant
               </button>
             </div>
+          </section>
+          <section className="workspaces-section">
+            <div className="section-header">
+              <h2>Active Workspaces</h2>
+              {/* FIXED: Changed from non-existent /workspaces to contracts page */}
+              <Link to="/contracts" className="view-all-btn">
+                View All Contracts
+              </Link>
+            </div>
+
+            {workspaces.length > 0 ? (
+              <div className="workspaces-grid">
+                {workspaces.slice(0, 3).map(workspace => (
+                 <ClientWorkspaceCard key={workspace._id} workspace={workspace} />
+                ))}
+              </div>
+            ) : (
+              <div className="no-workspaces">
+                <FaProjectDiagram />
+                <h3>No active workspaces</h3>
+                <p>Start a new project or sign a contract to begin collaborating.</p>
+                <button
+                  className="btn-primary"
+                  onClick={() => navigate('/projects/new')}>
+                  Create New Project
+                </button>
+              </div>
+            )}
           </section>
         </div>
       </main>
