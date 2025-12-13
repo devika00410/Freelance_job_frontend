@@ -4,6 +4,7 @@ import FreelancerGrid from '../Freelancer/FreelancerGrid';
 import ServiceFilters from '../Services/ServiceFilters';
 import { useFreelancers } from '../Hooks/useFreelancers';
 import { getServiceIcon } from '../utils/icons';
+import { SERVICE_NAMES } from '../utils/constants';
 import LoadingSpinner from '../Components/Common/LoadingSpinner';
 import ErrorMessage from '../Components/Common/ErrorMessage';
 
@@ -11,7 +12,7 @@ const ServiceDetailPage = () => {
     const { serviceId } = useParams();
     const [searchParams] = useSearchParams();
     const [showFilters, setShowFilters] = useState(false);
-    
+
     const {
         freelancers,
         service,
@@ -68,7 +69,7 @@ const ServiceDetailPage = () => {
                             </p>
                         </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8">
                         <div className="bg-white bg-opacity-20 p-4 rounded-lg">
                             <div className="text-2xl font-bold">
@@ -155,7 +156,7 @@ const ServiceDetailPage = () => {
                                     >
                                         Previous
                                     </button>
-                                    
+
                                     {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
                                         let pageNum;
                                         if (pagination.pages <= 5) {
@@ -167,22 +168,21 @@ const ServiceDetailPage = () => {
                                         } else {
                                             pageNum = filters.page - 2 + i;
                                         }
-                                        
+
                                         return (
                                             <button
                                                 key={pageNum}
                                                 onClick={() => changePage(pageNum)}
-                                                className={`px-4 py-2 rounded-lg ${
-                                                    filters.page === pageNum
+                                                className={`px-4 py-2 rounded-lg ${filters.page === pageNum
                                                         ? 'bg-blue-600 text-white'
                                                         : 'border border-gray-300 hover:bg-gray-50'
-                                                }`}
+                                                    }`}
                                             >
                                                 {pageNum}
                                             </button>
                                         );
                                     })}
-                                    
+
                                     <button
                                         onClick={() => changePage(filters.page + 1)}
                                         disabled={filters.page === pagination.pages}

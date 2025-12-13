@@ -1,0 +1,218 @@
+:root {
+    --navy: #0a1a44;
+    --lightblue: #4DA3FF;
+    --white: #ffffff;
+    --muted: #6b7590;
+    --radius: 14px;
+    --shadow: 0 6px 18px rgba(10, 26, 68, 0.08);
+}
+
+.community-wrapper {
+    width: 100%;
+    background: #f7fbff;
+    padding-bottom: 50px;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+/* Hero */
+.community-hero {
+    background: linear-gradient(180deg, rgba(10, 26, 68, 0.9), rgba(10, 26, 68, 0.7)), url('https://images.pexels.com/photos/3184306/pexels-photo-3184306.jpeg');
+    background-size: cover;
+    background-position: center;
+    color: var(--white);
+    padding: 80px 20px;
+    text-align: center;
+}
+
+.community-hero h1 {
+    font-size: 36px;
+    margin-bottom: 8px;
+}
+
+.community-hero p {
+    max-width: 900px;
+    margin: 0 auto;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 16px;
+}
+
+/* Section */
+.community-section {
+    padding: 50px 28px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.section-title {
+    font-size: 22px;
+    color: var(--navy);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+/* cards grid */
+.community-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.community-card {
+    background: var(--white);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: all .25s;
+    display: flex;
+    flex-direction: column;
+}
+
+.community-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 26px rgba(10, 26, 68, 0.12);
+}
+
+.community-card img {
+    width: 100%;
+    height: 190px;
+    object-fit: cover;
+}
+
+.community-card h3 {
+    padding: 14px 16px 4px;
+    color: var(--navy);
+    font-size: 18px;
+}
+
+.community-card p {
+    padding: 0 16px 12px;
+    color: var(--muted);
+    flex: 1;
+}
+
+.read-more-btn {
+    margin: 12px 16px 18px;
+    padding: 10px 14px;
+    background: var(--navy);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.read-more-btn:hover {
+    background: var(--lightblue);
+    color: var(--navy);
+}
+
+/* Tips */
+.tips-section {
+    background: linear-gradient(90deg, rgba(77, 163, 255, 0.08), rgba(10, 26, 68, 0.02));
+    border-radius: 12px;
+    padding: 30px;
+    color: var(--navy);
+}
+
+.tips-list {
+    padding-left: 18px;
+    color: var(--navy);
+    line-height: 1.8;
+    font-size: 15px;
+}
+
+/* Stories */
+.story-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+}
+
+.story-card {
+    background: var(--white);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: all .25s;
+    text-align: center;
+}
+
+.story-card img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+}
+
+.story-card h3 {
+    margin: 12px 0 4px;
+    color: var(--navy);
+}
+
+.story-role {
+    color: var(--lightblue);
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.story-text {
+    padding: 0 12px 18px;
+    color: var(--muted);
+}
+
+/* Announcement */
+.announcement-box {
+    background: var(--navy);
+    color: var(--white);
+    padding: 28px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+/* Discussion */
+.discussion {
+    background: #f5fbff;
+    border-left: 6px solid var(--lightblue);
+    padding: 20px;
+    border-radius: 10px;
+}
+
+/* CTA */
+.community-cta {
+    text-align: center;
+    padding: 36px;
+    background: linear-gradient(90deg, rgba(77, 163, 255, 0.08), rgba(10, 26, 68, 0.02));
+    border-radius: 12px;
+    margin: 34px auto;
+    max-width: 980px;
+}
+
+.community-cta h2 {
+    color: var(--navy);
+}
+
+.community-cta p {
+    color: var(--muted);
+}
+
+.community-cta button {
+    margin-top: 14px;
+    padding: 12px 20px;
+    background: var(--navy);
+    color: var(--white);
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width:900px) {
+    .community-hero h1 {
+        font-size: 28px;
+    }
+
+    .community-section {
+        padding: 36px 18px;
+    }
+}

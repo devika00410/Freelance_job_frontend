@@ -40,6 +40,18 @@ import ServiceDetailPage from './Pages/ServiceDetailPage'
 import ServicePage from './Pages/ServicePage'
 import FreelancerDetailPage from './Freelancer/FreelancerDetailPage'
 import SearchResultsPage from './Pages/SearchResultsPage'
+import ClientAnalyticsPage from './Client/ClientAnalyticsPage'
+import FreelancerWorkspace from './Freelancer/FreelancerWorkspace'
+
+import HowItWorksPage from "./Pages/HowItWorks";
+import CommunityPage from "./Pages/CommunityPage";
+import SuccessStoriesPage from "./Community/SuccessStoriesPage";
+import JoinCommunityForm from "./Community/JoinCommunityForm";
+import BlogListPage from "./Community/BlogListPage";
+import BlogPage from "./Community/BlogPage";
+import PricingPage from "./Pages/PricingPage";
+// import ContactPage from "./Pages/ContactPage";
+
 
 // Protected route component
 const ProtectedRoute = ({ children, requiredRole = null }) => {
@@ -110,6 +122,18 @@ function App() {
             <Route path="/services/:serviceId/freelancers" element={<ServiceDetailPage />} />
             <Route path="/freelancers/:id" element={<FreelancerDetailPage />} />
             <Route path="/search" element={<SearchResultsPage />} />
+            {/* PUBLIC WEBSITE PAGES */}
+            <Route path="/how-it-works" element={<HowItWorksPage />} />
+            <Route path="/pricing" element={<PricingPage />} />
+            {/* <Route path="/contact" element={<ContactPage />} /> */}
+
+            {/* COMMUNITY SYSTEM */}
+            <Route path="/community" element={<CommunityPage />} />
+            <Route path="/community/success-stories" element={<SuccessStoriesPage />} />
+            <Route path="/community/join" element={<JoinCommunityForm />} />
+            <Route path="/community/blogs" element={<BlogListPage />} />
+            <Route path="/community/blogs/:id" element={<BlogPage />} />
+
 
             {/* Public routes */}
             <Route path='/role-selection' element={
@@ -149,9 +173,17 @@ function App() {
             <Route path="/proposals" element={<ProposalsPage />} />
             <Route path="/contracts" element={<ContractsPage />} />
             <Route path="/payments" element={<PaymentPage />} />
+            <Route path="/analytics" element={<ClientAnalyticsPage />} />
             <Route path="/client/workspace" element={
               <ProtectedRoute requiredRole="client">
                 <ClientWorkspaceList />
+              </ProtectedRoute>
+            } />
+
+            {/* NEW: CLIENT ROLE-BASED WORKSPACE */}
+            <Route path="/client/workspace/:workspaceId" element={
+              <ProtectedRoute requiredRole="client">
+                <ClientWorkspace />
               </ProtectedRoute>
             } />
 
@@ -174,19 +206,26 @@ function App() {
                 <FreelancerWorkspaceList />
               </ProtectedRoute>
             } />
+
+            {/* NEW: FREELANCER ROLE-BASED WORKSPACE */}
+            <Route path="/freelancer/workspace/:workspaceId" element={
+              <ProtectedRoute requiredRole="freelancer">
+                <FreelancerWorkspace />
+              </ProtectedRoute>
+            } />
+
             <Route path="/freelancer/profile/:id" element={
               <ProtectedRoute>
                 <PublicProfile />
               </ProtectedRoute>
             } />
 
-            {/* UNIFIED WORKSPACE ROUTE - SINGLE ENTRY POINT */}
+            {/* UNIFIED WORKSPACE ROUTE - SINGLE ENTRY POINT (Keep for backward compatibility) */}
             <Route path="/workspace/:workspaceId" element={
               <ProtectedRoute>
                 <WorkspaceRouter />
               </ProtectedRoute>
             } />
-
 
             {/* ADMIN routes */}
             <Route path='/admin/register' element={

@@ -1,6 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import axios from "axios";
-
 const AuthContext = createContext();
 
 export const useAuth = () => {
@@ -71,6 +70,22 @@ export const AuthProvider = ({ children }) => {
         });
         
         console.log('✅ All user data cleared from localStorage');
+    };
+ const logout = () => {
+        console.log('🚪 Logging out user:', user);
+        
+        // Clear all user data
+        clearAllUserData();
+        
+        // Reset all states
+        setUser(null);
+        setToken(null);
+        setLoading(false);
+        
+        console.log('✅ User logged out successfully');
+        
+        // Return success flag - let the component handle navigation
+        return true;
     };
 
     useEffect(() => {
@@ -331,15 +346,28 @@ const registerUser = async (userData) => {
         }
     }
 
-    // AuthContext.jsx - Fix in loginUser function
-const loginUser = async (credentials) => {
+    const loginUser = async (credentials) => {
     setLoading(true);
     try {
         // Clear any existing sessions before new login
         console.log('🧹 Clearing old sessions before login');
         clearAllUserData();
         
-        const response = await axios.post(`${API_BASE}/auth/login`, credentials);
+        // ⭐️⭐️⭐️ CRITICAL FIX: DETECT ADMIN LOGIN BY EMAIL ⭐️⭐️⭐️
+        const isAdminEmail = credentials.email === 'admin@gmail.com' || 
+                            credentials.email.includes('@admin.');
+        
+        // Choose the correct endpoint
+        let endpoint = '/auth/login';
+        if (isAdminEmail) {
+            console.log('🔐 Admin email detected - switching to admin login endpoint');
+            endpoint = '/auth/admin/login';
+        }
+        
+        console.log('🔐 Calling endpoint:', endpoint);
+        console.log('🔐 Email:', credentials.email);
+        
+        const response = await axios.post(`${API_BASE}${endpoint}`, credentials);
         
         if (response.data.success) {
             const { user, token } = response.data;
@@ -404,80 +432,66 @@ const loginUser = async (credentials) => {
         setLoading(false);
     }
 };
-    // Admin login
     const loginAdmin = async (loginData) => {
-        setLoading(true)
-        try {
-            // Clear any existing sessions
-            console.log('🧹 Clearing old sessions before admin login');
-            clearAllUserData();
-            
-            const response = await axios.post(`${API_BASE}/auth/admin/login`, loginData)
-            
-            if (response.data.success) {
-                const { user, token } = response.data;
-
-                // DEBUG LOGGING
-                console.log('🔐 Admin login successful - Storing user data:', {
-                    userId: user._id,
-                    userName: user.name || user.username,
-                    userRole: user.role,
-                    userEmail: user.email
-                });
-
-                // Save admin-specific items
-                saveUserData(user, token);
-                
-                // ⭐️ CRITICAL: Also save individual user fields
-                localStorage.setItem('userId', user._id);
-                localStorage.setItem('userName', user.name || user.username);
-                localStorage.setItem('userRole', user.role);
-                localStorage.setItem('userEmail', user.email);
-
-                // Update state
-                setUser(user);
-                setToken(token);
-
-                console.log('✅ Admin login successful');
-                return { success: true, user };
-            } else {
-                return {
-                    success: false,
-                    error: response.data.error || "Admin login failed"
-                };
-            }
-        } catch (error) {
-            console.error('Admin login error:', error);
-            return {
-                success: false,
-                error: error.response?.data?.error || error.response?.data?.message || "Admin login failed"
-            }
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const logout = () => {
-        if (user) {
-            console.log('🚪 Logging out user:', {
-                role: user?.role,
-                name: user?.name || user?.username,
-                id: user?._id
-            });
-        }
-        
-        // Clear all user data from localStorage - COMPREHENSIVE
+    setLoading(true)
+    try {
+        // Clear any existing sessions
+        console.log('🧹 Clearing old sessions before admin login');
         clearAllUserData();
         
-        // Reset state
-        setUser(null);
-        setToken(null);
+        const response = await axios.post(`${API_BASE}/auth/admin/login`, loginData)
         
-        console.log('✅ User logged out successfully');
-        
-        // Optional: Redirect to login page
-        // window.location.href = '/login';
-    };
+        if (response.data.success) {
+            const { user, token } = response.data;
+
+            // DEBUG LOGGING
+            console.log('🔐 Admin login response:', response.data);
+            
+            // ⭐️ FIX: Check different possible ID fields
+            const userId = user._id || user.id || user.userId || response.data.userId;
+            
+            console.log('🔐 Admin login successful - Storing user data:', {
+                userId: userId,
+                userName: user.name || user.username,
+                userRole: user.role,
+                userEmail: user.email,
+                rawUser: user // Log full user object for debugging
+            });
+
+            // Save admin-specific items
+            saveUserData(user, token);
+            
+            // ⭐️ CRITICAL: Also save individual user fields
+            localStorage.setItem('userId', userId || '');
+            localStorage.setItem('userName', user.name || user.username || '');
+            localStorage.setItem('userRole', user.role || '');
+            localStorage.setItem('userEmail', user.email || '');
+            
+            // ⭐️ ADD: Also save admin-specific token separately
+            localStorage.setItem('adminToken', token);
+
+            // Update state
+            setUser(user);
+            setToken(token);
+
+            console.log('✅ Admin login successful - Token saved');
+            return { success: true, user };
+        } else {
+            return {
+                success: false,
+                error: response.data.error || "Admin login failed"
+            };
+        }
+    } catch (error) {
+        console.error('Admin login error:', error);
+        return {
+            success: false,
+            error: error.response?.data?.error || error.response?.data?.message || "Admin login failed"
+        }
+    } finally {
+        setLoading(false)
+    }
+};
 
     // Function to manually check localStorage (for debugging)
     const checkLocalStorage = () => {

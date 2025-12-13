@@ -7,16 +7,23 @@ const api = axios.create({
     }
 });
 
-// Adding request interceptor to include auth token
+
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
+        console.log('API Request Interceptor - Token:', token ? 'Yes' : 'No');
+        console.log('Endpoint:', config.url);
+        
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
+            console.log('Token added to headers');
+        } else {
+            console.log('No token found in localStorage');
         }
         return config;
     },
     (error) => {
+        console.error('Request interceptor error:', error);
         return Promise.reject(error);
     }
 );
@@ -37,34 +44,130 @@ api.interceptors.response.use(
     }
 );
 
-// Auth API functions
+// ============= AUTH API =============
 export const authAPI = {
-    register: (userData) => api.post('/auth/register', userData),
-    login: (credentials) => api.post('/auth/login', credentials),
-    adminRegister: (adminData) => api.post('/admin/register', adminData),
-    adminLogin: (adminCredentials) => api.post('/admin/login', adminCredentials)
+    register: (userData) => api.post('/auth/register', userData).then(res => res.data),
+    login: (credentials) => api.post('/auth/login', credentials).then(res => res.data),
+    adminRegister: (adminData) => api.post('/admin/register', adminData).then(res => res.data),
+    adminLogin: (adminCredentials) => api.post('/admin/login', adminCredentials).then(res => res.data)
 };
 
-// Client API functions
+// ============= CLIENT API =============
 export const clientAPI = {
-    getDashboard: () => api.get('/client/dashboard'),
-    getJobs: () => api.get('/client/jobs'),
-    createJob: (jobData) => api.post('/client/jobs', jobData)
+    getDashboard: () => api.get('/client/dashboard').then(res => res.data),
+    getJobs: () => api.get('/client/jobs').then(res => res.data),
+    createJob: (jobData) => api.post('/client/jobs', jobData).then(res => res.data)
 };
 
-// Freelancer API functions
+// ============= FREELANCER API =============
 export const freelancerAPI = {
-    getDashboard: () => api.get('/freelancer/dashboard'),
-    getJobs: () => api.get('/freelancer/jobs')
+    getDashboard: () => api.get('/freelancer/dashboard').then(res => res.data),
+    getJobs: () => api.get('/freelancer/jobs').then(res => res.data)
 };
 
-// Admin API functions
+// ============= ADMIN API =============
 export const adminAPI = {
-    getDashboard: () => api.get('/admin/dashboard'),
-    getUsers: () => api.get('/admin/users')
+    getDashboard: () => api.get('/admin/dashboard').then(res => res.data),
+    getUsers: () => api.get('/admin/users').then(res => res.data)
 };
 
-// ============= WORKSPACE SERVICES =============
+// ============= EARNINGS API =============
+export const earningsAPI = {
+    // Get freelancer earnings overview (
+    getFreelancerEarnings: (workspaceId) => 
+        api.get(`/earnings/freelancer${workspaceId ? `?workspaceId=${workspaceId}` : ''}`).then(res => res.data),
+    
+    // Get earnings overview
+    getOverview: () => 
+        api.get('/earnings/overview').then(res => res.data),
+    
+    // Get transactions with filters
+    getTransactions: (params = {}) => 
+        api.get('/earnings/transactions', { params }).then(res => res.data),
+    
+    // Get monthly earnings breakdown
+    getMonthlyEarnings: (months = 6) => 
+        api.get(`/earnings/monthly?months=${months}`).then(res => res.data),
+    
+    // Get earnings by project
+    getProjectEarnings: () => 
+        api.get('/earnings/by-project').then(res => res.data),
+    
+    // Get pending payments
+    getPendingPayments: () => 
+        api.get('/earnings/pending').then(res => res.data),
+    
+    // Get detailed stats
+    getStats: () => 
+        api.get('/earnings/stats').then(res => res.data),
+    
+    // Request withdrawal
+    requestWithdrawal: (withdrawalData) => 
+        api.post('/earnings/withdraw', withdrawalData).then(res => res.data),
+    
+    // Get withdrawal history
+    getWithdrawalHistory: () => 
+        api.get('/earnings/withdrawals').then(res => res.data)
+};
+
+// ============= WORKSPACE API (ALIASES FOR COMPONENTS) =============
+// These are the exports your components expect
+export const workspaceAPI = {
+    // Generic methods
+    get: (endpoint) => api.get(endpoint).then(res => res.data),
+    post: (endpoint, data) => api.post(endpoint, data).then(res => res.data),
+    put: (endpoint, data) => api.put(endpoint, data).then(res => res.data),
+    delete: (endpoint) => api.delete(endpoint).then(res => res.data),
+    
+    // Specific workspace endpoints
+    getFreelancerWorkspace: (workspaceId) => 
+        api.get(`/workspaces/freelancer/${workspaceId}`).then(res => res.data),
+    
+    getRecentActivity: (workspaceId) => 
+        api.get(`/workspaces/${workspaceId}/activity`).then(res => res.data),
+      getFreelancerWorkspaceById: (workspaceId) => 
+        api.get(`/workspaces/freelancer/${workspaceId}`).then(res => res.data),
+    
+    // Or add client version too:
+    getClientWorkspaceById: (workspaceId) => 
+        api.get(`/workspaces/client/${workspaceId}`).then(res => res.data)
+};
+
+export const milestoneAPI = {
+    // Get milestones for a workspace
+    getByWorkspace: (workspaceId) => 
+        api.get(`/milestones/workspaces/${workspaceId}`).then(res => res.data),
+    
+    // Get available milestones for submission
+    getAvailableMilestones: (workspaceId) => 
+        api.get(`/milestones/available/${workspaceId}`).then(res => res.data)
+};
+
+export const messageAPI = {
+    // Get messages for a workspace
+    getByWorkspace: (workspaceId, params = {}) => 
+        api.get(`/messages/workspaces/${workspaceId}`, { params }).then(res => res.data)
+};
+
+export const fileAPI = {
+    // Get files for a workspace
+    getByWorkspace: (workspaceId, params = {}) => 
+        api.get(`/files/workspaces/${workspaceId}`, { params }).then(res => res.data)
+};
+
+// ============= SUBMISSIONS API =============
+export const submissionsAPI = {
+    submitMilestone: (data) => 
+        api.post('/submissions/milestone', data).then(res => res.data),
+    
+    getByWorkspace: (workspaceId) => 
+        api.get(`/submissions/workspaces/${workspaceId}`).then(res => res.data),
+    
+    getAvailableMilestones: (workspaceId) => 
+        api.get(`/submissions/available-milestones/${workspaceId}`).then(res => res.data)
+};
+
+// ============= EXISTING SERVICES (KEEP THESE FOR BACKWARD COMPATIBILITY) =============
 
 // Workspace Service
 export const workspaceService = {
@@ -93,7 +196,7 @@ export const workspaceService = {
 export const messageService = {
     // Get messages for a workspace
     getByWorkspace: (workspaceId) => 
-        api.get(`/messages/workspace/${workspaceId}`).then(res => res.data),
+        api.get(`/messages/workspaces/${workspaceId}`).then(res => res.data),
     
     // Send a new message
     sendMessage: (messageData) => 
@@ -112,7 +215,7 @@ export const messageService = {
 export const fileService = {
     // Get files for a workspace
     getByWorkspace: (workspaceId) => 
-        api.get(`/files/workspace/${workspaceId}`).then(res => res.data),
+        api.get(`/files/workspaces/${workspaceId}`).then(res => res.data),
     
     // Upload a file
     uploadFile: (formData) => {
@@ -145,7 +248,7 @@ export const fileService = {
 export const milestoneService = {
     // Get milestones for a workspace
     getByWorkspace: (workspaceId) => 
-        api.get(`/milestones/workspace/${workspaceId}`).then(res => res.data),
+        api.get(`/milestones/workspaces/${workspaceId}`).then(res => res.data),
     
     // Get milestone by ID
     getById: (milestoneId) => 
@@ -180,7 +283,7 @@ export const milestoneService = {
 export const videoCallService = {
     // Get calls for a workspace
     getByWorkspace: (workspaceId) => 
-        api.get(`/video-calls/workspace/${workspaceId}`).then(res => res.data),
+        api.get(`/video-calls/workspaces/${workspaceId}`).then(res => res.data),
     
     // Get call by ID
     getById: (callId) => 
@@ -215,7 +318,7 @@ export const videoCallService = {
 export const paymentService = {
     // Get payments for a workspace
     getByWorkspace: (workspaceId) => 
-        api.get(`/payments/workspace/${workspaceId}`).then(res => res.data),
+        api.get(`/payments/workspaces/${workspaceId}`).then(res => res.data),
     
     // Get payment by ID
     getById: (paymentId) => 
@@ -263,7 +366,7 @@ export const reportService = {
     
     // Get reports for a workspace
     getByWorkspace: (workspaceId) => 
-        api.get(`/reports/workspace/${workspaceId}`).then(res => res.data),
+        api.get(`/reports/workspaces/${workspaceId}`).then(res => res.data),
     
     // Get reports submitted by user
     getUserReports: () => 
@@ -282,11 +385,11 @@ export const reportService = {
         api.get('/reports/all').then(res => res.data)
 };
 
-// Contract Service (if you have separate contracts)
+// Contract Service
 export const contractService = {
     // Get contract for a workspace
     getByWorkspace: (workspaceId) => 
-        api.get(`/contracts/workspace/${workspaceId}`).then(res => res.data),
+        api.get(`/contracts/workspaces/${workspaceId}`).then(res => res.data),
     
     // Create contract
     createContract: (contractData) => 
@@ -332,7 +435,7 @@ export const notificationService = {
         api.put('/notifications/settings', settings).then(res => res.data)
 };
 
-// User Service (for profile, etc.)
+// User Service
 export const userService = {
     // Get current user profile
     getProfile: () => 
@@ -411,7 +514,7 @@ export const reviewService = {
     
     // Get reviews for workspace
     getWorkspaceReviews: (workspaceId) => 
-        api.get(`/reviews/workspace/${workspaceId}`).then(res => res.data),
+        api.get(`/reviews/workspaces/${workspaceId}`).then(res => res.data),
     
     // Update review
     updateReview: (reviewId, updateData) => 
@@ -472,4 +575,5 @@ export const supportService = {
         api.get('/support/tickets/all').then(res => res.data)
 };
 
+// Default export
 export default api;

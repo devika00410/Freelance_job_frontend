@@ -1,25 +1,58 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../Context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import './AdminDashboard.css';
 
-// StatCard component
-const StatCard = ({ title, value, icon, subtitle, color = 'blue' }) => (
-  <div className={`stat-card stat-${color}`}>
-    <div className="stat-content">
-      <div className="stat-info">
-        <h3 className="stat-title">{title}</h3>
-        <div className="stat-value">{value}</div>
-        {subtitle && <div className="stat-subtitle">{subtitle}</div>}
+// React Icons (keeping same)
+import { 
+  FaUsers, FaBriefcase, FaMoneyBillWave, FaChartBar, 
+  FaExclamationTriangle, FaCheckCircle, FaUserCheck,
+  FaSignOutAlt, FaHome, FaExchangeAlt, FaFileAlt, 
+  FaBell, FaArrowUp, FaSyncAlt, FaCog, FaSearch,
+  FaFilter, FaDownload, FaEye, FaEdit, FaTrash,
+  FaPlus, FaCalendarAlt, FaCreditCard, FaShieldAlt,
+  FaDatabase, FaServer, FaNetworkWired, FaLock
+} from 'react-icons/fa';
+import { 
+  MdDashboard, MdVerifiedUser, MdPayment, MdAnalytics,
+  MdPerson, MdReceipt, MdReport, MdSettings,
+  MdNotifications, MdHelp, MdMenu, MdClose,
+  MdArrowDropDown, MdArrowRight, MdRefresh
+} from 'react-icons/md';
+import { 
+  HiOutlineUserGroup, HiOutlineCash, HiOutlineChartBar,
+  HiOutlineDocumentReport, HiOutlineCog, HiOutlineBell
+} from 'react-icons/hi';
+
+// Import components
+import VerificationCenter from './VerificationCenter';
+import PaymentOverview from './PaymentOverview';
+import AnalyticsCharts from './AnalyticsCharts';
+import QuickActions from './QuickActions';
+import AdminStatsWidget from './AdminStatsWidget';
+import UserManagement from './UserManagement';
+import TransactionMonitoring from './TransactionMonitoring';
+import ReportManagement from './ReportManagement';
+
+// StatCard Component
+const StatCard = ({ title, value, icon: Icon, subtitle, trend, color = 'primary' }) => (
+  <div className={`admin-stat-card admin-stat-${color}`}>
+    <div className="admin-stat-content">
+      <div className="admin-stat-info">
+        <h3 className="admin-stat-title">{title}</h3>
+        <div className="admin-stat-value">{value}</div>
+        {subtitle && <div className="admin-stat-subtitle">{subtitle}</div>}
+        {trend && <div className={`admin-stat-trend ${trend.type}`}>{trend.value}</div>}
       </div>
-      <div className="stat-icon">
-        {icon}
+      <div className="admin-stat-icon">
+        <Icon size={24} />
       </div>
     </div>
   </div>
 );
 
 // Dashboard Overview Component
-const DashboardOverview = ({ data }) => {
+const DashboardOverviewComponent = ({ data }) => {
   if (!data) return null;
 
   const { stats, recentUsers, recentJobs } = data;
@@ -28,66 +61,79 @@ const DashboardOverview = ({ data }) => {
     {
       title: 'Total Users',
       value: stats.totalUsers,
-      icon: '👥',
+      icon: FaUsers,
       subtitle: `${stats.userStats?.find(u => u._id === 'client')?.count || 0} clients, ${stats.userStats?.find(u => u._id === 'freelancer')?.count || 0} freelancers`,
-      color: 'blue'
+      color: 'primary',
+      trend: { type: 'up', value: '+12%' }
     },
     {
-      title: 'Total Jobs',
+      title: 'Active Jobs',
       value: stats.totalJobs,
-      icon: '💼',
-      subtitle: `${stats.jobStats?.find(j => j._id === 'active')?.count || 0} active`,
-      color: 'green'
+      icon: FaBriefcase,
+      subtitle: `${stats.jobStats?.find(j => j._id === 'active')?.count || 0} active, ${stats.jobStats?.find(j => j._id === 'pending')?.count || 0} pending`,
+      color: 'success',
+      trend: { type: 'up', value: '+8%' }
     },
     {
       title: 'Total Revenue',
       value: `$${stats.totalRevenue?.toLocaleString() || 0}`,
-      icon: '💰',
+      icon: FaMoneyBillWave,
       subtitle: `${stats.totalTransactions} transactions`,
-      color: 'purple'
+      color: 'warning',
+      trend: { type: 'up', value: '+15%' }
     },
     {
       title: 'Active Projects',
       value: stats.totalWorkspaces,
-      icon: '📊',
+      icon: FaChartBar,
       subtitle: `${stats.totalContracts} contracts`,
-      color: 'orange'
+      color: 'info',
+      trend: { type: 'stable', value: '↔️' }
     },
     {
       title: 'Pending Reports',
       value: stats.totalReports,
-      icon: '⚠️',
-      subtitle: 'Need attention',
-      color: 'red'
+      icon: FaExclamationTriangle,
+      subtitle: 'Require attention',
+      color: 'danger',
+      trend: { type: 'down', value: '-3%' }
     },
     {
       title: 'Platform Health',
       value: '99.9%',
-      icon: '✅',
-      subtitle: 'Uptime',
-      color: 'teal'
+      icon: FaCheckCircle,
+      subtitle: 'Uptime status',
+      color: 'teal',
+      trend: { type: 'stable', value: '100%' }
     }
   ];
 
   return (
-    <div className="dashboard-overview">
-      <div className="stats-grid">
+    <div className="admin-dashboard-overview">
+      <div className="admin-stats-grid">
         {statCards.map((stat, index) => (
           <StatCard key={index} {...stat} />
         ))}
       </div>
 
-      <div className="recent-activity">
-        <div className="activity-column">
-          <h3>Recent Users</h3>
-          <div className="activity-list">
+      <div className="admin-recent-activity">
+        <div className="admin-activity-column">
+          <div className="admin-column-header">
+            <HiOutlineUserGroup className="admin-column-icon" />
+            <h3>Recent Users</h3>
+            <button className="admin-view-all">View All <MdArrowRight /></button>
+          </div>
+          <div className="admin-activity-list">
             {recentUsers?.map((user, index) => (
-              <div key={index} className="activity-item">
-                <div className="activity-info">
-                  <strong>{user.name || user.profile?.name}</strong>
+              <div key={index} className="admin-activity-item">
+                <div className="admin-user-avatar">
+                  {user.name?.charAt(0) || user.email?.charAt(0)}
+                </div>
+                <div className="admin-activity-info">
+                  <strong>{user.name || user.profile?.name || 'No Name'}</strong>
                   <span>{user.email}</span>
                 </div>
-                <span className={`role-badge role-${user.role}`}>
+                <span className={`admin-role-badge admin-role-${user.role}`}>
                   {user.role}
                 </span>
               </div>
@@ -95,16 +141,23 @@ const DashboardOverview = ({ data }) => {
           </div>
         </div>
 
-        <div className="activity-column">
-          <h3>Recent Jobs</h3>
-          <div className="activity-list">
+        <div className="admin-activity-column">
+          <div className="admin-column-header">
+            <FaBriefcase className="admin-column-icon" />
+            <h3>Recent Jobs</h3>
+            <button className="admin-view-all">View All <MdArrowRight /></button>
+          </div>
+          <div className="admin-activity-list">
             {recentJobs?.map((job, index) => (
-              <div key={index} className="activity-item">
-                <div className="activity-info">
-                  <strong>{job.title}</strong>
-                  <span>${job.budget} • {job.clientId?.name || job.clientId?.companyName}</span>
+              <div key={index} className="admin-activity-item">
+                <div className="admin-job-icon">
+                  <FaBriefcase />
                 </div>
-                <span className={`status-badge status-${job.status}`}>
+                <div className="admin-activity-info">
+                  <strong>{job.title}</strong>
+                  <span>${job.budget} • {job.clientId?.name || job.clientId?.companyName || 'Unknown'}</span>
+                </div>
+                <span className={`admin-status-badge admin-status-${job.status}`}>
                   {job.status}
                 </span>
               </div>
@@ -116,464 +169,27 @@ const DashboardOverview = ({ data }) => {
   );
 };
 
-// UserManagement Component with Real Data
-const UserManagement = () => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [filters, setFilters] = useState({
-    role: 'all',
-    page: 1,
-    limit: 10
-  });
-
-  useEffect(() => {
-    fetchUsers();
-  }, [filters]);
-
-  const fetchUsers = async () => {
-    try {
-      const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
-      const queryParams = new URLSearchParams(filters).toString();
-      
-      const response = await fetch(`http://localhost:3000/api/admin/users?${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch users');
-      const data = await response.json();
-      setUsers(data.users);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSuspendUser = async (userId) => {
-    try {
-      const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/admin/users/${userId}/suspend`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ suspensionReason: 'Admin action' })
-      });
-
-      if (response.ok) {
-        fetchUsers(); // Refresh the list
-      }
-    } catch (error) {
-      console.error('Error suspending user:', error);
-    }
-  };
-
-  if (loading) {
-    return <div className="loading">Loading users...</div>;
-  }
-
-  if (error) {
-    return <div className="error">Error: {error}</div>;
-  }
-
-  return (
-    <div className="tab-content">
-      <h2>User Management</h2>
-      
-      <div className="filters">
-        <select 
-          value={filters.role} 
-          onChange={(e) => setFilters({...filters, role: e.target.value})}
-        >
-          <option value="all">All Roles</option>
-          <option value="client">Clients</option>
-          <option value="freelancer">Freelancers</option>
-          <option value="admin">Admins</option>
-        </select>
-      </div>
-
-      <div className="users-table">
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Joined</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user._id}>
-                <td>{user.profile?.name}</td>
-                <td>{user.email}</td>
-                <td>
-                  <span className={`role-badge role-${user.role}`}>
-                    {user.role}
-                  </span>
-                </td>
-                <td>
-                  <span className={`status-badge ${user.status === 'suspended' ? 'suspended' : 'active'}`}>
-                    {user.status || 'active'}
-                  </span>
-                </td>
-                <td>{new Date(user.createdAt).toLocaleDateString()}</td>
-                <td>
-                  <button 
-                    className="action-btn suspend-btn"
-                    onClick={() => handleSuspendUser(user._id)}
-                  >
-                    Suspend
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+// Helper functions
+const getAdminToken = () => {
+  return localStorage.getItem('admin_token') || 
+         localStorage.getItem('adminToken') || 
+         localStorage.getItem('token');
 };
 
-// Transaction Monitoring Component with Real Data
-const TransactionMonitoring = () => {
-  const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [filters, setFilters] = useState({
-    status: 'all',
-    page: 1,
-    limit: 10
-  });
-
-  useEffect(() => {
-    fetchTransactions();
-  }, [filters]);
-
-  const fetchTransactions = async () => {
-    try {
-      const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
-      const queryParams = new URLSearchParams(filters).toString();
-      
-      const response = await fetch(`http://localhost:3000/api/admin/transactions?${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch transactions');
-      const data = await response.json();
-      setTransactions(data.transactions);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyPayment = async (transactionId) => {
-    try {
-      const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/admin/transactions/${transactionId}/verify-payment`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ adminNotes: 'Payment verified by admin' })
-      });
-
-      if (response.ok) {
-        fetchTransactions(); // Refresh the list
-      }
-    } catch (error) {
-      console.error('Error verifying payment:', error);
-    }
-  };
-
-  if (loading) {
-    return <div className="loading">Loading transactions...</div>;
-  }
-
-  if (error) {
-    return <div className="error">Error: {error}</div>;
-  }
-
-  return (
-    <div className="tab-content">
-      <h2>Transaction Monitoring</h2>
-      
-      <div className="filters">
-        <select 
-          value={filters.status} 
-          onChange={(e) => setFilters({...filters, status: e.target.value})}
-        >
-          <option value="all">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="completed">Completed</option>
-          <option value="failed">Failed</option>
-        </select>
-      </div>
-
-      <div className="transactions-table">
-        <table>
-          <thead>
-            <tr>
-              <th>Transaction ID</th>
-              <th>From</th>
-              <th>To</th>
-              <th>Amount</th>
-              <th>Type</th>
-              <th>Status</th>
-              <th>Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.map((transaction) => (
-              <tr key={transaction._id}>
-                <td className="transaction-id">{transaction._id?.slice(-8)}</td>
-                <td>{transaction.fromUser?.name || 'N/A'}</td>
-                <td>{transaction.toUser?.name || 'N/A'}</td>
-                <td className="amount">${transaction.amount}</td>
-                <td>
-                  <span className={`type-badge type-${transaction.type}`}>
-                    {transaction.type}
-                  </span>
-                </td>
-                <td>
-                  <span className={`status-badge status-${transaction.status}`}>
-                    {transaction.status}
-                  </span>
-                </td>
-                <td>{new Date(transaction.createdAt).toLocaleDateString()}</td>
-                <td>
-                  <button 
-                    className="action-btn verify-btn"
-                    onClick={() => handleVerifyPayment(transaction._id)}
-                  >
-                    Verify
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-};
-
-// Analytics Overview Component with Real Data
-const AnalyticsOverview = () => {
-  const [analyticsData, setAnalyticsData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    fetchAnalytics();
-  }, []);
-
-  const fetchAnalytics = async () => {
-    try {
-      const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/admin/dashboard/analytics?period=30d', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch analytics');
-      const data = await response.json();
-      setAnalyticsData(data.analytics);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return <div className="loading">Loading analytics...</div>;
-  }
-
-  if (error) {
-    return <div className="error">Error: {error}</div>;
-  }
-
-  return (
-    <div className="tab-content">
-      <h2>Analytics Overview</h2>
-      
-      <div className="analytics-grid">
-        <div className="analytics-card">
-          <h3>User Registrations (Last 30 Days)</h3>
-          <div className="analytics-data">
-            {analyticsData?.userRegistrations?.length ? (
-              <ul>
-                {analyticsData.userRegistrations.slice(0, 10).map((item, index) => (
-                  <li key={index}>
-                    <span>{item._id.date}: </span>
-                    <strong>{item.count} users</strong>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No registration data available</p>
-            )}
-          </div>
-        </div>
-
-        <div className="analytics-card">
-          <h3>Service Categories</h3>
-          <div className="analytics-data">
-            {analyticsData?.serviceAnalytics?.length ? (
-              <ul>
-                {analyticsData.serviceAnalytics.map((item, index) => (
-                  <li key={index}>
-                    <span>{item._id}: </span>
-                    <strong>{item.totalJobs} jobs</strong>
-                    <span> (${item.totalBudget})</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No service data available</p>
-            )}
-          </div>
-        </div>
-
-        <div className="analytics-card">
-          <h3>Revenue Analytics</h3>
-          <div className="analytics-data">
-            {analyticsData?.paymentAnalytics?.length ? (
-              <div>
-                <p>Total Transactions: {analyticsData.paymentAnalytics.reduce((sum, item) => sum + item.count, 0)}</p>
-                <p>Total Revenue: ${analyticsData.paymentAnalytics.reduce((sum, item) => sum + item.totalAmount, 0)}</p>
-              </div>
-            ) : (
-              <p>No revenue data available</p>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Report Management Component with Real Data
-const ReportManagement = () => {
-  const [reports, setReports] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    fetchReports();
-  }, []);
-
-  const fetchReports = async () => {
-    try {
-      const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/admin/reports?status=open', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch reports');
-      const data = await response.json();
-      setReports(data.reports);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResolveReport = async (reportId) => {
-    try {
-      const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/admin/reports/${reportId}/resolve`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ 
-          resolution: 'Resolved by admin',
-          resolutionNotes: 'Issue has been addressed'
-        })
-      });
-
-      if (response.ok) {
-        fetchReports(); // Refresh the list
-      }
-    } catch (error) {
-      console.error('Error resolving report:', error);
-    }
-  };
-
-  if (loading) {
-    return <div className="loading">Loading reports...</div>;
-  }
-
-  if (error) {
-    return <div className="error">Error: {error}</div>;
-  }
-
-  return (
-    <div className="tab-content">
-      <h2>Report Management</h2>
-      
-      <div className="reports-list">
-        {reports.length > 0 ? (
-          reports.map((report) => (
-            <div key={report._id} className="report-item">
-              <div className="report-header">
-                <h3>{report.title}</h3>
-                <span className={`priority-badge priority-${report.priority}`}>
-                  {report.priority}
-                </span>
-              </div>
-              <p className="report-description">{report.description}</p>
-              <div className="report-details">
-                <span>Category: {report.category}</span>
-                <span>Reporter: {report.reporterId?.name || 'Unknown'}</span>
-                <span>Reported: {report.reportedUserId?.name || 'Unknown'}</span>
-              </div>
-              <button 
-                className="action-btn resolve-btn"
-                onClick={() => handleResolveReport(report._id)}
-              >
-                Resolve
-              </button>
-            </div>
-          ))
-        ) : (
-          <p>No pending reports</p>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// Main AdminDashboard component
+// Main AdminDashboard Component
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/admin/login');
+  };
 
   useEffect(() => {
     fetchDashboardData();
@@ -581,7 +197,13 @@ const AdminDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+      const token = getAdminToken();
+      
+      if (!token) {
+        window.location.href = '/admin/login';
+        return;
+      }
+      
       const response = await fetch('http://localhost:3000/api/admin/dashboard/stats', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -589,12 +211,18 @@ const AdminDashboard = () => {
         }
       });
 
-      if (!response.ok) throw new Error('Failed to fetch dashboard data');
+      if (response.status === 401) {
+        window.location.href = '/admin/login';
+        return;
+      }
+      
+      if (!response.ok) throw new Error(`Failed to fetch dashboard data: ${response.status}`);
 
       const data = await response.json();
       setDashboardData(data);
     } catch (err) {
       setError(err.message);
+      console.error('Fetch dashboard error:', err);
     } finally {
       setLoading(false);
     }
@@ -602,8 +230,10 @@ const AdminDashboard = () => {
 
   if (loading) {
     return (
-      <div className="admin-loading">
-        <div className="loading-spinner"></div>
+      <div className="admin-loading-screen">
+        <div className="admin-loading-spinner">
+          <div className="admin-spinner-circle"></div>
+        </div>
         <p>Loading Admin Dashboard...</p>
       </div>
     );
@@ -611,66 +241,207 @@ const AdminDashboard = () => {
 
   if (error) {
     return (
-      <div className="admin-error">
-        <h3>Error loading dashboard</h3>
-        <p>{error}</p>
-        <button onClick={fetchDashboardData} className="retry-btn">Retry</button>
+      <div className="admin-error-screen">
+        <div className="admin-error-content">
+          <FaExclamationTriangle className="admin-error-icon" />
+          <h3>Error loading dashboard</h3>
+          <p>{error}</p>
+          <div className="admin-error-actions">
+            <button onClick={fetchDashboardData} className="admin-btn admin-btn-primary">
+              <MdRefresh /> Retry
+            </button>
+            <button onClick={() => window.location.href = '/admin/login'} className="admin-btn admin-btn-secondary">
+              <FaHome /> Go to Login
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="admin-dashboard">
-      <header className="admin-header">
-        <div className="admin-header-content">
-          <h1>Admin Dashboard</h1>
+    <div className="admin-dashboard-container">
+      {/* Sidebar */}
+      <div className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <div className="admin-sidebar-header">
+          <div className="admin-logo">
+            <div className="admin-logo-icon">
+              <FaShieldAlt />
+            </div>
+            <h2>AdminPanel</h2>
+          </div>
+          <button className="admin-close-sidebar" onClick={() => setSidebarOpen(false)}>
+            <MdClose />
+          </button>
+        </div>
+
+        <div className="admin-sidebar-user">
+          <div className="admin-user-avatar-large">
+            {user?.name?.charAt(0) || 'A'}
+          </div>
           <div className="admin-user-info">
-            <span>Welcome, {user?.name || 'Admin'}</span>
-            <button onClick={logout} className="logout-btn">Logout</button>
+            <h4>{user?.name || 'Administrator'}</h4>
+            <span className="admin-user-role">Super Admin</span>
+            <span className="admin-user-email">{user?.email || 'admin@example.com'}</span>
           </div>
         </div>
-      </header>
 
-      <nav className="admin-tabs">
-        <button 
-          className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
-          onClick={() => setActiveTab('overview')}
-        >
-          Overview
-        </button>
-        <button 
-          className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
-          onClick={() => setActiveTab('users')}
-        >
-          Users
-        </button>
-        <button 
-          className={`tab-btn ${activeTab === 'transactions' ? 'active' : ''}`}
-          onClick={() => setActiveTab('transactions')}
-        >
-          Transactions
-        </button>
-        <button 
-          className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
-          onClick={() => setActiveTab('analytics')}
-        >
-          Analytics
-        </button>
-        <button 
-          className={`tab-btn ${activeTab === 'reports' ? 'active' : ''}`}
-          onClick={() => setActiveTab('reports')}
-        >
-          Reports
-        </button>
-      </nav>
+        <nav className="admin-sidebar-nav">
+          <div className="admin-nav-section">
+            <span className="admin-nav-label">MAIN</span>
+            <button 
+              className={`admin-nav-item ${activeTab === 'overview' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('overview'); setSidebarOpen(false); }}
+            >
+              <MdDashboard /> Dashboard
+            </button>
+            <button 
+              className={`admin-nav-item ${activeTab === 'analytics' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('analytics'); setSidebarOpen(false); }}
+            >
+              <MdAnalytics /> Analytics
+            </button>
+          </div>
 
-      <main className="admin-main">
-        {activeTab === 'overview' && <DashboardOverview data={dashboardData} />}
-        {activeTab === 'users' && <UserManagement />}
-        {activeTab === 'transactions' && <TransactionMonitoring />}
-        {activeTab === 'analytics' && <AnalyticsOverview />}
-        {activeTab === 'reports' && <ReportManagement />}
-      </main>
+          <div className="admin-nav-section">
+            <span className="admin-nav-label">MANAGEMENT</span>
+            <button 
+              className={`admin-nav-item ${activeTab === 'verification' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('verification'); setSidebarOpen(false); }}
+            >
+              <MdVerifiedUser /> Verification
+            </button>
+            <button 
+              className={`admin-nav-item ${activeTab === 'payments' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('payments'); setSidebarOpen(false); }}
+            >
+              <MdPayment /> Payments
+            </button>
+            <button 
+              className={`admin-nav-item ${activeTab === 'users' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('users'); setSidebarOpen(false); }}
+            >
+              <MdPerson /> Users
+            </button>
+            <button 
+              className={`admin-nav-item ${activeTab === 'transactions' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('transactions'); setSidebarOpen(false); }}
+            >
+              <MdReceipt /> Transactions
+            </button>
+            <button 
+              className={`admin-nav-item ${activeTab === 'reports' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('reports'); setSidebarOpen(false); }}
+            >
+              <MdReport /> Reports
+            </button>
+          </div>
+
+          <div className="admin-nav-section">
+            <span className="admin-nav-label">SYSTEM</span>
+            <button className="admin-nav-item">
+              <MdSettings /> Settings
+            </button>
+            <button className="admin-nav-item">
+              <HiOutlineCog /> System Logs
+            </button>
+            <button className="admin-nav-item">
+              <FaLock /> Security
+            </button>
+          </div>
+        </nav>
+
+        <div className="admin-sidebar-footer">
+          <button className="admin-logout-btn" onClick={handleLogout}>
+            <FaSignOutAlt /> Logout
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="admin-main">
+        {/* Top Header */}
+        <header className="admin-header">
+          <div className="admin-header-left">
+            <button className="admin-menu-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+              <MdMenu />
+            </button>
+            <div className="admin-breadcrumb">
+              <span>Admin Panel</span>
+              <MdArrowRight />
+              <span className="admin-current-page">
+                {activeTab === 'overview' ? 'Dashboard' : 
+                 activeTab === 'verification' ? 'Verification Center' :
+                 activeTab === 'payments' ? 'Payment Management' :
+                 activeTab === 'analytics' ? 'Analytics' :
+                 activeTab === 'users' ? 'User Management' :
+                 activeTab === 'transactions' ? 'Transactions' :
+                 activeTab === 'reports' ? 'Reports' : 'Dashboard'}
+              </span>
+            </div>
+          </div>
+
+          <div className="admin-header-right">
+            <div className="admin-search-box">
+              <FaSearch className="admin-search-icon" />
+              <input type="text" placeholder="Search..." />
+            </div>
+            <button className="admin-notification-btn">
+              <HiOutlineBell />
+              <span className="admin-notification-badge">3</span>
+            </button>
+            <button className="admin-quick-action-btn">
+              <FaPlus /> New
+            </button>
+          </div>
+        </header>
+
+        {/* Stats Widget */}
+        <div className="admin-stats-section">
+          <AdminStatsWidget />
+        </div>
+
+        {/* Content Area */}
+        <main className="admin-content">
+          {activeTab === 'overview' && (
+            <div className="admin-overview-container">
+              <div className="admin-overview-main">
+                <DashboardOverviewComponent data={dashboardData} />
+              </div>
+              <div className="admin-overview-sidebar">
+                <QuickActions />
+              </div>
+            </div>
+          )}
+          {activeTab === 'verification' && <VerificationCenter />}
+          {activeTab === 'payments' && <PaymentOverview />}
+          {activeTab === 'analytics' && <AnalyticsCharts />}
+          {activeTab === 'users' && <UserManagement />}
+          {activeTab === 'transactions' && <TransactionMonitoring />}
+          {activeTab === 'reports' && <ReportManagement />}
+        </main>
+
+        {/* Footer */}
+        <footer className="admin-footer">
+          <div className="admin-footer-content">
+            <div className="admin-system-info">
+              <span><FaServer /> Server: <span className="admin-status-online">Online</span></span>
+              <span><FaNetworkWired /> Uptime: 99.9%</span>
+              <span><FaDatabase /> Response: 120ms</span>
+              <span><MdRefresh /> Updated: {new Date().toLocaleTimeString()}</span>
+            </div>
+            <div className="admin-footer-links">
+              <span>© 2024 AdminPanel v2.0</span>
+              <button onClick={() => window.location.reload()}>
+                <FaSyncAlt /> Refresh
+              </button>
+              <button onClick={() => window.scrollTo(0, 0)}>
+                <FaArrowUp /> Top
+              </button>
+            </div>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 };

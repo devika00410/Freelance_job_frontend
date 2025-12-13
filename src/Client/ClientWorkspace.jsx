@@ -1,401 +1,778 @@
-// Workspace.jsx
-import React, { useState, useEffect, useRef } from 'react';
+// ClientWorkspace.jsx - Updated with Navbar Design
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   FaFolderOpen, FaCommentDots, FaCheckCircle, FaVideo, FaCalendarAlt,
   FaDollarSign, FaExclamationTriangle, FaUser, FaClock, FaFileAlt,
-  FaImage, FaPalette, FaPlayCircle, FaPhone, FaUpload, FaEdit,
-  FaDownload, FaEye, FaSpinner, FaCheck, FaTimes, FaPaperPlane,
-  FaChartLine, FaMoneyBillWave, FaTasks, FaArrowLeft, FaFlag, FaCheckSquare,
-  // FaUploadCloud, FaUserCheck, FaFileContract,
-  FaClipboardCheck, FaCalendarPlus, FaCalendarDay
+  FaImage, FaUpload, FaDownload, FaEye, FaSpinner, FaCheck,
+  FaPaperPlane, FaChartBar, FaWallet, FaStickyNote, FaFileContract,
+  FaHome, FaSearch, FaBell, FaCog, FaSignOutAlt,
+  FaEdit, FaMusic, FaArchive 
 } from 'react-icons/fa';
-import './ClientWorkspace.css';
 import io from 'socket.io-client';
 
-// API Service
-// const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+import ClientMilestoneApprovals from './ClientMilestoneApprovals';
+import ClientPaymentManager from './ClientPaymentManager';
+import ClientReportsDashboard from './ClientReportsDashboard';
+import ClientNotes from './ClientNotes';
+import SharedMeetingScheduler from './SharedMeetingScheduler';
+import ClientWorkspaceOverview from './ClientWorkspaceOverview';
+import ContractViewer from './ClientContractViewer';
+
+import './ClientWorkspace.css';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+// ===== Helper function to parse workspaceId =====
+const parseWorkspaceId = (workspaceId) => {
+  if (!workspaceId) return null;
+  
+  if (typeof workspaceId === 'string' && workspaceId.length === 24) {
+    return workspaceId;
+  }
+  
+  if (typeof workspaceId === 'string' && workspaceId.includes('object')) {
+    const stored = localStorage.getItem('currentWorkspaceId');
+    if (stored) return stored;
+    
+    try {
+      const parsed = JSON.parse(workspaceId);
+      return parsed.id || parsed._id || parsed.workspaceId;
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  if (typeof workspaceId === 'object' && workspaceId !== null) {
+    return workspaceId.id || workspaceId._id || workspaceId.workspaceId;
+  }
+  
+  return workspaceId;
+};
 
 const ClientWorkspace = () => {
-  const { workspaceId } = useParams();
+  const { workspaceId: rawWorkspaceId } = useParams();
   const navigate = useNavigate();
-  const [userRole, setUserRole] = useState('');
-  const [userId, setUserId] = useState('');
-  const [workspace, setWorkspace] = useState(null);
-  const [activeSection, setActiveSection] = useState('overview');
-  const [loading, setLoading] = useState(true);
-  const [apiError, setApiError] = useState(null);
   
-  // State for different sections
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [files, setFiles] = useState([]);
-  const [milestones, setMilestones] = useState([]);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [socket, setSocket] = useState(null);
-  const [isOnline, setIsOnline] = useState(false);
-  const [otherPartyOnline, setOtherPartyOnline] = useState(false);
+  const workspaceId = parseWorkspaceId(rawWorkspaceId);
+  console.log('📌 Workspace ID:', workspaceId);
   
-  // New milestone submission (for freelancer)
-  const [milestoneSubmission, setMilestoneSubmission] = useState({
-    files: [],
-    notes: ''
-  });
-
-  // Payment states
-  const [paymentData, setPaymentData] = useState({
-    amount: '',
-    method: 'upi',
-    screenshot: null,
-    upiId: '',
-    transactionId: ''
-  });
-
-  // Meeting states
-  const [newMeeting, setNewMeeting] = useState({
-    title: '',
-    description: '',
-    scheduledTime: '',
-    duration: 60
-  });
-
-  const chatEndRef = useRef(null);
-
-  // Get user info on mount
-  useEffect(() => {
+  const [userId, setUserId] = useState(() => {
     const userData = localStorage.getItem('userData');
     if (userData) {
-      const parsedUser = JSON.parse(userData);
-      setUserRole(parsedUser.role || 'client');
-      setUserId(parsedUser._id || parsedUser.id);
+      try {
+        const parsed = JSON.parse(userData);
+        let id = parsed._id || parsed.id || parsed.userId;
+        if (id && typeof id === 'string') {
+          if (id.includes('ObjectId')) {
+            const match = id.match(/'([^']+)'/);
+            if (match) {
+              id = match[1];
+            }
+          }
+          return id;
+        }
+        return id || '';
+      } catch (error) {
+        console.error('Error parsing userData:', error);
+      }
     }
+    
+    const directId = localStorage.getItem('userId') || 
+                     localStorage.getItem('user_id') || 
+                     localStorage.getItem('userID') || '';
+    
+    if (directId.includes('ObjectId')) {
+      const match = directId.match(/'([^']+)'/);
+      if (match) return match[1];
+    }
+    
+    return directId;
+  });
+  
+  const [userRole, setUserRole] = useState('client');
+  const [workspace, setWorkspace] = useState(null);
+  const [contractDetails, setContractDetails] = useState(null);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Stats state
+  const [stats, setStats] = useState({
+    progress: 0,
+    earnings: { total: 0, pending: 0, upcoming: 0 },
+    milestones: { total: 0, completed: 0, pending: 0, awaitingApproval: 0 },
+    messages: { total: 0, unread: 0 },
+    files: { total: 0, recent: [] }
+  });
+
+  // Chat and socket state
+  const [newMessage, setNewMessage] = useState('');
+  const [sharedMessages, setSharedMessages] = useState([]);
+  const [socket, setSocket] = useState(null);
+  const [otherPartyOnline, setOtherPartyOnline] = useState(false);
+  const chatEndRef = useRef(null);
+
+  // Workspace data
+  const [sharedFiles, setSharedFiles] = useState([]);
+  const [sharedMilestones, setSharedMilestones] = useState([]);
+  const [privateNotes, setPrivateNotes] = useState([]);
+  const [videoCalls, setVideoCalls] = useState([]);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [callDetails, setCallDetails] = useState({
+    title: '',
+    date: '',
+    time: '',
+    duration: 30,
+    description: ''
+  });
+
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  const fetchCountRef = useRef(0);
+  const dataLoadedRef = useRef(false);
+
+  // Navigation tabs - Updated for navbar
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: <FaHome /> },
+    { id: 'milestones', label: 'Milestones', icon: <FaCheckCircle /> },
+    { id: 'budget', label: 'Budget & Payments', icon: <FaWallet /> },
+    { id: 'reports', label: 'Reports', icon: <FaChartBar /> },
+    { id: 'notes', label: 'Private Notes', icon: <FaStickyNote /> },
+    { id: 'meetings', label: 'Meetings', icon: <FaVideo /> },
+    { id: 'chat', label: 'Chat', icon: <FaCommentDots /> },
+    { id: 'files', label: 'Files', icon: <FaFolderOpen /> },
+    { id: 'contract', label: 'Contract', icon: <FaFileContract /> }
+  ];
+
+  // ===== Initialize user info =====
+  useEffect(() => {
+    const loadUserInfo = () => {
+      console.log('🔄 Loading user info...');
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('❌ No token found, redirecting to login');
+        navigate('/login');
+        return;
+      }
+      
+      let extractedUserId = userId;
+      
+      if (!extractedUserId) {
+        const userData = localStorage.getItem('userData');
+        if (userData) {
+          try {
+            const parsed = JSON.parse(userData);
+            extractedUserId = parsed._id || parsed.id;
+            if (extractedUserId && typeof extractedUserId === 'string') {
+              if (extractedUserId.includes('ObjectId')) {
+                const match = extractedUserId.match(/'([^']+)'/);
+                if (match) {
+                  extractedUserId = match[1];
+                }
+              }
+              setUserId(extractedUserId);
+              console.log('✅ Extracted userId from userData:', extractedUserId);
+            }
+          } catch (error) {
+            console.error('Error parsing userData:', error);
+          }
+        }
+      }
+      
+      const storedRole = localStorage.getItem('userRole') || 'client';
+      setUserRole(storedRole);
+    };
+    
+    loadUserInfo();
+  }, [navigate, userId]);
+
+  // ===== Fetch contract details =====
+  const fetchContractDetails = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token || !workspaceId) return;
+
+      console.log('🔍 Fetching contract details...');
+      
+      // Try multiple endpoints
+      const endpoints = [
+        `${API_URL}/api/contracts/${workspaceId}`,
+        `${API_URL}/api/contracts/workspace/${workspaceId}`,
+        `${API_URL}/api/workspaces/${workspaceId}/contract`
+      ];
+
+      let contractResponse = null;
+      let lastError = null;
+
+      for (const endpoint of endpoints) {
+        try {
+          console.log(`Trying endpoint: ${endpoint}`);
+          const response = await fetch(endpoint, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.contract || data.success) {
+              contractResponse = data.contract || data;
+              console.log(`✅ Success from endpoint: ${endpoint}`);
+              break;
+            }
+          }
+        } catch (error) {
+          lastError = error;
+          console.log(`❌ Failed endpoint ${endpoint}:`, error.message);
+        }
+      }
+
+      if (contractResponse) {
+        setContractDetails(contractResponse);
+        console.log('📄 Contract data loaded:', contractResponse);
+
+        // Extract milestones from contract
+        if (contractResponse.milestones || contractResponse.phases) {
+          const contractMilestones = contractResponse.milestones || contractResponse.phases || [];
+          setSharedMilestones(contractMilestones.map((milestone, index) => ({
+            _id: milestone._id || `milestone-${index + 1}`,
+            title: milestone.title || `Milestone ${index + 1}`,
+            phase: milestone.phase || index + 1,
+            amount: milestone.amount || milestone.value || 0,
+            description: milestone.description || milestone.deliverables || '',
+            status: milestone.status || 'pending',
+            dueDate: milestone.dueDate || milestone.deliveryDate,
+            deliverables: milestone.deliverables || [],
+            paymentStatus: milestone.paymentStatus || 'pending',
+            ...(milestone.submission && { submission: milestone.submission })
+          })));
+        }
+      } else {
+        console.log('❌ Could not fetch contract from any endpoint');
+      }
+    } catch (error) {
+      console.error('🔥 Error in fetchContractDetails:', error);
+    }
+  };
+
+  // ===== Calculate stats from workspace data =====
+  const calculateStats = useCallback((workspaceData, milestones) => {
+    if (!workspaceData || !milestones) return;
+    
+    const completedMilestones = milestones.filter(m => 
+      m.status === 'completed' || m.status === 'approved' || m.status === 'paid'
+    ).length;
+    
+    const pendingMilestones = milestones.filter(m => 
+      m.status === 'pending' || m.status === 'not_started'
+    ).length;
+    
+    const awaitingApprovalMilestones = milestones.filter(m => 
+      m.status === 'awaiting_approval' || m.status === 'submitted' || m.status === 'review'
+    ).length;
+    
+    const totalEarnings = milestones
+      .filter(m => m.status === 'completed' || m.status === 'approved' || m.status === 'paid')
+      .reduce((sum, m) => sum + (m.amount || 0), 0);
+    
+    const pendingEarnings = milestones
+      .filter(m => m.status === 'awaiting_approval' || m.status === 'submitted' || m.status === 'review')
+      .reduce((sum, m) => sum + (m.amount || 0), 0);
+    
+    const upcomingEarnings = milestones
+      .filter(m => m.status === 'pending' || m.status === 'not_started')
+      .reduce((sum, m) => sum + (m.amount || 0), 0);
+    
+    const progress = milestones.length > 0 
+      ? Math.round((completedMilestones / milestones.length) * 100)
+      : 0;
+    
+    setStats(prev => ({
+      ...prev,
+      progress,
+      milestones: {
+        total: milestones.length,
+        completed: completedMilestones,
+        pending: pendingMilestones,
+        awaitingApproval: awaitingApprovalMilestones
+      },
+      earnings: {
+        total: totalEarnings,
+        pending: pendingEarnings,
+        upcoming: upcomingEarnings
+      }
+    }));
   }, []);
 
-  // Fetch workspace data
-  useEffect(() => {
-    if (workspaceId && userId) {
-      fetchWorkspaceData();
-    }
-  }, [workspaceId, userId]);
-
-  // Initialize WebSocket
-  useEffect(() => {
-    if (!workspace || !userId) return;
-
-    const token = localStorage.getItem('token');
-    const newSocket = io(API_URL, {
-      auth: { token },
-      transports: ['websocket', 'polling']
-    });
-
-    setSocket(newSocket);
-
-    // Join workspace room
-    newSocket.emit('join_workspace', workspace._id);
-
-    // Listen for new messages
-    newSocket.on('new_message', (message) => {
-      if (message.workspaceId === workspace._id) {
-        setMessages(prev => [...prev, message]);
-      }
-    });
-
-    // Online status
-    newSocket.on('user_online', (onlineUserId) => {
-      const otherId = userRole === 'client' ? workspace.freelancerId : workspace.clientId;
-      if (onlineUserId === otherId) {
-        setOtherPartyOnline(true);
-      }
-    });
-
-    newSocket.on('user_offline', (offlineUserId) => {
-      const otherId = userRole === 'client' ? workspace.freelancerId : workspace.clientId;
-      if (offlineUserId === otherId) {
-        setOtherPartyOnline(false);
-      }
-    });
-
-    return () => {
-      if (newSocket) {
-        newSocket.emit('leave_workspace', workspace._id);
-        newSocket.disconnect();
-      }
-    };
-  }, [workspace, userId, userRole]);
-
-  // Scroll to bottom of chat
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  // In your fetchWorkspaceData function, wrap the API call with timeout:
-
-
-// Fix the fetchWorkspaceData function - REPLACE the broken one
-const fetchWorkspaceData = async () => {
+  // ===== Fetch workspace data =====
+const fetchData = async () => {
+  if (dataLoadedRef.current) return;
+  
   setLoading(true);
   setApiError(null);
 
   try {
     const token = localStorage.getItem('token');
-    
-    // Try API first
-    const response = await fetch(`${API_URL}/api/workspaces/${workspaceId}`, {
-      headers: {
+    if (!token) throw new Error('No authentication token found');
+
+    console.log('🔍 Fetching workspace...');
+
+    // Use Promise.race for timeout
+    const fetchPromise = fetch(`${API_URL}/api/workspaces/client/${workspaceId}`, {
+      headers: { 
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        'Accept': 'application/json'
       }
     });
 
-    if (response.ok) {
-      const data = await response.json();
+    // Timeout after 3 seconds
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timeout')), 3000);
+    });
+
+    try {
+      const response = await Promise.race([fetchPromise, timeoutPromise]);
       
-      if (data.success) {
-        setWorkspace(data.workspace || data.data);
+      if (response.ok) {
+        const data = await response.json();
         
-        // Fetch related data
-        await Promise.all([
-          fetchMessages(),
-          fetchFiles(),
-          fetchMilestones()
-        ]);
-      } else {
-        throw new Error(data.message || 'Failed to load workspace');
-      }
-    } else {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-  } catch (error) {
-    console.error('Error fetching workspace:', error);
-    setApiError(error.message);
-    
-    // Load demo data as fallback
-    setWorkspace({
-      _id: workspaceId || 'demo-id',
-      projectTitle: 'Demo Project',
-      clientName: 'Demo Client',
-      freelancerName: 'Demo Freelancer',
-      status: 'active',
-      currentPhase: 1,
-      overallProgress: 0,
-      startDate: new Date().toISOString(),
-      estimatedEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      budget: '$5000',
-      description: 'Demo workspace data - backend not available'
-    });
-    
-  } finally {
-    setLoading(false); 
-  }
-};
-
-const fetchWithTimeout = async (url, options = {}, timeout = 8000) => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-  
-  try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
-    return response;
-  } catch (error) {
-    clearTimeout(timeoutId);
-    throw error;
-  }
-};
-
-  const fetchMessages = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/workspaces/${workspaceId}/messages`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setMessages(data.messages || data.data || []);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-    }
-  };
-
-  const fetchFiles = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/workspaces/${workspaceId}/files`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setFiles(data.files || data.data || []);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching files:', error);
-    }
-  };
-
-  const fetchMilestones = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/api/workspaces/${workspaceId}/milestones`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setMilestones(data.milestones || data.data || []);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching milestones:', error);
-    }
-  };
-
-  // Message handling
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !workspace) return;
-
-    try {
-      const token = localStorage.getItem('token');
-      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-
-      const messageData = {
-        content: newMessage,
-        workspaceId: workspace._id,
-        senderId: userId,
-        senderName: userData.name || userData.username,
-        senderRole: userRole
-      };
-
-      const response = await fetch(`${API_URL}/api/workspaces/${workspaceId}/messages`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(messageData)
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          // Send via socket
-          if (socket) {
-            socket.emit('send_message', data.message || data.data);
+        if (data.success && data.workspace) {
+          console.log('✅ Real API data loaded:', data.workspace.title);
+          setWorkspace(data.workspace);
+          
+          if (data.workspace.milestones) {
+            setSharedMilestones(data.workspace.milestones);
+            calculateStats(data.workspace, data.workspace.milestones);
           }
           
-          // Update local state
-          setMessages(prev => [...prev, data.message || data.data]);
-          setNewMessage('');
+          dataLoadedRef.current = true;
+          setLoading(false);
+          return;
         }
       }
-    } catch (error) {
-      console.error('Error sending message:', error);
-      alert('Failed to send message');
+    } catch (fetchError) {
+      console.log('⚠️ API call failed:', fetchError.message);
     }
-  };
+    
+    // Fallback to mock data
+    console.log('🎭 Falling back to mock data');
+    createMockWorkspace();
+    
+  } catch (error) {
+    console.error('❌ Main error:', error);
+    createMockWorkspace();
+  }
+};
 
-  // File upload
-  const handleFileUpload = async (e) => {
-    e.preventDefault();
-    if (!selectedFile || !workspace) {
-      alert('Please select a file');
-      return;
+ // ===== Initialize WebSocket =====
+useEffect(() => {
+  if (!workspaceId || !userId) {
+    console.log('⚠️ WebSocket: Missing workspaceId or userId');
+    return;
+  }
+
+  const token = localStorage.getItem('token');
+  if (!token) {
+    console.log('⚠️ WebSocket: No authentication token found');
+    return;
+  }
+
+  console.log('🔌 Initializing WebSocket connection...');
+  
+  // Create socket with robust error handling
+  const newSocket = io(API_URL, {
+    auth: { token },
+    transports: ['websocket', 'polling'],
+    reconnection: true,
+    reconnectionAttempts: 10,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    timeout: 20000,
+    forceNew: true,
+    autoConnect: true
+  });
+
+  setSocket(newSocket);
+
+  // Connection established
+  newSocket.on('connect', () => {
+    console.log('✅ WebSocket connected successfully');
+    console.log('📡 Socket ID:', newSocket.id);
+    
+    // Join the workspace room
+    newSocket.emit('join_workspace', { workspaceId });
+    
+    // Notify that user is online
+    newSocket.emit('user_online', {
+      userId: userId,
+      workspaceId: workspaceId,
+      role: userRole,
+      userName: workspace?.client?.name || 'Client'
+    });
+  });
+
+  // Connection error
+  newSocket.on('connect_error', (error) => {
+    console.error('❌ WebSocket connection error:', error.message);
+    
+    // Check if it's a specific error type
+    if (error.message.includes('Invalid credentials')) {
+      console.log('⚠️ Authentication error, clearing token...');
+      localStorage.removeItem('token');
+      localStorage.removeItem('userData');
     }
+    
+    // Don't show connection errors to users unless they're critical
+  });
 
-    try {
-      const token = localStorage.getItem('token');
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-      formData.append('workspaceId', workspace._id);
-      formData.append('description', `Uploaded ${selectedFile.name}`);
+  // Socket error
+  newSocket.on('error', (error) => {
+    console.error('❌ WebSocket general error:', error);
+  });
 
-      const response = await fetch(`${API_URL}/api/workspaces/${workspaceId}/files`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
+  // Reconnection events
+  newSocket.on('reconnect_attempt', (attemptNumber) => {
+    console.log(`🔄 Attempting to reconnect (${attemptNumber}/10)...`);
+  });
+
+  newSocket.on('reconnect', (attemptNumber) => {
+    console.log(`✅ Reconnected successfully after ${attemptNumber} attempts`);
+    
+    // Rejoin workspace after reconnection
+    newSocket.emit('join_workspace', { workspaceId });
+    newSocket.emit('user_online', {
+      userId: userId,
+      workspaceId: workspaceId,
+      role: userRole,
+      userName: workspace?.client?.name || 'Client'
+    });
+  });
+
+  newSocket.on('reconnect_error', (error) => {
+    console.error('❌ Reconnection error:', error);
+  });
+
+  newSocket.on('reconnect_failed', () => {
+    console.error('❌ WebSocket reconnection failed after all attempts');
+    // Optionally show a non-intrusive notification to user
+  });
+
+  // Disconnect event
+  newSocket.on('disconnect', (reason) => {
+    console.log('🔌 WebSocket disconnected:', reason);
+    
+    if (reason === 'io server disconnect') {
+      // The server has forcefully disconnected the socket
+      console.log('⚠️ Server disconnected the socket');
+    }
+    
+    // Update other party status to offline
+    setOtherPartyOnline(false);
+  });
+
+
+  // ===== Message Event Handlers =====
+
+  // New shared message received
+  newSocket.on('new_shared_message', (message) => {
+    console.log('📨 New message received:', message);
+    setSharedMessages(prev => [...prev, message]);
+    setStats(prev => ({
+      ...prev,
+      messages: { ...prev.messages, total: prev.messages.total + 1 }
+    }));
+  });
+
+  // User online status
+  newSocket.on('user_online', (onlineUser) => {
+    console.log('🟢 User online:', onlineUser);
+    if (workspace?.freelancerId === onlineUser.userId) {
+      setOtherPartyOnline(true);
+    }
+  });
+
+  // User offline status
+  newSocket.on('user_offline', (offlineUser) => {
+    console.log('🔴 User offline:', offlineUser);
+    if (workspace?.freelancerId === offlineUser.userId) {
+      setOtherPartyOnline(false);
+    }
+  });
+
+  // Initial workspace messages
+  newSocket.on('workspace_messages', (messages) => {
+    console.log('📬 Received workspace messages:', messages.length);
+    setSharedMessages(messages);
+    setStats(prev => ({
+      ...prev,
+      messages: { 
+        ...prev.messages, 
+        total: messages.length,
+        unread: messages.filter(m => 
+          m.senderRole !== 'client' && 
+          !m.readAt
+        ).length
+      }
+    }));
+  });
+
+  // New file uploaded
+  newSocket.on('new_file_uploaded', (fileData) => {
+    console.log('📁 New file uploaded:', fileData);
+    setSharedFiles(prev => [fileData, ...prev]);
+    setStats(prev => ({
+      ...prev,
+      files: {
+        total: prev.files.total + 1,
+        recent: [fileData, ...prev.files.recent.slice(0, 4)]
+      }
+    }));
+  });
+
+  // Milestone submitted
+  newSocket.on('milestone_submitted', (milestoneData) => {
+    console.log('📋 Milestone submitted:', milestoneData);
+    setSharedMilestones(prev => prev.map(m => 
+      m._id === milestoneData._id ? { ...m, ...milestoneData } : m
+    ));
+    calculateStats(workspace, sharedMilestones.map(m => 
+      m._id === milestoneData._id ? { ...m, ...milestoneData } : m
+    ));
+  });
+
+  // Milestone approved notification
+  newSocket.on('milestone_approved', (data) => {
+    console.log('✅ Milestone approved notification:', data);
+    // Update UI or show notification
+  });
+
+  // Milestone changes requested
+  newSocket.on('milestone_changes_requested', (data) => {
+    console.log('✏️ Milestone changes requested:', data);
+    // Update UI or show notification
+  });
+
+  // Typing indicators (optional)
+  newSocket.on('user_typing', (data) => {
+    if (data.userId !== userId) {
+      console.log('✍️ User is typing...');
+      // Could implement typing indicator UI here
+    }
+  });
+
+  // Cleanup function
+  return () => {
+    console.log('🧹 Cleaning up WebSocket connection...');
+    
+    if (newSocket && newSocket.connected) {
+      // Notify server that user is leaving
+      newSocket.emit('leave_workspace', { workspaceId });
+      newSocket.emit('user_offline', { 
+        userId: userId, 
+        workspaceId: workspaceId 
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setFiles(prev => [...prev, data.file || data.data]);
-          setSelectedFile(null);
-          alert('File uploaded successfully!');
-        }
-      }
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      alert('File upload failed');
-    }
-  };
-
-  // Milestone submission (freelancer)
-  const handleSubmitMilestone = async (milestoneId) => {
-    if (!milestoneSubmission.notes.trim()) {
-      alert('Please add submission notes');
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
       
-      const submissionData = {
-        notes: milestoneSubmission.notes,
-        files: milestoneSubmission.files
-      };
+      // Disconnect socket
+      newSocket.disconnect();
+    }
+    
+    // Clear socket reference
+    setSocket(null);
+  };
+}, [workspaceId, userId, workspace?.freelancerId, userRole, workspace, calculateStats, sharedMilestones]);
 
-      const response = await fetch(`${API_URL}/api/workspaces/${workspaceId}/milestones/${milestoneId}/submit`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(submissionData)
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          // Update milestone status
-          setMilestones(prev => prev.map(m => 
-            m._id === milestoneId ? { ...m, status: 'awaiting_approval' } : m
-          ));
-          
-          // Reset submission form
-          setMilestoneSubmission({ files: [], notes: '' });
-          alert('Work submitted successfully! Awaiting client approval.');
-        }
+// Make sure this function is defined and working
+const createMockWorkspace = () => {
+  console.log('🎭 Creating mock workspace immediately...');
+  
+  const mockWorkspace = {
+    _id: workspaceId,
+    workspaceId: workspaceId,
+    title: 'Digital Marketing Project',
+    status: 'active',
+    overallProgress: 45,
+    currentPhase: 2,
+    totalBudget: 5000,
+    startDate: new Date('2024-01-15'),
+    estimatedEndDate: new Date('2024-03-15'),
+    serviceType: 'Marketing Strategy',
+    
+    client: {
+      _id: userId,
+      name: 'You',
+      email: 'client@example.com'
+    },
+    
+    freelancer: {
+      _id: 'freelancer123',
+      name: 'John Designer',
+      email: 'john@example.com',
+      skills: ['Design', 'Marketing']
+    },
+    
+    milestones: [
+      {
+        _id: '1',
+        title: 'Initial Research',
+        status: 'completed',
+        phaseNumber: 1,
+        amount: 1000
+      },
+      {
+        _id: '2',
+        title: 'Design Phase',
+        status: 'awaiting_approval',
+        phaseNumber: 2,
+        amount: 2000
       }
-    } catch (error) {
-      console.error('Error submitting milestone:', error);
-      alert('Failed to submit work');
+    ],
+    
+    userRoleInWorkspace: 'client',
+    userPermissions: {
+      canApproveMilestones: true,
+      canUploadFiles: true,
+      canSendMessages: true
+    },
+    createdAt: new Date('2024-01-01'),
+    lastActivity: new Date()
+  };
+  
+  setWorkspace(mockWorkspace);
+  setSharedMilestones(mockWorkspace.milestones);
+  calculateStats(mockWorkspace, mockWorkspace.milestones);
+  
+  // IMPORTANT: Set loading to false
+  setTimeout(() => {
+    setLoading(false);
+  }, 500); // Small delay to show loading state briefly
+  
+  console.log('✅ Mock workspace created');
+};
+
+
+// ===== Fetch workspace data =====
+
+
+useEffect(() => {
+  console.log('🚀 ClientWorkspace useEffect running');
+  
+  if (!workspaceId || !userId) {
+    console.log('⚠️ Missing workspaceId or userId');
+    return;
+  }
+
+  // Call the fetchData function
+  fetchData();
+  
+  // Add a safety timeout in case fetchData fails
+  const safetyTimeout = setTimeout(() => {
+    if (loading && !workspace) {
+      console.log('⏰ Safety timeout - showing mock data');
+      createMockWorkspace();
+    }
+  }, 3000);
+
+  return () => clearTimeout(safetyTimeout);
+}, [workspaceId, userId]);
+
+
+// In ClientWorkspace.jsx, add this helper function
+const getContractByWorkspaceId = async (workspaceId) => {
+  try {
+    // Try different endpoints
+    const endpoints = [
+      `/api/contracts?workspaceId=${workspaceId}`,
+      `/api/client/contracts?workspaceId=${workspaceId}`,
+      `/api/freelancer/contracts?workspaceId=${workspaceId}`
+    ];
+    
+    for (const endpoint of endpoints) {
+      try {
+        const response = await fetch(`http://localhost:3000${endpoint}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.contracts && data.contracts.length > 0) {
+            return data.contracts[0]; // Return first contract
+          }
+        }
+      } catch (err) {
+        console.log(`Endpoint ${endpoint} failed:`, err.message);
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error fetching contract:', error);
+    return null;
+  }
+};
+
+
+
+
+const handleTyping = useCallback((isTyping) => {
+  if (socket && socket.connected) {
+    socket.emit('typing', {
+      workspaceId,
+      userId,
+      isTyping,
+      userName: workspace?.client?.name || 'Client'
+    });
+  }
+}, [socket, workspaceId, userId, workspace]);
+
+// Update your message input to trigger typing events
+const handleMessageInputChange = (e) => {
+  setNewMessage(e.target.value);
+  
+  // Debounced typing indicator
+  if (socket && socket.connected) {
+    clearTimeout(typingTimeoutRef.current);
+    handleTyping(true);
+    
+    typingTimeoutRef.current = setTimeout(() => {
+      handleTyping(false);
+    }, 1000);
+  }
+};
+
+// Add this ref at the top of your component
+const typingTimeoutRef = useRef(null);
+
+// Don't forget to clear timeout on unmount
+useEffect(() => {
+  return () => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
     }
   };
+}, []);
 
-  // Milestone approval (client)
-  const handleApproveMilestone = async (milestoneId) => {
+  // ===== Scroll to bottom of chat =====
+  useEffect(() => {
+    if (activeTab === 'chat') {
+      setTimeout(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  }, [sharedMessages, activeTab]);
+
+  // ===== Handler functions =====
+  const handleApproveMilestone = async (milestoneId, feedback = '') => {
     try {
       const token = localStorage.getItem('token');
+      console.log(`Approving milestone ${milestoneId}`);
       
       const response = await fetch(`${API_URL}/api/workspaces/${workspaceId}/milestones/${milestoneId}/approve`, {
         method: 'PUT',
@@ -403,31 +780,37 @@ const fetchWithTimeout = async (url, options = {}, timeout = 8000) => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ feedback: 'Approved! Great work.' })
+        body: JSON.stringify({ feedback })
       });
 
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          // Update milestone status
-          setMilestones(prev => prev.map(m => 
-            m._id === milestoneId ? { ...m, status: 'completed' } : m
+          // Update local state
+          setSharedMilestones(prev => prev.map(m => 
+            m._id === milestoneId ? { 
+              ...m, 
+              status: 'completed', 
+              approvalDate: new Date().toISOString(),
+              paymentStatus: 'pending_payment'
+            } : m
           ));
           
-          // Update workspace progress
-          if (workspace) {
-            const completedCount = milestones.filter(m => m.status === 'completed').length + 1;
-            const totalCount = milestones.length;
-            const newProgress = Math.round((completedCount / totalCount) * 100);
-            
-            setWorkspace(prev => ({
-              ...prev,
-              overallProgress: newProgress,
-              currentPhase: prev.currentPhase + 1
-            }));
-          }
+          calculateStats(workspace, sharedMilestones.map(m => 
+            m._id === milestoneId ? { 
+              ...m, 
+              status: 'completed', 
+              approvalDate: new Date().toISOString(),
+              paymentStatus: 'pending_payment'
+            } : m
+          ));
           
-          alert('Milestone approved and payment released!');
+          alert('Milestone approved successfully!');
+          
+          // Notify freelancer via socket
+          if (socket) {
+            socket.emit('milestone_approved', { milestoneId, feedback });
+          }
         }
       }
     } catch (error) {
@@ -436,11 +819,7 @@ const fetchWithTimeout = async (url, options = {}, timeout = 8000) => {
     }
   };
 
-  // Request changes (client)
-  const handleRequestChanges = async (milestoneId) => {
-    const feedback = prompt('Please provide feedback for requested changes:');
-    if (!feedback) return;
-
+  const handleRequestChanges = async (milestoneId, feedback) => {
     try {
       const token = localStorage.getItem('token');
       
@@ -454,14 +833,19 @@ const fetchWithTimeout = async (url, options = {}, timeout = 8000) => {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          // Update milestone status
-          setMilestones(prev => prev.map(m => 
-            m._id === milestoneId ? { ...m, status: 'in_progress' } : m
-          ));
-          
-          alert('Changes requested successfully!');
+        setSharedMilestones(prev => prev.map(m => 
+          m._id === milestoneId ? { ...m, status: 'changes_requested' } : m
+        ));
+        
+        calculateStats(workspace, sharedMilestones.map(m => 
+          m._id === milestoneId ? { ...m, status: 'changes_requested' } : m
+        ));
+        
+        alert('Changes requested successfully!');
+        
+        // Notify freelancer via socket
+        if (socket) {
+          socket.emit('milestone_changes_requested', { milestoneId, feedback });
         }
       }
     } catch (error) {
@@ -470,821 +854,827 @@ const fetchWithTimeout = async (url, options = {}, timeout = 8000) => {
     }
   };
 
-  // Schedule meeting
-  const handleScheduleMeeting = async (e) => {
-    e.preventDefault();
-    if (!newMeeting.title || !newMeeting.scheduledTime) {
-      alert('Please fill all required fields');
-      return;
-    }
+  const handleFileUpload = async (file) => {
+    if (!file) return false;
 
     try {
-      const token = localStorage.getItem('token');
-      
-      const meetingData = {
-        ...newMeeting,
-        workspaceId: workspace._id,
-        scheduledBy: userId
-      };
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('filename', file.name);
+      formData.append('workspaceId', workspaceId);
+      formData.append('uploaderRole', 'client');
 
-      const response = await fetch(`${API_URL}/api/workspaces/${workspaceId}/meetings`, {
+      const token = localStorage.getItem('token');
+
+      const response = await fetch(`${API_URL}/api/workspaces/${workspaceId}/files/upload`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(meetingData)
+        body: formData
       });
 
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          alert('Meeting scheduled successfully!');
-          setNewMeeting({
-            title: '',
-            description: '',
-            scheduledTime: '',
-            duration: 60
-          });
+          const newFile = data.file;
+          setSharedFiles(prev => [newFile, ...prev]);
+          setStats(prev => ({
+            ...prev,
+            files: {
+              total: prev.files.total + 1,
+              recent: [newFile, ...prev.files.recent.slice(0, 4)]
+            }
+          }));
+          
+          // Notify freelancer via socket
+          if (socket) {
+            socket.emit('file_uploaded', newFile);
+          }
+          
+          alert('File uploaded successfully!');
+          return true;
         }
       }
     } catch (error) {
-      console.error('Error scheduling meeting:', error);
-      alert('Failed to schedule meeting');
+      console.error('Error uploading file:', error);
+      alert('Failed to upload file. Please try again.');
+    }
+    return false;
+  };
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim()) {
+      alert('Please enter a message');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const messageData = {
+        content: newMessage.trim(),
+        senderRole: 'client',
+        workspaceId: workspaceId,
+        timestamp: new Date().toISOString()
+      };
+
+      // Send via WebSocket
+      if (socket) {
+        socket.emit('send_message', messageData);
+      }
+
+      // Save via API
+      const response = await fetch(`${API_URL}/api/workspaces/${workspaceId}/messages`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(messageData)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const newMsg = data.message || {
+          messageId: Date.now().toString(),
+          ...messageData,
+          senderName: workspace?.client?.name || 'Client'
+        };
+
+        setSharedMessages(prev => [...prev, newMsg]);
+        setStats(prev => ({
+          ...prev,
+          messages: {
+            ...prev.messages,
+            total: prev.messages.total + 1
+          }
+        }));
+
+        setNewMessage('');
+      }
+    } catch (error) {
+      console.error('❌ Error sending message:', error);
+      alert('Failed to send message');
     }
   };
 
-  // Helper functions
-  const getOtherParty = () => {
-    if (!workspace) return null;
-    if (userRole === 'client') {
-      return {
-        id: workspace.freelancerId,
-        name: workspace.freelancerName || workspace.freelancer?.name || 'Freelancer'
-      };
-    } else {
-      return {
-        id: workspace.clientId,
-        name: workspace.clientName || workspace.client?.name || 'Client'
-      };
+  const handleScheduleCall = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/workspaces/${workspaceId}/calls/schedule`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...callDetails,
+          workspaceId: workspaceId,
+          scheduledDate: `${callDetails.date}T${callDetails.time}:00`,
+          status: 'scheduled'
+        })
+      });
+
+      if (response.ok) {
+        alert('Call scheduled successfully!');
+        setShowScheduleModal(false);
+        setCallDetails({
+          title: '',
+          date: '',
+          time: '',
+          duration: 30,
+          description: ''
+        });
+      }
+    } catch (error) {
+      console.log('API schedule call endpoint not available');
+      alert('Schedule call feature coming soon!');
+      setShowScheduleModal(false);
     }
+  };
+
+  // ===== Helper Functions =====
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0
+    }).format(amount || 0);
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'Not set';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
+      year: 'numeric'
     });
   };
 
   const formatTime = (dateString) => {
     if (!dateString) return '';
-    return new Date(dateString).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
+    try {
+      return new Date(dateString).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch (error) {
+      return '';
+    }
   };
 
-  const getFileTypeIcon = (fileType) => {
-    if (!fileType) return <FaFileAlt />;
-    
-    const type = fileType.toLowerCase();
-    if (type.includes('image')) return <FaImage />;
-    if (type.includes('pdf')) return <FaFileAlt />;
-    if (type.includes('video')) return <FaPlayCircle />;
-    if (type.includes('fig') || type.includes('ai') || type.includes('psd')) return <FaPalette />;
-    return <FaFileAlt />;
+  const formatFileSize = (bytes) => {
+    if (!bytes) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const getCurrentMilestone = () => {
-    return milestones.find(m => 
-      m.status === 'in_progress' || 
-      m.status === 'in-progress' || 
-      m.status === 'awaiting_approval' || 
-      m.status === 'awaiting-approval'
-    );
+  const getOtherParty = () => {
+    if (!workspace) return null;
+    return {
+      id: workspace.freelancerId,
+      name: workspace.freelancer?.name || 'Freelancer'
+    };
   };
 
-  if (loading) {
+  const handleDownloadContract = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/contracts/${workspaceId}/download`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `contract-${workspaceId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        alert('Could not download contract. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error downloading contract:', error);
+      alert('Failed to download contract');
+    }
+  };
+
+  // ===== Loading state =====
+  if (loading && !workspace) {
     return (
-      <div className="workspace-loading">
-        <FaSpinner className="spinning" />
-        <p>Loading workspace...</p>
+      <div className="loading-container">
+        <div className="loading-content">
+          <FaSpinner className="spinning-icon" />
+          <p>Loading workspace...</p>
+        </div>
       </div>
     );
   }
 
-  if (!workspace) {
+  if (apiError && !workspace) {
     return (
-      <div className="workspace-error">
-        <FaExclamationTriangle />
-        <h3>Workspace not found</h3>
-        <p>You don't have access to this workspace or it doesn't exist.</p>
-        <button onClick={() => navigate('/dashboard')}>Back to Dashboard</button>
+      <div className="error-container">
+        <div className="error-content">
+          <FaExclamationTriangle />
+          <h3>Unable to load workspace</h3>
+          <p>{apiError}</p>
+          <div className="error-actions">
+            <button onClick={() => window.location.reload()} className="primary-button">
+              Refresh Page
+            </button>
+            <button onClick={() => navigate('/client/dashboard')} className="outline-button">
+              Back to Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!workspace && !loading) {
+    return (
+      <div className="error-container">
+        <div className="error-content">
+          <FaExclamationTriangle />
+          <h3>Workspace not found</h3>
+          <button onClick={() => navigate('/client/dashboard')} className="primary-button">
+            Back to Dashboard
+          </button>
+        </div>
       </div>
     );
   }
 
   const otherParty = getOtherParty();
-  const currentMilestone = getCurrentMilestone();
 
-  return (
-    <div className="workspace-container">
-      {/* Header */}
-      <header className="workspace-header">
-        <div className="header-content">
-          <button className="back-button" onClick={() => navigate('/dashboard')}>
-            <FaArrowLeft /> Back to Dashboard
+  // ===== Schedule Call Modal =====
+  const ScheduleCallModal = () => (
+    <div className={`workspace-modal-overlay ${showScheduleModal ? 'show' : ''}`}>
+      <div className="workspace-modal-content">
+        <div className="workspace-modal-header">
+          <h3>Schedule a Call</h3>
+          <button className="modal-close-button" onClick={() => setShowScheduleModal(false)}>
+            ×
           </button>
-          
-          <div className="project-info">
-            <h1>{workspace.projectTitle || 'Workspace'}</h1>
-            <div className="project-meta">
-              <span className="other-party">
-                <FaUser /> 
-                {userRole === 'client' ? 'Freelancer: ' : 'Client: '}
-                {otherParty?.name || 'Unknown'}
-              </span>
-              <span className="contract-id">
-                <FaFileContract /> Contract: {workspace.contractId || 'N/A'}
-              </span>
-              <span className={`status-badge ${workspace.status}`}>
-                {workspace.status}
-              </span>
+        </div>
+        <div className="workspace-modal-body">
+          <div className="form-group">
+            <label>Call Title</label>
+            <input
+              type="text"
+              value={callDetails.title}
+              onChange={(e) => setCallDetails({ ...callDetails, title: e.target.value })}
+              placeholder="Weekly check-in, Design review, etc."
+              className="form-input"
+            />
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label>Date</label>
+              <input
+                type="date"
+                value={callDetails.date}
+                onChange={(e) => setCallDetails({ ...callDetails, date: e.target.value })}
+                className="form-input"
+                min={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+            <div className="form-group">
+              <label>Time</label>
+              <input
+                type="time"
+                value={callDetails.time}
+                onChange={(e) => setCallDetails({ ...callDetails, time: e.target.value })}
+                className="form-input"
+              />
+            </div>
+            <div className="form-group">
+              <label>Duration (minutes)</label>
+              <select
+                value={callDetails.duration}
+                onChange={(e) => setCallDetails({ ...callDetails, duration: parseInt(e.target.value) })}
+                className="form-select"
+              >
+                <option value={15}>15 minutes</option>
+                <option value={30}>30 minutes</option>
+                <option value={45}>45 minutes</option>
+                <option value={60}>60 minutes</option>
+              </select>
             </div>
           </div>
-          
-          <div className="workspace-stats">
-            <div className="stat-card">
-              <span className="stat-value">{workspace.overallProgress || 0}%</span>
-              <span className="stat-label">Progress</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-value">Phase {workspace.currentPhase || 1}</span>
-              <span className="stat-label">Current Phase</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-value">${workspace.totalBudget || 0}</span>
-              <span className="stat-label">Budget</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-value">
-                <span className={`online-dot ${otherPartyOnline ? 'online' : 'offline'}`}></span>
-              </span>
-              <span className="stat-label">{otherPartyOnline ? 'Online' : 'Offline'}</span>
+          <div className="form-group">
+            <label>Description / Agenda</label>
+            <textarea
+              value={callDetails.description}
+              onChange={(e) => setCallDetails({ ...callDetails, description: e.target.value })}
+              placeholder="Agenda, topics to discuss, preparation needed, etc."
+              rows="3"
+              className="form-textarea"
+            />
+          </div>
+        </div>
+        <div className="workspace-modal-footer">
+          <button className="outline-button" onClick={() => setShowScheduleModal(false)}>
+            Cancel
+          </button>
+          <button
+            className="primary-button"
+            onClick={handleScheduleCall}
+            disabled={!callDetails.title || !callDetails.date || !callDetails.time}
+          >
+            Schedule Call
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="client-workspace">
+      {/* 🔵 TOP NAVBAR — REPLACES SIDEBAR COMPLETELY */}
+      <div className="workspace-navbar-wrapper">
+
+        {/* Project Title + Freelancer Info */}
+        <div className="workspace-navbar-header">
+          <div className="navbar-left">
+            <h3 className="proj-title">{workspace?.title || "Untitled Project"}</h3>
+
+            <div className="project-meta">
+              <span><FaUser /> Freelancer: {otherParty?.name || 'Freelancer'}</span>
+              <span className="project-status">{workspace?.status || 'active'}</span>
             </div>
           </div>
         </div>
-      </header>
 
-      {/* Navigation */}
-      <nav className="workspace-nav">
-        <div className="nav-container">
-          {[
-            { key: 'overview', label: 'Overview', icon: FaTasks },
-            { key: 'milestones', label: 'Milestones', icon: FaCheckCircle },
-            { key: 'chat', label: 'Chat', icon: FaCommentDots },
-            { key: 'files', label: 'Files', icon: FaFolderOpen },
-            { key: 'calls', label: 'Calls', icon: FaVideo },
-            { key: 'contract', label: 'Contract', icon: FaFileContract }
-          ].map((item) => (
+        {/* 🔹 Navigation Button Tabs */}
+        <div className="navbar-tabs-row">
+          {tabs.map((tab) => (
             <button
-              key={item.key}
-              className={`nav-btn ${activeSection === item.key ? 'active' : ''}`}
-              onClick={() => setActiveSection(item.key)}
+              key={tab.id}
+              className={`navbar-tab ${activeTab === tab.id ? "active" : ""}`}
+              onClick={() => setActiveTab(tab.id)}
             >
-              <item.icon />
-              <span>{item.label}</span>
+              {tab.icon && <span className="tab-icon">{tab.icon}</span>}
+              {tab.label}
             </button>
           ))}
         </div>
-      </nav>
 
-      {/* Main Content */}
-      <main className="workspace-main">
-        {/* Overview Section */}
-        {activeSection === 'overview' && (
-          <div className="overview-section">
-            <div className="section-header">
-              <h2>Project Overview</h2>
-              <p>Track your project progress and current status</p>
-            </div>
-
-            <div className="overview-content">
-              {/* Progress Section */}
-              <div className="progress-section">
-                <h3>Project Progress</h3>
-                <div className="progress-container">
-                  <div className="progress-bar">
-                    <div 
-                      className="progress-fill" 
-                      style={{ width: `${workspace.overallProgress || 0}%` }}
-                    />
-                  </div>
-                  <div className="progress-info">
-                    <span className="progress-text">{workspace.overallProgress || 0}% Complete</span>
-                    <span>Phase {workspace.currentPhase || 1} of {milestones.length}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Current Milestone */}
-              {currentMilestone && (
-                <div className="current-milestone-section">
-                  <h3>Current Phase</h3>
-                  <div className="milestone-card">
-                    <div className="milestone-header">
-                      <h4>Phase {currentMilestone.phase || currentMilestone.phaseNumber}: {currentMilestone.title}</h4>
-                      <span className={`status-tag ${currentMilestone.status}`}>
-                        {currentMilestone.status?.replace('_', ' ')}
-                      </span>
-                    </div>
-                    
-                    <p className="milestone-description">{currentMilestone.description}</p>
-                    
-                    <div className="milestone-details">
-                      <div className="detail-item">
-                        <FaDollarSign />
-                        <span>${currentMilestone.amount || 0}</span>
-                      </div>
-                      <div className="detail-item">
-                        <FaCalendarAlt />
-                        <span>Due: {formatDate(currentMilestone.dueDate)}</span>
-                      </div>
-                    </div>
-
-                    {/* Actions based on role and status */}
-                    <div className="milestone-actions">
-                      {userRole === 'freelancer' && 
-                       (currentMilestone.status === 'in_progress' || currentMilestone.status === 'in-progress') && (
-                        <div className="submission-form">
-                          <h5>Submit Work</h5>
-                          <textarea
-                            placeholder="Add submission notes..."
-                            value={milestoneSubmission.notes}
-                            onChange={(e) => setMilestoneSubmission(prev => ({ ...prev, notes: e.target.value }))}
-                            rows="3"
-                          />
-                          <div className="file-upload">
-                            <input
-                              type="file"
-                              multiple
-                              onChange={(e) => setMilestoneSubmission(prev => ({
-                                ...prev,
-                                files: [...prev.files, ...Array.from(e.target.files)]
-                              }))}
-                            />
-                            <FaUploadCloud />
-                          </div>
-                          <button 
-                            className="btn-primary"
-                            onClick={() => handleSubmitMilestone(currentMilestone._id)}
-                          >
-                            Submit for Review
-                          </button>
-                        </div>
-                      )}
-
-                      {userRole === 'client' && 
-                       (currentMilestone.status === 'awaiting_approval' || currentMilestone.status === 'awaiting-approval') && (
-                        <div className="approval-actions">
-                          <button 
-                            className="btn-success"
-                            onClick={() => handleApproveMilestone(currentMilestone._id)}
-                          >
-                            <FaCheck /> Approve & Release Payment
-                          </button>
-                          <button 
-                            className="btn-warning"
-                            onClick={() => handleRequestChanges(currentMilestone._id)}
-                          >
-                            <FaEdit /> Request Changes
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Quick Stats */}
-              <div className="quick-stats">
-                <div className="stat-card">
-                  <FaCheckCircle />
-                  <div>
-                    <span className="stat-number">
-                      {milestones.filter(m => m.status === 'completed').length}
-                    </span>
-                    <span className="stat-label">Completed</span>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <FaClock />
-                  <div>
-                    <span className="stat-number">
-                      {milestones.filter(m => 
-                        m.status === 'in_progress' || 
-                        m.status === 'in-progress' ||
-                        m.status === 'awaiting_approval' ||
-                        m.status === 'awaiting-approval'
-                      ).length}
-                    </span>
-                    <span className="stat-label">In Progress</span>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <FaFolderOpen />
-                  <div>
-                    <span className="stat-number">{files.length}</span>
-                    <span className="stat-label">Files</span>
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <FaCommentDots />
-                  <div>
-                    <span className="stat-number">{messages.length}</span>
-                    <span className="stat-label">Messages</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Project Timeline */}
-              <div className="timeline-section">
-                <h3>Project Timeline</h3>
-                <div className="timeline">
-                  <div className="timeline-item">
-                    <div className="timeline-date">Start Date</div>
-                    <div className="timeline-content">
-                      <h4>Project Started</h4>
-                      <p>{formatDate(workspace.startDate)}</p>
-                    </div>
-                  </div>
-                  
-                  {milestones.map((milestone, index) => (
-                    <div key={milestone._id} className="timeline-item">
-                      <div className="timeline-date">
-                        {formatDate(milestone.dueDate)}
-                      </div>
-                      <div className="timeline-content">
-                        <h4>Phase {milestone.phase || milestone.phaseNumber}: {milestone.title}</h4>
-                        <p>${milestone.amount} • {milestone.status}</p>
-                      </div>
-                    </div>
-                  ))}
-                  
-                  <div className="timeline-item">
-                    <div className="timeline-date">End Date</div>
-                    <div className="timeline-content">
-                      <h4>Project Completion</h4>
-                      <p>{formatDate(workspace.endDate)}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Milestones Section */}
-        {activeSection === 'milestones' && (
-          <div className="milestones-section">
-            <div className="section-header">
-              <h2>Project Milestones</h2>
-              <p>Manage and track all project phases</p>
-            </div>
-
-            <div className="milestones-grid">
-              {milestones.map(milestone => (
-                <div key={milestone._id} className={`milestone-card ${milestone.status}`}>
-                  <div className="milestone-header">
-                    <div className="milestone-phase">
-                      <span className="phase-number">Phase {milestone.phase || milestone.phaseNumber}</span>
-                      <span className={`status-badge ${milestone.status}`}>
-                        {milestone.status?.replace('_', ' ')}
-                      </span>
-                    </div>
-                    <h3>{milestone.title}</h3>
-                  </div>
-                  
-                  <p className="milestone-description">{milestone.description}</p>
-                  
-                  <div className="milestone-details">
-                    <div className="detail-item">
-                      <FaDollarSign />
-                      <span>${milestone.amount || 0}</span>
-                    </div>
-                    <div className="detail-item">
-                      <FaCalendarAlt />
-                      <span>{formatDate(milestone.dueDate)}</span>
-                    </div>
-                  </div>
-
-                  {/* Submission info if exists */}
-                  {milestone.submission && (
-                    <div className="submission-info">
-                      <h5>Submission Details:</h5>
-                      <p>{milestone.submission.notes}</p>
-                      <small>Submitted: {formatDate(milestone.submission.submittedAt)}</small>
-                    </div>
-                  )}
-
-                  {/* Feedback if exists */}
-                  {milestone.feedback && (
-                    <div className="feedback-info">
-                      <h5>Client Feedback:</h5>
-                      <p>{milestone.feedback}</p>
-                    </div>
-                  )}
-
-                  {/* Actions based on role and status */}
-                  <div className="milestone-actions">
-                    {userRole === 'freelancer' && 
-                     (milestone.status === 'in_progress' || milestone.status === 'in-progress') && (
-                      <button 
-                        className="btn-primary"
-                        onClick={() => {
-                          setMilestoneSubmission({ files: [], notes: '' });
-                          // You could implement a modal for submission
-                          alert('Click "Submit Work" in the Overview tab to submit this milestone');
-                        }}
-                      >
-                        Submit Work
-                      </button>
-                    )}
-
-                    {userRole === 'client' && 
-                     (milestone.status === 'awaiting_approval' || milestone.status === 'awaiting-approval') && (
-                      <>
-                        <button 
-                          className="btn-success"
-                          onClick={() => handleApproveMilestone(milestone._id)}
-                        >
-                          Approve
-                        </button>
-                        <button 
-                          className="btn-warning"
-                          onClick={() => handleRequestChanges(milestone._id)}
-                        >
-                          Request Changes
-                        </button>
-                      </>
-                    )}
-
-                    {milestone.status === 'completed' && (
-                      <div className="completed-badge">
-                        <FaCheckCircle /> Completed
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Chat Section */}
-        {activeSection === 'chat' && (
-          <div className="chat-section">
-            <div className="chat-header">
-              <div className="chat-partner-info">
-                <h2>Chat with {otherParty?.name}</h2>
-                <div className="online-status">
-                  <span className={`status-dot ${otherPartyOnline ? 'online' : 'offline'}`}></span>
-                  {otherPartyOnline ? 'Online' : 'Offline'}
-                </div>
-              </div>
-              <button 
-                className="btn-primary"
-                onClick={() => {
-                  const modal = document.getElementById('schedule-meeting-modal');
-                  if (modal) modal.style.display = 'block';
-                }}
-              >
-                <FaCalendarPlus /> Schedule Call
-              </button>
-            </div>
-
-            <div className="messages-container">
-              {messages.length === 0 ? (
-                <div className="no-messages">
-                  <FaCommentDots />
-                  <p>No messages yet. Start the conversation!</p>
-                </div>
-              ) : (
-                messages.map((message) => (
-                  <div
-                    key={message._id}
-                    className={`message ${
-                      message.senderRole === 'system' ? 'system' : 
-                      message.senderId === userId ? 'sent' : 'received'
-                    }`}
-                  >
-                    <div className="message-header">
-                      <span className="sender-name">
-                        {message.senderRole === 'system' ? 'System' : message.senderName}
-                      </span>
-                      <span className="message-time">
-                        {formatTime(message.timestamp || message.createdAt)}
-                      </span>
-                    </div>
-                    <div className="message-content">
-                      {message.senderRole === 'system' && <FaExclamationTriangle />}
-                      <p>{message.content}</p>
-                    </div>
-                  </div>
-                ))
-              )}
-              <div ref={chatEndRef} />
-            </div>
-
-            <form className="chat-input-form" onSubmit={handleSendMessage}>
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type your message..."
-                disabled={loading}
-              />
-              <button type="submit" className="send-btn" disabled={loading}>
-                {loading ? <FaSpinner className="spinning" /> : <FaPaperPlane />}
-              </button>
-            </form>
-          </div>
-        )}
-
-        {/* Files Section */}
-        {activeSection === 'files' && (
-          <div className="files-section">
-            <div className="section-header">
-              <div>
-                <h2>Project Files</h2>
-                <p>Shared files and documents</p>
-              </div>
-              <form className="upload-form" onSubmit={handleFileUpload}>
-                <input
-                  type="file"
-                  onChange={(e) => setSelectedFile(e.target.files[0])}
-                  disabled={loading}
-                />
-                <button type="submit" className="btn-primary" disabled={!selectedFile || loading}>
-                  {loading ? <FaSpinner className="spinning" /> : <><FaUpload /> Upload File</>}
-                </button>
-              </form>
-            </div>
-
-            {files.length === 0 ? (
-              <div className="empty-state">
-                <FaFolderOpen />
-                <p>No files uploaded yet</p>
-                <small>Upload your first file to get started</small>
-              </div>
-            ) : (
-              <div className="files-grid">
-                {files.map((file) => (
-                  <div key={file._id} className="file-card">
-                    <div className="file-icon">
-                      {getFileTypeIcon(file.fileType || file.type)}
-                    </div>
-                    <div className="file-info">
-                      <h4 title={file.originalName || file.name}>
-                        {file.originalName || file.name}
-                      </h4>
-                      <p className="uploader">
-                        Uploaded by {file.uploadedBy?.name || file.uploaderName || 'Unknown'}
-                      </p>
-                      <div className="file-meta">
-                        <span>{formatDate(file.uploadDate || file.createdAt)}</span>
-                        <span>{file.fileSize ? `${(file.fileSize / 1024).toFixed(1)} KB` : 'Unknown size'}</span>
-                        {file.relatedPhase && <span>Phase {file.relatedPhase}</span>}
-                      </div>
-                    </div>
-                    <div className="file-actions">
-                      <button 
-                        className="btn-download"
-                        onClick={() => window.open(file.fileUrl || file.url, '_blank')}
-                      >
-                        <FaDownload />
-                      </button>
-                      <button 
-                        className="btn-preview"
-                        onClick={() => window.open(file.fileUrl || file.url, '_blank')}
-                      >
-                        <FaEye />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Calls Section */}
-        {activeSection === 'calls' && (
-          <div className="calls-section">
-            <div className="section-header">
-              <h2>Video Calls</h2>
-              <p>Connect with {otherParty?.name}</p>
-              <div className="call-actions">
-                <button 
-                  className="btn-primary"
-                  onClick={() => {
-                    const modal = document.getElementById('schedule-meeting-modal');
-                    if (modal) modal.style.display = 'block';
-                  }}
-                >
-                  <FaCalendarDay /> Schedule Call
-                </button>
-                <button className="btn-secondary">
-                  <FaPhone /> Start Instant Call
-                </button>
-              </div>
-            </div>
-
-            <div className="calls-list">
-              <div className="empty-state">
-                <FaVideo />
-                <p>No scheduled calls</p>
-                <button 
-                  className="btn-primary"
-                  onClick={() => {
-                    const modal = document.getElementById('schedule-meeting-modal');
-                    if (modal) modal.style.display = 'block';
-                  }}
-                >
-                  Schedule Your First Call
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Contract Section */}
-        {activeSection === 'contract' && (
-          <div className="contract-section">
-            <div className="section-header">
-              <h2>Contract Details</h2>
-              <p>View and manage your project contract</p>
-            </div>
-
-            <div className="contract-details">
-              <div className="contract-card">
-                <div className="contract-header">
-                  <h3>Project Contract</h3>
-                  <span className="contract-status">{workspace.contractStatus || 'Active'}</span>
-                </div>
-                
-                <div className="contract-info">
-                  <div className="info-row">
-                    <span className="info-label">Contract ID:</span>
-                    <span className="info-value">{workspace.contractId || 'N/A'}</span>
-                  </div>
-                  <div className="info-row">
-                    <span className="info-label">Project Title:</span>
-                    <span className="info-value">{workspace.projectTitle}</span>
-                  </div>
-                  <div className="info-row">
-                    <span className="info-label">Contract Value:</span>
-                    <span className="info-value">${workspace.totalBudget}</span>
-                  </div>
-                  <div className="info-row">
-                    <span className="info-label">Start Date:</span>
-                    <span className="info-value">{formatDate(workspace.startDate)}</span>
-                  </div>
-                  <div className="info-row">
-                    <span className="info-label">End Date:</span>
-                    <span className="info-value">{formatDate(workspace.endDate)}</span>
-                  </div>
-                  <div className="info-row">
-                    <span className="info-label">Payment Terms:</span>
-                    <span className="info-value">Milestone-based</span>
-                  </div>
-                </div>
-
-                <div className="contract-parties">
-                  <div className="party-card">
-                    <h4>Client</h4>
-                    <p>{workspace.clientName || 'Client'}</p>
-                    <small>Role: Client</small>
-                  </div>
-                  <div className="party-card">
-                    <h4>Freelancer</h4>
-                    <p>{workspace.freelancerName || 'Freelancer'}</p>
-                    <small>Role: Freelancer</small>
-                  </div>
-                </div>
-
-                <div className="contract-actions">
-                  <button className="btn-primary">
-                    <FaDownload /> Download Contract
-                  </button>
-                  <button className="btn-secondary">
-                    <FaEye /> View Full Contract
-                  </button>
-                </div>
-              </div>
-
-              {/* Milestone Payments */}
-              <div className="payments-section">
-                <h3>Payment Schedule</h3>
-                <div className="payments-list">
-                  {milestones.map(milestone => (
-                    <div key={milestone._id} className="payment-item">
-                      <div className="payment-info">
-                        <h4>Phase {milestone.phase || milestone.phaseNumber}: {milestone.title}</h4>
-                        <p>${milestone.amount}</p>
-                      </div>
-                      <div className="payment-status">
-                        <span className={`status ${milestone.status}`}>
-                          {milestone.status === 'completed' ? 'Paid' : milestone.status}
-                        </span>
-                        <small>Due: {formatDate(milestone.dueDate)}</small>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
-
-      {/* Schedule Meeting Modal */}
-      <div id="schedule-meeting-modal" className="modal" style={{ display: 'none' }}>
-        <div className="modal-content">
-          <div className="modal-header">
-            <h3>Schedule Video Call</h3>
-            <span className="close" onClick={() => document.getElementById('schedule-meeting-modal').style.display = 'none'}>
-              &times;
-            </span>
-          </div>
-          <div className="modal-body">
-            <form onSubmit={handleScheduleMeeting}>
-              <div className="form-group">
-                <label>Call Title</label>
-                <input
-                  type="text"
-                  value={newMeeting.title}
-                  onChange={(e) => setNewMeeting({ ...newMeeting, title: e.target.value })}
-                  placeholder="e.g., Design Review Meeting"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Description</label>
-                <textarea
-                  value={newMeeting.description}
-                  onChange={(e) => setNewMeeting({ ...newMeeting, description: e.target.value })}
-                  placeholder="Brief description of the call agenda..."
-                  rows="3"
-                />
-              </div>
-              <div className="form-group">
-                <label>Date & Time</label>
-                <input
-                  type="datetime-local"
-                  value={newMeeting.scheduledTime}
-                  onChange={(e) => setNewMeeting({ ...newMeeting, scheduledTime: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Duration (minutes)</label>
-                <input
-                  type="number"
-                  value={newMeeting.duration}
-                  onChange={(e) => setNewMeeting({ ...newMeeting, duration: parseInt(e.target.value) })}
-                  min="15"
-                  step="15"
-                />
-              </div>
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  onClick={() => document.getElementById('schedule-meeting-modal').style.display = 'none'}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn-primary">
-                  Schedule Call
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
       </div>
 
-      {apiError && (
-        <div className="error-banner">
-          <FaExclamationTriangle />
-          <span>{apiError}</span>
-          <button onClick={() => window.location.reload()}>Retry</button>
-        </div>
-      )}
+      {/* Main Content */}
+      <div className="workspace-main">
+        {/* Header */}
+        <header className="workspace-main-header">
+          <div className="header-section-left">
+            <div className="breadcrumb-nav">
+              <button onClick={() => navigate('/client/dashboard')}>
+                <FaHome /> Dashboard
+              </button>
+              <span>/</span>
+              <button onClick={() => navigate('/client/workspaces')}>
+                Workspaces
+              </button>
+              <span>/</span>
+              <span className="current-page">{workspace.title || 'Project'}</span>
+            </div>
+
+            <div className="search-container">
+              <FaSearch />
+              <input
+                type="text"
+                placeholder="Search workspace..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="header-section-right">
+            <div className="notification-wrapper">
+              <button
+                className="header-icon-button notification-button"
+                onClick={() => setShowNotifications(!showNotifications)}
+              >
+                <FaBell />
+                {notifications.filter(n => !n.read).length > 0 && (
+                  <span className="notification-indicator">
+                    {notifications.filter(n => !n.read).length}
+                  </span>
+                )}
+              </button>
+            </div>
+            <button className="header-icon-button">
+              <FaCog />
+            </button>
+            <div className="user-account">
+              <div className="user-avatar">
+                {workspace.client?.name?.charAt(0) || 'C'}
+              </div>
+              <span>{workspace.client?.name || 'Client'}</span>
+            </div>
+          </div>
+        </header>
+
+        {/* Content Area */}
+        <main className="workspace-content-area">
+          {/* Overview Tab */}
+          {activeTab === 'overview' && (
+            <ClientWorkspaceOverview
+              workspace={workspace}
+              milestones={sharedMilestones}
+              otherParty={otherParty}
+              otherPartyOnline={otherPartyOnline}
+              setActiveSection={setActiveTab}
+            />
+          )}
+
+          {/* Milestones Tab with Approval System */}
+          {activeTab === 'milestones' && (
+            <div className="milestones-container">
+              <div className="content-section-header">
+                <h2>Milestone Approvals</h2>
+                <div className="milestone-summary">
+                  <div className="summary-item">
+                    <span className="label">Completed</span>
+                    <span className="value">{stats.milestones.completed}</span>
+                  </div>
+                  <div className="summary-item">
+                    <span className="label">Pending Review</span>
+                    <span className="value">{stats.milestones.awaitingApproval}</span>
+                  </div>
+                  <div className="summary-item">
+                    <span className="label">Total</span>
+                    <span className="value">{stats.milestones.total}</span>
+                  </div>
+                </div>
+              </div>
+
+              {sharedMilestones.length > 0 ? (
+                <div className="milestones-list">
+                  {sharedMilestones.map(milestone => (
+                    <div key={milestone._id} className="milestone-item">
+                      <div className="milestone-header">
+                        <div className="milestone-title">
+                          <h3>{milestone.title}</h3>
+                          <p className="phase-label">Phase {milestone.phase}</p>
+                        </div>
+                        <div className="milestone-status-info">
+                          <span className={`status-tag ${milestone.status?.replace('_', '-')}`}>
+                            {milestone.status?.replace('_', ' ') || 'Pending'}
+                          </span>
+                          <span className="amount-display">{formatCurrency(milestone.amount)}</span>
+                        </div>
+                      </div>
+
+                      <div className="milestone-details">
+                        <p>{milestone.description}</p>
+                        <div className="details-row">
+                          <div className="detail-info">
+                            <FaCalendarAlt />
+                            <span>Due: {formatDate(milestone.dueDate)}</span>
+                          </div>
+                          <div className="detail-info">
+                            <FaClock />
+                            <span>Status: {milestone.paymentStatus || 'Not Paid'}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Show files if milestone has submissions */}
+                      {milestone.submission?.files && milestone.submission.files.length > 0 && (
+                        <div className="milestone-files">
+                          <h4>Submitted Files</h4>
+                          <div className="files-list">
+                            {milestone.submission.files.map((file, index) => (
+                              <div key={index} className="file-item">
+                                <FaFileAlt className="file-type-icon" />
+                                <a href={file.url || '#'} target="_blank" rel="noopener noreferrer" className="file-name">
+                                  {file.name}
+                                </a>
+                                <div className="file-actions-row">
+                                  <button className="icon-button" onClick={() => window.open(file.url || '#', '_blank')}>
+                                    <FaEye />
+                                  </button>
+                                  <button className="icon-button" onClick={() => {
+                                    const a = document.createElement('a');
+                                    a.href = file.url || '#';
+                                    a.download = file.name;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    document.body.removeChild(a);
+                                  }}>
+                                    <FaDownload />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Show submission notes */}
+                      {milestone.submission?.notes && (
+                        <div className="milestone-files">
+                          <h4>Submission Notes</h4>
+                          <p>{milestone.submission.notes}</p>
+                        </div>
+                      )}
+
+                      {/* Approval actions for pending milestones */}
+                      {milestone.status === 'awaiting_approval' && (
+                        <div className="feedback-section">
+                          <h4>Review & Approve</h4>
+                          <textarea
+                            className="feedback-textarea"
+                            placeholder="Add your feedback or approval notes..."
+                            id={`feedback-${milestone._id}`}
+                          />
+                          <div className="feedback-actions">
+                            <button
+                              className="primary-button success"
+                              onClick={() => handleApproveMilestone(
+                                milestone._id,
+                                document.getElementById(`feedback-${milestone._id}`)?.value || ''
+                              )}
+                            >
+                              <FaCheck /> Approve
+                            </button>
+                            <button
+                              className="outline-button warning"
+                              onClick={() => handleRequestChanges(
+                                milestone._id,
+                                document.getElementById(`feedback-${milestone._id}`)?.value || 'Please make the requested changes.'
+                              )}
+                            >
+                              <FaEdit /> Request Changes
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Status message for completed milestones */}
+                      {milestone.status === 'completed' && (
+                        <div className="milestone-actions">
+                          <span className="status-text success">
+                            <FaCheck /> Approved on {formatDate(milestone.approvalDate)}
+                          </span>
+                          <button
+                            className="primary-button"
+                            onClick={() => setActiveTab('budget')}
+                          >
+                            <FaDollarSign /> Make Payment
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Status message for changes requested */}
+                      {milestone.status === 'changes_requested' && (
+                        <div className="milestone-actions">
+                          <span className="status-text warning">
+                            <FaEdit /> Changes Requested
+                          </span>
+                          <p>Waiting for freelancer to resubmit with changes.</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-content-state">
+                  <FaCheckCircle />
+                  <h3>No milestones yet</h3>
+                  <p>Milestones will appear here once they're created in the contract</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Budget & Payments Tab with Stripe Integration */}
+          {activeTab === 'budget' && (
+            <ClientPaymentManager
+              workspace={workspace}
+              milestones={sharedMilestones}
+              loading={loading}
+              contractDetails={contractDetails}
+            />
+          )}
+
+          {/* Reports Tab */}
+          {activeTab === 'reports' && (
+            <ClientReportsDashboard
+              workspace={workspace}
+              milestones={sharedMilestones}
+              files={sharedFiles}
+              messages={sharedMessages}
+            />
+          )}
+
+          {/* Notes Tab */}
+          {activeTab === 'notes' && (
+            <ClientNotes workspaceId={workspaceId} />
+          )}
+
+          {/* Meetings Tab */}
+          {activeTab === 'meetings' && (
+            <SharedMeetingScheduler
+              workspace={workspace}
+              userRole="client"
+              loading={loading}
+            />
+          )}
+
+          {/* Chat Tab */}
+          {activeTab === 'chat' && (
+            <div className="messages-tab">
+              <div className="content-section-header">
+                <h2>Messages</h2>
+                <div className="message-summary">
+                  <span>{stats.messages.total} total messages</span>
+                  <span style={{ color: otherPartyOnline ? '#10b981' : '#ef4444' }}>
+                    <FaUser /> {otherParty?.name || 'Freelancer'} is {otherPartyOnline ? 'Online' : 'Offline'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="messages-wrapper">
+                {sharedMessages.length > 0 ? (
+                  sharedMessages.map((message, index) => (
+                    <div
+                      key={message.messageId || message._id || index}
+                      className={`message-bubble ${message.senderRole === 'client' ? 'sent' : 'received'}`}
+                    >
+                      <div className="message-avatar-circle">
+                        {message.senderRole === 'client' ? 'C' : 'F'}
+                      </div>
+                      <div className="message-content-wrapper">
+                        <div className="message-meta">
+                          <span className="message-sender">
+                            {message.senderRole === 'client' ? 'You' : otherParty?.name || 'Freelancer'}
+                          </span>
+                          <span className="message-time">
+                            {formatTime(message.timestamp || message.createdAt)} • {formatDate(message.timestamp || message.createdAt)}
+                          </span>
+                        </div>
+                        <div className="message-text-content">{message.content}</div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="empty-content-state">
+                    <FaCommentDots />
+                    <h3>No messages yet</h3>
+                    <p>Start the conversation with your freelancer</p>
+                  </div>
+                )}
+                <div ref={chatEndRef} />
+              </div>
+
+              <div className="message-input">
+                <textarea
+                  placeholder="Type your message here..."
+                  rows="3"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                />
+                <div className="input-actions">
+                  <button className="primary-button send-btn" onClick={handleSendMessage}>
+                    <FaPaperPlane /> Send
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Files Tab with Upload */}
+          {activeTab === 'files' && (
+            <div className="files-tab">
+              <div className="content-section-header">
+                <h2>Shared Files</h2>
+                <div className="file-actions">
+                  <button
+                    className="primary-button"
+                    onClick={() => document.getElementById('file-upload').click()}
+                  >
+                    <FaUpload /> Upload File
+                  </button>
+                  <input
+                    id="file-upload"
+                    type="file"
+                    style={{ display: 'none' }}
+                    onChange={async (e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        await handleFileUpload(file);
+                        e.target.value = '';
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="files-grid-layout">
+                {sharedFiles.length > 0 ? (
+                  sharedFiles.map((file, index) => (
+                    <div key={index} className="file-item-card">
+                      <div className="file-type-icon">
+                        {file.fileType?.includes('image') ? <FaImage /> :
+                          file.fileType?.includes('pdf') ? <FaFileAlt /> :
+                            file.fileType?.includes('video') ? <FaVideo /> :
+                              file.fileType?.includes('audio') ? <FaMusic /> :
+                                file.fileType?.includes('zip') || file.fileType?.includes('rar') ? <FaArchive /> :
+                                  <FaFileAlt />}
+                      </div>
+                      <div className="file-info-content">
+                        <h4 title={file.filename || file.name}>
+                          {file.filename || file.name}
+                        </h4>
+                        <p>{formatFileSize(file.fileSize)}</p>
+                        <span className="file-uploader-info">
+                          By {file.uploadedBy?.name || 'Unknown'}
+                          {file.uploaderRole === 'client' ? ' (You)' : ' (Freelancer)'}
+                        </span>
+                        <span className="file-date-info">
+                          {formatDate(file.uploadDate || file.createdAt)}
+                        </span>
+                      </div>
+                      <div className="file-actions-row">
+                        <button
+                          className="icon-button"
+                          onClick={() => window.open(file.fileUrl || file.url, '_blank')}
+                          title="View file"
+                        >
+                          <FaEye />
+                        </button>
+                        <button
+                          className="icon-button"
+                          onClick={() => {
+                            const a = document.createElement('a');
+                            a.href = file.fileUrl || file.url;
+                            a.download = file.filename || file.name;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                          }}
+                          title="Download file"
+                        >
+                          <FaDownload />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="empty-content-state">
+                    <FaFolderOpen />
+                    <h3>No files shared yet</h3>
+                    <p>Upload files to share with your freelancer</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Contract Tab */}
+          {activeTab === 'contract' && (
+            <ContractViewer
+              workspace={workspace}
+              contractDetails={contractDetails}
+              milestones={sharedMilestones}
+              onDownloadContract={handleDownloadContract}
+            />
+          )}
+        </main>
+
+        <footer className="workspace-footer">
+          <div className="footer-left-section">
+            <span className="workspace-id">Workspace ID: {workspace.workspaceId || workspaceId}</span>
+            <span className="last-updated">
+              Last updated: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          </div>
+          <div className="footer-right-section">
+            <button className="outline-button" onClick={() => navigate('/client/dashboard')}>
+              <FaSignOutAlt /> Exit Workspace
+            </button>
+          </div>
+        </footer>
+      </div>
+
+      {showScheduleModal && <ScheduleCallModal />}
     </div>
   );
 };

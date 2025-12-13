@@ -1,0 +1,177 @@
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 30px; /* Space between cards horizontally */
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+/* Ensure each card takes equal width */
+.services-grid > * {
+  display: flex;
+  justify-content: center;
+}
+
+/* Card wrapper to ensure proper sizing */
+.service-card-container {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* Loading, Error, Empty states */
+.services-loading,
+.services-error,
+.services-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  background: var(--blue-light);
+  border-radius: 16px;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid var(--gray-medium);
+  border-top-color: var(--navy-blue);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  color: var(--navy-dark);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.error-icon {
+  font-size: 42px;
+  margin-bottom: 20px;
+  color: #dc2626;
+}
+
+.error-title {
+  color: #dc2626;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.error-message {
+  color: var(--gray-text);
+  margin-bottom: 20px;
+  max-width: 400px;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.retry-btn {
+  background: var(--navy-blue);
+  color: var(--white);
+  border: none;
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.retry-btn:hover {
+  background: var(--navy-dark);
+  transform: translateY(-1px);
+}
+
+.empty-icon {
+  font-size: 56px;
+  margin-bottom: 24px;
+  opacity: 0.3;
+  color: var(--navy-blue);
+}
+
+.empty-title {
+  color: var(--navy-dark);
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.empty-subtitle {
+  color: var(--gray-text);
+  font-size: 15px;
+  max-width: 400px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Responsive Design for 3-column layout */
+@media (min-width: 1400px) {
+  .services-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1399px) and (min-width: 992px) {
+  .services-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+  }
+  
+  .service-card-container {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 991px) and (min-width: 768px) {
+  .services-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 columns on smaller tablets */
+    gap: 20px;
+  }
+}
+
+@media (max-width: 767px) {
+  .services-grid {
+    grid-template-columns: 1fr; /* 1 column on mobile */
+    gap: 20px;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  
+  .services-error,
+  .services-empty,
+  .services-loading {
+    padding: 60px 20px;
+  }
+  
+  .empty-icon,
+  .error-icon {
+    font-size: 48px;
+  }
+}
+
+@media (max-width: 480px) {
+  .services-grid {
+    gap: 16px;
+  }
+  
+  .empty-title,
+  .error-title {
+    font-size: 18px;
+  }
+  
+  .empty-subtitle,
+  .error-message,
+  .loading-text {
+    font-size: 14px;
+  }
+}

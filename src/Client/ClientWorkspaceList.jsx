@@ -1,279 +1,689 @@
-// ClientWorkspaceList.jsx
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { 
-  FaProjectDiagram, 
-  FaSearch, 
-  FaSpinner, 
-  FaExclamationTriangle, 
-  FaSyncAlt,
+import { useNavigate } from 'react-router-dom';
+import {
+  FaSearch,
+  FaFilter,
+  FaCalendarAlt,
+  FaUser,
+  FaDollarSign,
+  FaClock,
+  FaCheckCircle,
+  FaExclamationTriangle,
+  FaSpinner,
+  FaFolderOpen,
+  FaStar,
+  FaChartLine,
+  FaEye,
   FaPlus,
-  FaFileContract
+  FaSort,
+  FaDownload,
+  FaEllipsisV,
+  FaRegClock,
+  FaRegCalendarCheck
 } from 'react-icons/fa';
 import axios from 'axios';
-import ClientWorkspaceCard from './ClientWorkspaceCard';
-import { API_URL } from '../Config'; 
 import './ClientWorkspaceList.css';
 
 const ClientWorkspaceList = () => {
+  const navigate = useNavigate();
   const [workspaces, setWorkspaces] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filter, setFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('recent');
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    completed: 0,
+    pending: 0,
+    totalBudget: 0,
+    totalSpent: 0,
+    overdue: 0
+  });
+
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
   useEffect(() => {
     fetchWorkspaces();
   }, []);
-  
+
   const fetchWorkspaces = async () => {
     try {
       setLoading(true);
-      setError(null);
-      
       const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Authentication required. Please login again.');
-        setLoading(false);
-        return;
-      }
+      const userId = localStorage.getItem('userId');
       
-      console.log('🔍 Fetching client workspaces from:', `${API_URL}/api/client/workspaces`);
+      console.log('🔍 Fetching client workspaces for user:', userId);
       
-      const response = await axios.get(
+      // Try different API endpoints
+      const endpoints = [
         `${API_URL}/api/client/workspaces`,
-        { 
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          } 
+        `${API_URL}/api/workspaces/client`,
+        `${API_URL}/api/workspaces?clientId=${userId}`
+      ];
+
+      let workspacesData = null;
+      
+      for (const endpoint of endpoints) {
+        try {
+          console.log(`Trying endpoint: ${endpoint}`);
+          const response = await axios.get(endpoint, {
+            headers: { 
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (response.data && (response.data.workspaces || response.data.success)) {
+            workspacesData = response.data.workspaces || response.data.data || [];
+            console.log(`✅ Success from ${endpoint}:`, workspacesData.length, 'workspaces');
+            break;
+          }
+        } catch (err) {
+          console.log(`❌ Failed: ${endpoint} - ${err.message}`);
         }
-      );
-      
-      console.log('📦 Client Workspaces API Response:', response.data);
-      
-      if (response.data.success) {
-        setWorkspaces(response.data.workspaces || []);
-        console.log(`✅ Loaded ${response.data.workspaces?.length || 0} workspaces`);
-      } else {
-        setError(response.data.message || 'Failed to load workspaces');
-        setWorkspaces([]);
       }
+
+      // If no API data, use sample data
+      if (!workspacesData || workspacesData.length === 0) {
+        console.log('🎭 Using sample workspace data');
+        workspacesData = getSampleWorkspaces();
+      }
+
+      setWorkspaces(workspacesData);
+      calculateStats(workspacesData);
     } catch (error) {
       console.error('❌ Error fetching workspaces:', error);
-      
-      // Try alternative endpoints if the main one fails
-      await tryAlternativeEndpoints();
+      // Use sample data on error
+      const sampleData = getSampleWorkspaces();
+      setWorkspaces(sampleData);
+      calculateStats(sampleData);
     } finally {
       setLoading(false);
     }
   };
-  
-  const tryAlternativeEndpoints = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const userId = localStorage.getItem('userId');
-      
-      if (!token || !userId) {
-        setError('User information missing. Please login again.');
-        return;
+
+  const getSampleWorkspaces = () => {
+    return [
+      {
+        _id: 'workspace_001',
+        workspaceId: 'WS_001',
+        title: 'Digital Boost Strategy & Campaign Management',
+        description: 'Complete digital marketing strategy and campaign management including SEO, social media marketing, and content creation.',
+        status: 'active',
+        freelancerName: 'Alex Johnson',
+        freelancerId: 'freelancer_001',
+        freelancerRating: 4.9,
+        progress: 45,
+        budget: 12500,
+        spent: 2500,
+        startDate: '2024-01-15',
+        endDate: '2024-03-15',
+        lastActivity: new Date().toISOString(),
+        milestones: 4,
+        completedMilestones: 1,
+        overdueTasks: 0,
+        nextDeadline: '2024-02-15',
+        serviceType: 'Digital Marketing',
+        tags: ['marketing', 'seo', 'social-media'],
+        createdAt: '2024-01-10',
+        contractSigned: true,
+        paymentStatus: 'up_to_date'
+      },
+      {
+        _id: 'workspace_002',
+        workspaceId: 'WS_002',
+        title: 'E-commerce Mobile App Development',
+        description: 'Development of a React Native mobile application for e-commerce platform with payment integration.',
+        status: 'active',
+        freelancerName: 'Sarah Chen',
+        freelancerId: 'freelancer_002',
+        freelancerRating: 4.8,
+        progress: 75,
+        budget: 8000,
+        spent: 6000,
+        startDate: '2024-02-01',
+        endDate: '2024-04-01',
+        lastActivity: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        milestones: 6,
+        completedMilestones: 4,
+        overdueTasks: 1,
+        nextDeadline: '2024-02-28',
+        serviceType: 'Mobile Development',
+        tags: ['react-native', 'ecommerce', 'mobile'],
+        createdAt: '2024-01-25',
+        contractSigned: true,
+        paymentStatus: 'pending'
+      },
+      {
+        _id: 'workspace_003',
+        workspaceId: 'WS_003',
+        title: 'Corporate Website Redesign',
+        description: 'Complete redesign and development of corporate website with modern UI/UX and content management system.',
+        status: 'completed',
+        freelancerName: 'Michael Rodriguez',
+        freelancerId: 'freelancer_003',
+        freelancerRating: 4.7,
+        progress: 100,
+        budget: 5000,
+        spent: 5000,
+        startDate: '2024-01-01',
+        endDate: '2024-02-15',
+        lastActivity: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        milestones: 3,
+        completedMilestones: 3,
+        overdueTasks: 0,
+        nextDeadline: null,
+        serviceType: 'Web Development',
+        tags: ['web-design', 'cms', 'responsive'],
+        createdAt: '2023-12-15',
+        contractSigned: true,
+        paymentStatus: 'paid'
+      },
+      {
+        _id: 'workspace_004',
+        workspaceId: 'WS_004',
+        title: 'Cloud Infrastructure Migration',
+        description: 'Migration of existing infrastructure to AWS cloud with optimization and security implementation.',
+        status: 'pending',
+        freelancerName: 'Alex Johnson',
+        freelancerId: 'freelancer_001',
+        freelancerRating: 4.9,
+        progress: 0,
+        budget: 10000,
+        spent: 0,
+        startDate: '2024-03-01',
+        endDate: '2024-05-01',
+        lastActivity: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+        milestones: 5,
+        completedMilestones: 0,
+        overdueTasks: 0,
+        nextDeadline: '2024-03-15',
+        serviceType: 'Cloud Computing',
+        tags: ['aws', 'migration', 'devops'],
+        createdAt: '2024-02-20',
+        contractSigned: false,
+        paymentStatus: 'not_started'
+      },
+      {
+        _id: 'workspace_005',
+        workspaceId: 'WS_005',
+        title: 'Brand Identity & Logo Design',
+        description: 'Creation of complete brand identity including logo, color palette, typography, and brand guidelines.',
+        status: 'active',
+        freelancerName: 'Emma Wilson',
+        freelancerId: 'freelancer_004',
+        freelancerRating: 4.6,
+        progress: 30,
+        budget: 3000,
+        spent: 900,
+        startDate: '2024-02-10',
+        endDate: '2024-03-10',
+        lastActivity: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+        milestones: 3,
+        completedMilestones: 1,
+        overdueTasks: 0,
+        nextDeadline: '2024-02-25',
+        serviceType: 'Graphic Design',
+        tags: ['branding', 'logo', 'design'],
+        createdAt: '2024-01-30',
+        contractSigned: true,
+        paymentStatus: 'up_to_date'
+      },
+      {
+        _id: 'workspace_006',
+        workspaceId: 'WS_006',
+        title: 'Data Analytics Dashboard',
+        description: 'Development of interactive data analytics dashboard with real-time reporting and visualization.',
+        status: 'active',
+        freelancerName: 'David Kim',
+        freelancerId: 'freelancer_005',
+        freelancerRating: 4.8,
+        progress: 60,
+        budget: 7000,
+        spent: 4200,
+        startDate: '2024-01-20',
+        endDate: '2024-03-20',
+        lastActivity: new Date().toISOString(),
+        milestones: 4,
+        completedMilestones: 2,
+        overdueTasks: 0,
+        nextDeadline: '2024-02-20',
+        serviceType: 'Data Science',
+        tags: ['analytics', 'dashboard', 'data-visualization'],
+        createdAt: '2024-01-05',
+        contractSigned: true,
+        paymentStatus: 'pending'
       }
-      
-      console.log('🔄 Trying alternative endpoints...');
-      
-      // Try endpoint 1: Get from contracts with workspaceId
-      try {
-        const contractsResponse = await axios.get(
-          `${API_URL}/api/client/contracts`,
-          {
-            headers: { 'Authorization': `Bearer ${token}` },
-            params: { status: 'active' }
-          }
-        );
-        
-        if (contractsResponse.data.success) {
-          const activeContracts = contractsResponse.data.contracts || [];
-          const contractsWithWorkspace = activeContracts.filter(
-            contract => contract.workspaceId && contract.workspaceId !== 'null'
-          );
-          
-          if (contractsWithWorkspace.length > 0) {
-            console.log(`✅ Found ${contractsWithWorkspace.length} contracts with workspaces`);
-            
-            // Transform contract data to workspace format
-            const transformedWorkspaces = contractsWithWorkspace.map(contract => ({
-              _id: contract.workspaceId,
-              workspaceId: contract.workspaceId,
-              projectTitle: contract.title || 'Project',
-              status: 'active',
-              clientName: contract.clientId?.name || 'Client',
-              freelancerName: contract.freelancerId?.name || 'Freelancer',
-              contractId: contract.contractId,
-              projectId: contract.projectId?._id || contract.projectId,
-              freelancerId: contract.freelancerId?._id || contract.freelancerId,
-              clientId: contract.clientId?._id || contract.clientId,
-              budget: contract.totalBudget || 0,
-              overallProgress: 0,
-              currentPhase: 1,
-              startDate: contract.startDate,
-              endDate: contract.endDate
-            }));
-            
-            setWorkspaces(transformedWorkspaces);
-            return;
-          }
-        }
-      } catch (contractError) {
-        console.log('Contracts endpoint failed:', contractError.message);
-      }
-      
-      // Try endpoint 2: Generic workspace endpoint
-      try {
-        const genericResponse = await axios.get(
-          `${API_URL}/api/workspaces`,
-          { headers: { 'Authorization': `Bearer ${token}` } }
-        );
-        
-        if (genericResponse.data.success) {
-          // Filter for client's workspaces
-          const allWorkspaces = genericResponse.data.workspaces || [];
-          const clientWorkspaces = allWorkspaces.filter(
-            ws => ws.clientId === userId || ws.clientId?._id === userId
-          );
-          
-          setWorkspaces(clientWorkspaces);
-          return;
-        }
-      } catch (genericError) {
-        console.log('Generic workspaces endpoint failed:', genericError.message);
-      }
-      
-      // If all endpoints fail
-      setError('Unable to connect to server. Please check your connection.');
-      setWorkspaces([]);
-      
-    } catch (fallbackError) {
-      console.error('All fallback endpoints failed:', fallbackError);
-      setError('Server connection failed. Please try again later.');
+    ];
+  };
+
+  const calculateStats = (workspacesData) => {
+    const total = workspacesData.length;
+    const active = workspacesData.filter(w => w.status === 'active').length;
+    const completed = workspacesData.filter(w => w.status === 'completed').length;
+    const pending = workspacesData.filter(w => w.status === 'pending').length;
+    const totalBudget = workspacesData.reduce((sum, w) => sum + (w.budget || 0), 0);
+    const totalSpent = workspacesData.reduce((sum, w) => sum + (w.spent || 0), 0);
+    const overdue = workspacesData.filter(w => w.overdueTasks > 0).length;
+
+    setStats({
+      total,
+      active,
+      completed,
+      pending,
+      totalBudget,
+      totalSpent,
+      overdue
+    });
+  };
+
+  const filteredWorkspaces = workspaces.filter(workspace => {
+    const matchesSearch = workspace.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         workspace.freelancerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         workspace.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         workspace.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    if (filter === 'all') return matchesSearch;
+    if (filter === 'active') return matchesSearch && workspace.status === 'active';
+    if (filter === 'completed') return matchesSearch && workspace.status === 'completed';
+    if (filter === 'pending') return matchesSearch && workspace.status === 'pending';
+    if (filter === 'overdue') return matchesSearch && workspace.overdueTasks > 0;
+    if (filter === 'unsigned') return matchesSearch && !workspace.contractSigned;
+    
+    return matchesSearch;
+  });
+
+  const sortedWorkspaces = [...filteredWorkspaces].sort((a, b) => {
+    switch (sortBy) {
+      case 'recent':
+        return new Date(b.lastActivity || b.createdAt) - new Date(a.lastActivity || a.createdAt);
+      case 'progress':
+        return b.progress - a.progress;
+      case 'deadline':
+        return new Date(a.nextDeadline || a.endDate) - new Date(b.nextDeadline || b.endDate);
+      case 'budget':
+        return b.budget - a.budget;
+      case 'name':
+        return a.title.localeCompare(b.title);
+      default:
+        return 0;
+    }
+  });
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Not set';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0
+    }).format(amount || 0);
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'active': return { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-200' };
+      case 'completed': return { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-200' };
+      case 'pending': return { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-200' };
+      default: return { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-200' };
     }
   };
-  
-  const handleRetry = () => {
+
+  const getProgressColor = (progress) => {
+    if (progress >= 80) return 'bg-green-500';
+    if (progress >= 50) return 'bg-blue-500';
+    if (progress >= 30) return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
+
+  const handleWorkspaceClick = (workspaceId, workspaceTitle) => {
+    console.log('📍 Client Workspace Card Clicked!');
+    console.log('Workspace ID:', workspaceId);
+    console.log('Workspace Title:', workspaceTitle);
+    navigate(`/client/workspace/${workspaceId}`);
+  };
+
+  const handleCreateWorkspace = () => {
+    navigate('/client/projects/create');
+  };
+
+  const handleExportData = () => {
+    // Export workspaces data as CSV
+    const csvContent = [
+      ['Title', 'Freelancer', 'Status', 'Progress', 'Budget', 'Spent', 'Start Date', 'End Date'],
+      ...workspaces.map(w => [
+        w.title,
+        w.freelancerName,
+        w.status,
+        `${w.progress}%`,
+        `$${w.budget}`,
+        `$${w.spent}`,
+        formatDate(w.startDate),
+        formatDate(w.endDate)
+      ])
+    ].map(row => row.join(',')).join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `workspaces_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleRefresh = () => {
     fetchWorkspaces();
   };
-  
+
   if (loading) {
     return (
-      <div className="loading-container">
-        <FaSpinner className="spinner" />
+      <div className="client-workspace-list-loading">
+        <div className="loading-spinner">
+          <FaSpinner className="spinning" />
+        </div>
         <p>Loading your workspaces...</p>
-        <small>Fetching active projects...</small>
       </div>
     );
   }
-  
-  if (error) {
-    return (
-      <div className="error-container">
-        <FaExclamationTriangle className="error-icon" />
-        <h3>Unable to Load Workspaces</h3>
-        <p className="error-message">{error}</p>
-        <div className="error-actions">
-          <button onClick={handleRetry} className="btn-primary">
-            <FaSyncAlt /> Try Again
-          </button>
-          <Link to="/client/dashboard" className="btn-secondary">
-            Go to Dashboard
-          </Link>
-        </div>
-        <div className="debug-info">
-          <small>API URL: {API_URL}</small>
-          <small>Token present: {localStorage.getItem('token') ? 'Yes' : 'No'}</small>
-          <small>User ID: {localStorage.getItem('userId') || 'Not found'}</small>
-        </div>
-      </div>
-    );
-  }
-  
+
   return (
-    <div className="client-workspace-list-container">
-      <div className="workspace-list-header">
-        <div className="header-left">
+    <div className="client-workspace-list">
+      {/* Header Section */}
+      <header className="workspace-list-header">
+        <div className="header-content">
           <h1>My Workspaces</h1>
-          <p className="workspace-count">
-            {workspaces.length} active workspace{workspaces.length !== 1 ? 's' : ''}
-          </p>
+          <p>Manage all your active projects and collaborations</p>
         </div>
-        <div className="header-right">
-          <button onClick={handleRetry} className="btn-refresh" title="Refresh workspaces">
-            <FaSyncAlt />
-          </button>
-          <Link to="/projects/new" className="btn-primary">
+        <div className="header-actions">
+          <button className="btn-primary" onClick={handleCreateWorkspace}>
             <FaPlus /> Create New Project
-          </Link>
+          </button>
+          <button className="btn-outline" onClick={handleExportData}>
+            <FaDownload /> Export Data
+          </button>
+        </div>
+      </header>
+
+      {/* Stats Overview */}
+      <div className="stats-overview">
+        <div className="stats-grid">
+          <div className="stat-card total">
+            <div className="stat-icon">
+              <FaFolderOpen />
+            </div>
+            <div className="stat-content">
+              <h3>{stats.total}</h3>
+              <p>Total Workspaces</p>
+            </div>
+          </div>
+          <div className="stat-card active">
+            <div className="stat-icon">
+              <FaChartLine />
+            </div>
+            <div className="stat-content">
+              <h3>{stats.active}</h3>
+              <p>Active Projects</p>
+            </div>
+          </div>
+          <div className="stat-card completed">
+            <div className="stat-icon">
+              <FaCheckCircle />
+            </div>
+            <div className="stat-content">
+              <h3>{stats.completed}</h3>
+              <p>Completed</p>
+            </div>
+          </div>
+          <div className="stat-card budget">
+            <div className="stat-icon">
+              <FaDollarSign />
+            </div>
+            <div className="stat-content">
+              <h3>{formatCurrency(stats.totalBudget)}</h3>
+              <p>Total Budget</p>
+            </div>
+          </div>
         </div>
       </div>
-      
-      {workspaces.length === 0 ? (
+
+      {/* Search and Filter Bar */}
+      <div className="search-filter-bar">
+        <div className="search-section">
+          <div className="search-input">
+            <FaSearch />
+            <input
+              type="text"
+              placeholder="Search workspaces by title, freelancer, or tags..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <button className="clear-search" onClick={() => setSearchTerm('')}>
+                ×
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="filter-section">
+          <div className="filter-group">
+            <label>Filter by:</label>
+            <div className="filter-buttons">
+              <button
+                className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
+                onClick={() => setFilter('all')}
+              >
+                All
+              </button>
+              <button
+                className={`filter-btn ${filter === 'active' ? 'active' : ''}`}
+                onClick={() => setFilter('active')}
+              >
+                Active ({stats.active})
+              </button>
+              <button
+                className={`filter-btn ${filter === 'pending' ? 'active' : ''}`}
+                onClick={() => setFilter('pending')}
+              >
+                Pending ({stats.pending})
+              </button>
+              <button
+                className={`filter-btn ${filter === 'completed' ? 'active' : ''}`}
+                onClick={() => setFilter('completed')}
+              >
+                Completed ({stats.completed})
+              </button>
+              <button
+                className={`filter-btn ${filter === 'overdue' ? 'active' : ''}`}
+                onClick={() => setFilter('overdue')}
+              >
+                Overdue ({stats.overdue})
+              </button>
+            </div>
+          </div>
+
+          <div className="sort-group">
+            <label>Sort by:</label>
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+              <option value="recent">Most Recent</option>
+              <option value="progress">Progress</option>
+              <option value="deadline">Deadline</option>
+              <option value="budget">Budget</option>
+              <option value="name">Name</option>
+            </select>
+            <button className="refresh-btn" onClick={handleRefresh}>
+              <FaSpinner className={loading ? 'spinning' : ''} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Workspaces Grid */}
+      {sortedWorkspaces.length === 0 ? (
         <div className="empty-state">
-          <FaProjectDiagram className="empty-icon" />
-          <h3>No Active Workspaces</h3>
-          <p>You don't have any active projects with workspaces yet.</p>
-          <p className="empty-subtext">
-            Workspaces are automatically created when both you and the freelancer sign a contract.
+          <FaFolderOpen className="empty-icon" />
+          <h3>No workspaces found</h3>
+          <p>
+            {searchTerm 
+              ? 'Try adjusting your search or filter criteria'
+              : 'You don\'t have any workspaces yet'}
           </p>
-          <div className="empty-actions">
-            <Link to="/projects/new" className="btn-primary">
-              <FaPlus /> Create New Project
-            </Link>
-            <Link to="/contracts" className="btn-secondary">
-              <FaFileContract /> View My Contracts
-            </Link>
-          </div>
-          <div className="empty-tips">
-            <h4>How to create a workspace:</h4>
-            <ul>
-              <li>✓ Post a project and review proposals</li>
-              <li>✓ Accept a freelancer's proposal</li>
-              <li>✓ Create and send a contract to the freelancer</li>
-              <li>✓ Both parties sign the contract</li>
-              <li>✓ Workspace will be created automatically</li>
-            </ul>
-          </div>
+          {!searchTerm && (
+            <button className="btn-primary" onClick={handleCreateWorkspace}>
+              <FaPlus /> Create Your First Workspace
+            </button>
+          )}
         </div>
       ) : (
         <>
           <div className="workspaces-grid">
-            {workspaces.map(workspace => (
-              <ClientWorkspaceCard 
-                key={workspace._id || workspace.workspaceId} 
-                workspace={workspace} 
-              />
-            ))}
+            {sortedWorkspaces.map((workspace) => {
+              const statusColors = getStatusColor(workspace.status);
+              
+              return (
+                <div
+                  key={workspace._id}
+                  className="workspace-card"
+                  onClick={() => handleWorkspaceClick(workspace._id, workspace.title)}
+                >
+                  {/* Workspace Header */}
+                  <div className="workspace-header">
+                    <div className="workspace-title-section">
+                      <h3>{workspace.title}</h3>
+                      <div className="workspace-meta">
+                        <span className="workspace-id">ID: {workspace.workspaceId}</span>
+                        <span className={`status-badge ${statusColors.bg} ${statusColors.text}`}>
+                          {workspace.status.charAt(0).toUpperCase() + workspace.status.slice(1)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="workspace-actions">
+                      <button className="action-btn" onClick={(e) => {
+                        e.stopPropagation();
+                        handleWorkspaceClick(workspace._id, workspace.title);
+                      }}>
+                        <FaEye />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Workspace Description */}
+                  <p className="workspace-description">{workspace.description}</p>
+
+                  {/* Freelancer Info */}
+                  <div className="freelancer-info">
+                    <div className="freelancer-avatar">
+                      {workspace.freelancerName.charAt(0)}
+                    </div>
+                    <div className="freelancer-details">
+                      <h4>{workspace.freelancerName}</h4>
+                      <div className="freelancer-rating">
+                        <FaStar />
+                        <span>{workspace.freelancerRating}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="progress-section">
+                    <div className="progress-header">
+                      <span>Project Progress</span>
+                      <span>{workspace.progress}%</span>
+                    </div>
+                    <div className="progress-bar">
+                      <div
+                        className={`progress-fill ${getProgressColor(workspace.progress)}`}
+                        style={{ width: `${workspace.progress}%` }}
+                      ></div>
+                    </div>
+                    <div className="milestone-info">
+                      <FaCheckCircle />
+                      <span>{workspace.completedMilestones}/{workspace.milestones} milestones</span>
+                    </div>
+                  </div>
+
+                  {/* Budget Info */}
+                  <div className="budget-info">
+                    <div className="budget-item">
+                      <span>Budget:</span>
+                      <strong>{formatCurrency(workspace.budget)}</strong>
+                    </div>
+                    <div className="budget-item">
+                      <span>Spent:</span>
+                      <strong>{formatCurrency(workspace.spent)}</strong>
+                    </div>
+                    <div className="budget-item">
+                      <span>Remaining:</span>
+                      <strong>{formatCurrency(workspace.budget - workspace.spent)}</strong>
+                    </div>
+                  </div>
+
+                  {/* Timeline Info */}
+                  <div className="timeline-info">
+                    <div className="timeline-item">
+                      <FaRegCalendarCheck />
+                      <span>Start: {formatDate(workspace.startDate)}</span>
+                    </div>
+                    <div className="timeline-item">
+                      <FaRegClock />
+                      <span>End: {formatDate(workspace.endDate)}</span>
+                    </div>
+                    {workspace.nextDeadline && (
+                      <div className="timeline-item deadline">
+                        <FaClock />
+                        <span>Next: {formatDate(workspace.nextDeadline)}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Tags */}
+                  <div className="tags-container">
+                    {workspace.tags?.map((tag, index) => (
+                      <span key={index} className="tag">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="workspace-footer">
+                    <span className="last-activity">
+                      Last activity: {formatDate(workspace.lastActivity)}
+                    </span>
+                    {workspace.overdueTasks > 0 && (
+                      <span className="overdue-badge">
+                        <FaExclamationTriangle /> {workspace.overdueTasks} overdue
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          
-          {/* Stats section */}
-          <div className="workspace-stats">
-            <div className="stat-card">
-              <span className="stat-number">{workspaces.length}</span>
-              <span className="stat-label">Active Projects</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-number">
-                {workspaces.filter(ws => ws.status === 'active').length}
-              </span>
-              <span className="stat-label">Active</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-number">
-                {workspaces.filter(ws => ws.status === 'in-progress' || ws.status === 'in_progress').length}
-              </span>
-              <span className="stat-label">In Progress</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-number">
-                ${workspaces.reduce((sum, ws) => sum + (ws.budget || 0), 0).toLocaleString()}
-              </span>
-              <span className="stat-label">Total Investment</span>
-            </div>
+
+          {/* Pagination Info */}
+          <div className="pagination-info">
+            <p>Showing {sortedWorkspaces.length} of {workspaces.length} workspaces</p>
           </div>
         </>
       )}

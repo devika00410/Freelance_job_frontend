@@ -30,18 +30,43 @@ const ClientWorkspaceCard = ({ workspace }) => {
     e.stopPropagation();
     
     console.log('📍 Client Workspace Card Clicked!');
-    console.log('Workspace ID:', workspace._id);
-    console.log('Workspace Title:', workspace.projectTitle);
+    console.log('Workspace ID:', workspace._id || workspace.workspaceId);
+    console.log('Workspace Title:', workspace.projectTitle || workspace.title);
    
+    const workspaceId = workspace._id || workspace.workspaceId;
     
-    if (!workspace._id) {
+    if (!workspaceId) {
       console.error('ERROR: No workspace ID found!');
       alert('No workspace ID found');
       return;
     }
     
-    // Use unified route
-    navigate(`/workspace/${workspace._id}`);
+    // Use CLIENT role-based route
+    navigate(`/client/workspace/${workspaceId}`);
+  };
+
+  const getDisplayTitle = () => {
+    return workspace.projectTitle || workspace.title || 'Project';
+  };
+
+  const getFreelancerName = () => {
+    return workspace.freelancerName || workspace.freelancer?.name || 'Freelancer';
+  };
+
+  const getBudget = () => {
+    return workspace.totalBudget || workspace.budget || 0;
+  };
+
+  const getProgress = () => {
+    return workspace.overallProgress || 0;
+  };
+
+  const getCurrentPhase = () => {
+    return workspace.currentPhase || 1;
+  };
+
+  const getStatus = () => {
+    return workspace.status || 'active';
   };
 
   return (
@@ -55,17 +80,17 @@ const ClientWorkspaceCard = ({ workspace }) => {
           <FaProjectDiagram />
         </div>
         <div className="workspace-title-section">
-          <h4 className="workspace-title">{workspace.projectTitle || 'Project'}</h4>
+          <h4 className="workspace-title">{getDisplayTitle()}</h4>
           <div className="workspace-meta">
             <span className="workspace-status">
               <span 
                 className="status-dot" 
-                style={{ backgroundColor: getStatusColor(workspace.status) }}
+                style={{ backgroundColor: getStatusColor(getStatus()) }}
               />
-              {workspace.status || 'active'}
+              {getStatus()}
             </span>
             <span className="workspace-phase">
-              Phase {workspace.currentPhase || 1}
+              Phase {getCurrentPhase()}
             </span>
           </div>
         </div>
@@ -80,14 +105,14 @@ const ClientWorkspaceCard = ({ workspace }) => {
             <FaUser />
             <div>
               <span className="info-label">Freelancer</span>
-              <span className="info-value">{workspace.freelancerName || 'Freelancer'}</span>
+              <span className="info-value">{getFreelancerName()}</span>
             </div>
           </div>
           <div className="workspace-budget">
             <FaDollarSign />
             <div>
               <span className="info-label">Budget</span>
-              <span className="info-value">${workspace.totalBudget || 0}</span>
+              <span className="info-value">${getBudget()}</span>
             </div>
           </div>
         </div>
@@ -95,12 +120,12 @@ const ClientWorkspaceCard = ({ workspace }) => {
         <div className="progress-section">
           <div className="progress-header">
             <span className="progress-label">Progress</span>
-            <span className="progress-percentage">{workspace.overallProgress || 0}%</span>
+            <span className="progress-percentage">{getProgress()}%</span>
           </div>
           <div className="progress-bar">
             <div 
               className="progress-fill"
-              style={{ width: `${workspace.overallProgress || 0}%` }}
+              style={{ width: `${getProgress()}%` }}
             />
           </div>
         </div>
@@ -109,7 +134,7 @@ const ClientWorkspaceCard = ({ workspace }) => {
       <div className="workspace-card-footer">
         <div className="last-updated">
           <FaClock className="clock-icon" />
-          <span>Updated 2 days ago</span>
+          <span>Updated recently</span>
         </div>
       </div>
     </div>

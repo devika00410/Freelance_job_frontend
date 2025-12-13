@@ -1,0 +1,485 @@
+/* ===== VERIFICATION CENTER ===== */
+:root {
+  /* Upwork Greens */
+  --upwork-dark: #14a800;
+  --upwork-medium: #5bbc2e;
+  --upwork-light: #b2ff9e;
+  --upwork-bg: #f7fdf5;
+  --upwork-extra-light: #d3f9d8;
+  
+  /* Neutrals */
+  --white: #ffffff;
+  --gray-50: #f8f9fa;
+  --gray-100: #f1f3f5;
+  --gray-200: #e9ecef;
+  --gray-300: #dee2e6;
+  --gray-400: #ced4da;
+  --gray-500: #adb5bd;
+  --gray-600: #868e96;
+  --gray-700: #495057;
+  --gray-800: #343a40;
+  --gray-900: #212529;
+  
+  /* Status */
+  --success: #37b24d;
+  --warning: #f59f00;
+  --danger: #fa5252;
+  --info: #339af0;
+}
+
+.verification-center-container {
+  padding: 1.5rem;
+  background: var(--upwork-bg);
+  min-height: 100vh;
+}
+
+.verification-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(20, 168, 0, 0.1);
+  border: 1px solid var(--upwork-extra-light);
+}
+
+.verification-header-section h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--gray-900);
+  background: linear-gradient(135deg, var(--upwork-dark), var(--upwork-medium));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.verification-auto-verify-btn {
+  background: linear-gradient(135deg, var(--upwork-dark), var(--upwork-medium));
+  color: var(--white);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.verification-auto-verify-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(20, 168, 0, 0.3);
+}
+
+/* Verification Stats */
+.verification-stats-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.verification-stat-card {
+  background: var(--white);
+  border-radius: 10px;
+  padding: 1.25rem;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(20, 168, 0, 0.1);
+  border: 1px solid var(--upwork-extra-light);
+}
+
+.verification-stat-card h3 {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+}
+
+.verification-stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 0.25rem;
+}
+
+.verification-stat-sub {
+  font-size: 0.875rem;
+  color: var(--gray-500);
+}
+
+/* Filters */
+.verification-filters-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.5rem;
+  background: var(--white);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(20, 168, 0, 0.1);
+  border: 1px solid var(--upwork-extra-light);
+}
+
+.verification-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.verification-filter-group label {
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+.verification-filter-group select {
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--upwork-extra-light);
+  border-radius: 6px;
+  background: var(--white);
+  color: var(--gray-700);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.verification-filter-group select:hover {
+  border-color: var(--upwork-medium);
+}
+
+.verification-filter-group select:focus {
+  outline: none;
+  border-color: var(--upwork-medium);
+  box-shadow: 0 0 0 3px rgba(91, 188, 46, 0.1);
+}
+
+.verification-queue-count {
+  font-weight: 600;
+  color: var(--upwork-dark);
+  background: var(--upwork-extra-light);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+}
+
+/* Verification Table */
+.verification-table-container {
+  background: var(--white);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(20, 168, 0, 0.1);
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--upwork-extra-light);
+}
+
+.verification-queue-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.verification-queue-table th {
+  background: linear-gradient(135deg, var(--upwork-dark), var(--upwork-medium));
+  color: var(--white);
+  padding: 1rem 1.25rem;
+  text-align: left;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+}
+
+.verification-queue-table td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--upwork-extra-light);
+  color: var(--gray-700);
+}
+
+.verification-queue-table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.verification-queue-table tbody tr:hover {
+  background: var(--upwork-bg);
+}
+
+.verification-user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.verification-user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--upwork-dark), var(--upwork-medium));
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.verification-score-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.verification-score-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--white);
+  font-size: 0.75rem;
+}
+
+.verification-score-high {
+  background: linear-gradient(135deg, var(--success), #51cf66);
+}
+
+.verification-score-medium {
+  background: linear-gradient(135deg, var(--warning), #ffd43b);
+}
+
+.verification-score-low {
+  background: linear-gradient(135deg, var(--danger), #ff6b6b);
+}
+
+.verification-score-label {
+  font-size: 0.75rem;
+  color: var(--gray-600);
+  font-weight: 500;
+}
+
+.verification-missing-checks ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.verification-check-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--gray-700);
+}
+
+.verification-check-icon {
+  color: var(--success);
+  font-weight: bold;
+}
+
+.verification-no-checks {
+  color: var(--danger);
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+.verification-action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.verification-verify-btn, .verification-view-btn {
+  padding: 0.375rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.verification-verify-btn {
+  background: var(--upwork-medium);
+  color: var(--white);
+}
+
+.verification-verify-btn:hover:not(:disabled) {
+  background: var(--upwork-dark);
+  transform: translateY(-1px);
+}
+
+.verification-verify-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.verification-view-btn {
+  background: var(--upwork-extra-light);
+  color: var(--upwork-dark);
+}
+
+.verification-view-btn:hover {
+  background: var(--upwork-light);
+}
+
+/* Empty State */
+.verification-empty-queue {
+  text-align: center;
+  padding: 3rem 1.5rem;
+}
+
+.verification-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.verification-empty-queue h3 {
+  color: var(--gray-900);
+  margin-bottom: 0.5rem;
+}
+
+.verification-empty-queue p {
+  color: var(--gray-600);
+}
+
+/* Quick Actions */
+.verification-quick-actions {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(20, 168, 0, 0.1);
+  border: 1px solid var(--upwork-extra-light);
+}
+
+.verification-quick-actions h3 {
+  color: var(--gray-900);
+  margin-bottom: 1rem;
+  font-size: 1.125rem;
+}
+
+.verification-quick-action-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.verification-action-btn {
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.verification-primary-btn {
+  background: linear-gradient(135deg, var(--upwork-dark), var(--upwork-medium));
+  color: var(--white);
+}
+
+.verification-secondary-btn {
+  background: var(--upwork-extra-light);
+  color: var(--upwork-dark);
+}
+
+.verification-tertiary-btn {
+  background: rgba(55, 178, 77, 0.1);
+  color: var(--success);
+}
+
+.verification-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Loading */
+.verification-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--upwork-extra-light);
+  border-top-color: var(--upwork-medium);
+  border-radius: 50%;
+  animation: verification-spin 1s linear infinite;
+  margin: 2rem auto;
+}
+
+@keyframes verification-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error */
+.verification-error-message {
+  text-align: center;
+  padding: 2rem;
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(20, 168, 0, 0.1);
+}
+
+.verification-retry-btn {
+  background: var(--upwork-medium);
+  color: var(--white);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+/* Role Badges */
+.verification-role-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.verification-role-client {
+  background: rgba(20, 168, 0, 0.1);
+  color: var(--upwork-dark);
+}
+
+.verification-role-freelancer {
+  background: rgba(51, 154, 240, 0.1);
+  color: var(--info);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .verification-stats-section {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .verification-header-section {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .verification-filters-section {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .verification-quick-action-buttons {
+    flex-direction: column;
+  }
+  
+  .verification-queue-table {
+    display: block;
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 576px) {
+  .verification-stats-section {
+    grid-template-columns: 1fr;
+  }
+}

@@ -30,39 +30,37 @@ const Navbar = () => {
           {isMenuOpen ? <FaTimes /> : <FaBars />}
         </div>
 
-        {/* Nav Items */}
         <ul className={`nav-menu ${isMenuOpen ? "active" : ""}`}>
-          <li><Link to="/how-it-works">How it Works</Link></li>
-          <li><Link to="/services">Services</Link></li>
-          <li><Link to="/pricing">Pricing</Link></li>
-          <li><Link to="/contact">Contact</Link></li>
 
-          {/* Right side user section */}
+          {/* MAIN NAVIGATION */}
+          <li><Link to="/how-it-works" onClick={() => setIsMenuOpen(false)}>How it Works</Link></li>
+          <li><Link to="/services" onClick={() => setIsMenuOpen(false)}>Services</Link></li>
+          <li><Link to="/pricing" onClick={() => setIsMenuOpen(false)}>Pricing</Link></li>
+          <li><Link to="/community" onClick={() => setIsMenuOpen(false)}>Community</Link></li>
+          <li><Link to="/contact" onClick={() => setIsMenuOpen(false)}>Contact</Link></li>
+
+          {/* RIGHT SIDE SECTION */}
           <div className="right-section">
 
             {/* White bubble */}
-          <div className="email-bubble">
-  {!token ? (
-    <Link to="/signup" className="email-bubble-link">Signup</Link>
-  ) : (
-    <div
-      onClick={() => {
-        const userRole = localStorage.getItem('userRole');
-        if (userRole === 'client') {
-          navigate('/client-dashboard');
-        } else if (userRole === 'freelancer') {
-          navigate('/freelancer-dashboard');
-        } else {
-          navigate('/dashboard');
-        }
-      }}
-      className="email-bubble-clickable"
-      style={{cursor: 'pointer'}}
-    >
-      {user?.email || 'Dashboard'}
-    </div>
-  )}
-</div>
+            <div className="email-bubble">
+              {!token ? (
+                <Link to="/signup" className="email-bubble-link">Signup</Link>
+              ) : (
+                <div
+                  onClick={() => {
+                    const userRole = localStorage.getItem("userRole");
+                    if (userRole === "client") navigate("/client/dashboard");
+                    else if (userRole === "freelancer") navigate("/freelancer/dashboard");
+                    else navigate("/dashboard");
+                  }}
+                  className="email-bubble-clickable"
+                >
+                  {user?.email || "Dashboard"}
+                </div>
+              )}
+            </div>
+
             {/* Login or Logout */}
             {!token ? (
               <Link to="/login" className="login-btn">Login</Link>
@@ -73,6 +71,7 @@ const Navbar = () => {
             )}
           </div>
         </ul>
+
       </div>
     </nav>
   );
