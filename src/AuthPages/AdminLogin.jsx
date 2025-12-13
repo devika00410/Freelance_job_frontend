@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../Context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
-import './AdminRegister.css'; // Reusing the same CSS
+import './AdminRegister.css'; 
 
 const AdminLogin = () => {
   const [formData, setFormData] = useState({

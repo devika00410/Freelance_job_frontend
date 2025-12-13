@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import FreelancerWorkspaceCard from './FreelancerWorkspaceCard'; 
-import { API_URL } from '../Config'
+import { API_URL } from '../config'
 import {
   // Layout & Navigation
   FaHome, FaBriefcase, FaFileContract, FaCreditCard, FaChartBar,

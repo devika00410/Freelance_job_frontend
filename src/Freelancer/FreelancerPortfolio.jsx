@@ -1,4 +1,3 @@
-// FreelancerPortfolio.jsx
 import React, { useState, useEffect } from 'react';
 import {
   FaUser, FaBriefcase, FaCode, FaFileAlt, FaImages,

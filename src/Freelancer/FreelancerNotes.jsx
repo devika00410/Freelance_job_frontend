@@ -8,7 +8,7 @@ import {
   X,
   AlertCircle
 } from 'lucide-react';
-import './FreelancerNotes.css'; // Add this CSS import
+import './FreelancerNotes.css';
 
 const FreelancerNotes = ({ workspaceId }) => {
   const [notes, setNotes] = useState([]);

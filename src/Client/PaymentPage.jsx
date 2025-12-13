@@ -10,7 +10,7 @@ const PaymentPage = () => {
     cvc: '',
     name: '',
     description: '',
-    freelancerId: '69246fa44262486de9f3195e' // Default freelancer ID
+    freelancerId: '69246fa44262486de9f3195e'
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);

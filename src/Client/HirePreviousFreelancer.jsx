@@ -18,7 +18,7 @@ const HirePreviousFreelancers = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Dummy data - replace with real API later
+ 
   const dummyFreelancers = [
     {
       freelancerId: "1",

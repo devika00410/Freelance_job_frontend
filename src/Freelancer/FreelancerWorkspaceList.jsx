@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { FaProjectDiagram, FaSearch, FaSpinner, FaPlus, FaExclamationTriangle, FaSyncAlt } from 'react-icons/fa';
 import FreelancerWorkspaceCard from './FreelancerWorkspaceCard';
 import axios from 'axios';
-import { API_URL } from '../Config';
+import { API_URL } from '../config';
 import './FreelancerWorkspaceList.css';
 
 const FreelancerWorkspaceList = () => {
