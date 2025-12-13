@@ -1,4 +1,3 @@
-// ContractsPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -23,7 +22,7 @@ import {
     FaFolderOpen,
     FaFolderPlus
 } from 'react-icons/fa';
-import { API_URL } from '../Config';
+import { API_URL } from '../config';
 import './ContractsPage.css';
 
 const ContractsPage = () => {

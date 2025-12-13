@@ -18,7 +18,7 @@ import './ProposalsPage.css';
 
 const ProposalsPage = () => {
 
-    // DUMMY DATA - Keep for reference/testing
+   
     const dummyProposals = [
         {
             _id: '1',

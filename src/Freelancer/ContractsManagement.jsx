@@ -8,7 +8,7 @@ import {
   FaSignature, FaFileSignature, FaFolderOpen
 } from 'react-icons/fa';
 import axios from 'axios';
-import { API_URL } from "../Config";
+import { API_URL } from "../config";
 import './ContractsManagement.css';
 
 const ContractsManagement = () => {
