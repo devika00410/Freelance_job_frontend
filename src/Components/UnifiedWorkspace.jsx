@@ -11,21 +11,31 @@ import {
 } from 'react-icons/fa';
 import './UnifiedWorkspace.css';
 
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 const UnifiedWorkspace = ({ userRole }) => {
   const { workspaceId } = useParams();
+  console.log('🔍 workspaceId from useParams:', workspaceId);
+  console.log('🔍 Type:', typeof workspaceId);
+  console.log('🔍 Value:', workspaceId);
+
+  // If it's already an object, you need to extract the string ID
+  const actualId = workspaceId?.id || workspaceId?._id || workspaceId;
+  console.log('🔍 Actual ID to use:', actualId);
   const navigate = useNavigate();
   const [workspace, setWorkspace] = useState(null);
   const [activeSection, setActiveSection] = useState('overview');
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState(null);
-  
-  // Common state
+
+
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [files, setFiles] = useState([]);
   const [milestones, setMilestones] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
-  
+
   const chatEndRef = useRef(null);
 
   useEffect(() => {
@@ -38,12 +48,12 @@ const UnifiedWorkspace = ({ userRole }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:3000/api/workspaces/${workspaceId}`, {
+      const response = await axios.get(`${API_URL}/api/workspaces/${String(workspaceId?.id || workspaceId?._id || workspaceId)}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       if (response.data.success) {
         setWorkspace(response.data.workspace);
         setMilestones(response.data.workspace.milestones || []);
@@ -299,12 +309,12 @@ const UnifiedWorkspace = ({ userRole }) => {
           <button className="back-button" onClick={() => navigate('/dashboard')}>
             <FaArrowLeft /> Back to Dashboard
           </button>
-          
+
           <div className="project-info">
             <h1>{workspace.projectTitle || workspace.title || 'Workspace'}</h1>
             <div className="project-meta">
               <span className="other-party">
-                <FaUser /> 
+                <FaUser />
                 {userRole === 'client' ? 'Freelancer: ' : 'Client: '}
                 {otherParty?.name || otherParty?.username || 'Unknown'}
               </span>
@@ -313,7 +323,7 @@ const UnifiedWorkspace = ({ userRole }) => {
               </span>
             </div>
           </div>
-          
+
           <div className="workspace-stats">
             <div className="stat-card">
               <span className="stat-value">{workspace.overallProgress || 0}%</span>
@@ -357,7 +367,7 @@ const UnifiedWorkspace = ({ userRole }) => {
       <main className="workspace-main">
         {/* Overview Section */}
         {activeSection === 'overview' && (
-          <OverviewSection 
+          <OverviewSection
             workspace={workspace}
             milestones={milestones}
             userRole={userRole}
@@ -430,8 +440,8 @@ const UnifiedWorkspace = ({ userRole }) => {
 // Sub-components
 
 const OverviewSection = ({ workspace, milestones, userRole, onApproveMilestone, onRequestChanges, onSubmitMilestone, formatDate }) => {
-  const currentMilestone = milestones.find(m => m.status === 'in_progress' || m.status === 'in-progress') || 
-                          milestones.find(m => m.status === 'awaiting_approval' || m.status === 'awaiting-approval');
+  const currentMilestone = milestones.find(m => m.status === 'in_progress' || m.status === 'in-progress') ||
+    milestones.find(m => m.status === 'awaiting_approval' || m.status === 'awaiting-approval');
 
   return (
     <div className="overview-section">
@@ -439,8 +449,8 @@ const OverviewSection = ({ workspace, milestones, userRole, onApproveMilestone, 
         <h2>Project Progress</h2>
         <div className="progress-container">
           <div className="progress-bar">
-            <div 
-              className="progress-fill" 
+            <div
+              className="progress-fill"
               style={{ width: `${workspace.overallProgress || 0}%` }}
             />
           </div>
@@ -469,7 +479,7 @@ const OverviewSection = ({ workspace, milestones, userRole, onApproveMilestone, 
             {/* Action buttons based on role and status */}
             <div className="phase-actions">
               {userRole === 'freelancer' && (currentMilestone.status === 'in_progress' || currentMilestone.status === 'in-progress') && (
-                <button 
+                <button
                   className="btn-primary"
                   onClick={() => {
                     const files = []; // You can implement file selection here
@@ -483,13 +493,13 @@ const OverviewSection = ({ workspace, milestones, userRole, onApproveMilestone, 
 
               {userRole === 'client' && (currentMilestone.status === 'awaiting_approval' || currentMilestone.status === 'awaiting-approval') && (
                 <>
-                  <button 
+                  <button
                     className="btn-success"
                     onClick={() => onApproveMilestone(currentMilestone._id, 'Great work! Approved.')}
                   >
                     <FaCheck /> Approve
                   </button>
-                  <button 
+                  <button
                     className="btn-warning"
                     onClick={() => {
                       const feedback = prompt('Enter feedback for changes:');
@@ -540,10 +550,10 @@ const MilestonesSection = ({ milestones, userRole, onApproveMilestone, onRequest
                 {milestone.status?.replace('_', ' ')}
               </span>
             </div>
-            
+
             <h4>{milestone.title}</h4>
             <p>{milestone.description}</p>
-            
+
             <div className="milestone-details">
               <div className="detail-item">
                 <FaDollarSign />
@@ -578,7 +588,7 @@ const MilestonesSection = ({ milestones, userRole, onApproveMilestone, onRequest
             {/* Actions */}
             <div className="milestone-actions">
               {userRole === 'freelancer' && (milestone.status === 'in_progress' || milestone.status === 'in-progress') && (
-                <button 
+                <button
                   className="btn-primary"
                   onClick={() => {
                     const files = [];
@@ -592,13 +602,13 @@ const MilestonesSection = ({ milestones, userRole, onApproveMilestone, onRequest
 
               {userRole === 'client' && (milestone.status === 'awaiting_approval' || milestone.status === 'awaiting-approval') && (
                 <>
-                  <button 
+                  <button
                     className="btn-success"
                     onClick={() => onApproveMilestone(milestone._id, 'Approved!')}
                   >
                     Approve
                   </button>
-                  <button 
+                  <button
                     className="btn-warning"
                     onClick={() => {
                       const feedback = prompt('Enter feedback for changes:');
@@ -649,10 +659,9 @@ const ChatSection = ({ messages, newMessage, onNewMessageChange, onSendMessage, 
           messages.map((message) => (
             <div
               key={message._id || message.id}
-              className={`message ${
-                message.senderRole === 'system' ? 'system' : 
+              className={`message ${message.senderRole === 'system' ? 'system' :
                 message.senderId === currentUserId ? 'sent' : 'received'
-              }`}
+                }`}
             >
               <div className="message-content">
                 {message.senderRole === 'system' && <FaExclamationTriangle />}
@@ -696,7 +705,7 @@ const FilesSection = ({ files, selectedFile, onFileSelect, onFileUpload, getFile
       <div className="section-header">
         <h2>Project Files</h2>
         <p>Shared files and documents</p>
-        
+
         <form className="upload-form" onSubmit={onFileUpload}>
           <input
             type="file"
@@ -757,7 +766,7 @@ const CallsSection = ({ workspaceId, userRole, otherParty }) => {
       <div className="section-header">
         <h2>Video Calls</h2>
         <p>Connect with {otherParty?.name || otherParty?.username || 'your partner'}</p>
-        
+
         <div className="call-actions">
           <button className="btn-primary" onClick={handleScheduleCall}>
             <FaVideo /> Schedule Call

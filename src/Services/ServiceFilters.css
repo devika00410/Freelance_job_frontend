@@ -1,0 +1,35 @@
+.filters {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 920px;
+}
+
+.f-search {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(4, 38, 59, 0.06);
+    background: var(--white);
+}
+
+.f-select {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(4, 38, 59, 0.06);
+    background: var(--white);
+    min-width: 160px;
+}
+
+@media (max-width:720px) {
+    .filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .f-select {
+        width: 100%;
+    }
+}

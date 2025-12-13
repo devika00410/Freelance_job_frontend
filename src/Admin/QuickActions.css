@@ -1,0 +1,217 @@
+/* ===== QUICK ACTIONS ===== */
+:root {
+  /* Upwork Greens */
+  --upwork-dark: #14a800;
+  --upwork-medium: #5bbc2e;
+  --upwork-light: #b2ff9e;
+  --upwork-bg: #f7fdf5;
+  --upwork-extra-light: #d3f9d8;
+  
+  /* Neutrals */
+  --white: #ffffff;
+  --gray-50: #f8f9fa;
+  --gray-100: #f1f3f5;
+  --gray-200: #e9ecef;
+  --gray-300: #dee2e6;
+  --gray-400: #ced4da;
+  --gray-500: #adb5bd;
+  --gray-600: #868e96;
+  --gray-700: #495057;
+  --gray-800: #343a40;
+  --gray-900: #212529;
+  
+  /* Status */
+  --success: #37b24d;
+  --warning: #f59f00;
+  --danger: #fa5252;
+}
+
+.admin-quick-actions-container {
+  background: var(--white);
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(20, 168, 0, 0.1);
+  border: 1px solid var(--upwork-extra-light);
+}
+
+.admin-quick-actions-container h3 {
+  margin: 0 0 0.5rem 0;
+  color: var(--gray-900);
+  font-size: 1.25rem;
+}
+
+.admin-quick-actions-subtitle {
+  color: var(--gray-600);
+  margin: 0 0 1.5rem 0;
+  font-size: 0.875rem;
+}
+
+.admin-quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.admin-quick-action-card {
+  background: var(--white);
+  border: 2px solid transparent;
+  border-radius: 10px;
+  padding: 1rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.admin-quick-action-card:hover {
+  border-color: var(--upwork-medium);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(20, 168, 0, 0.15);
+}
+
+.admin-quick-action-verify {
+  border-left: 4px solid var(--success);
+}
+
+.admin-quick-action-payment {
+  border-left: 4px solid var(--upwork-dark);
+}
+
+.admin-quick-action-report {
+  border-left: 4px solid #8b5cf6;
+}
+
+.admin-quick-action-system {
+  border-left: 4px solid var(--warning);
+}
+
+.admin-quick-action-cache {
+  border-left: 4px solid #339af0;
+}
+
+.admin-quick-action-email {
+  border-left: 4px solid #f59e0b;
+}
+
+.admin-quick-action-icon {
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.admin-quick-action-verify .admin-quick-action-icon {
+  background: rgba(55, 178, 77, 0.1);
+  color: var(--success);
+}
+
+.admin-quick-action-payment .admin-quick-action-icon {
+  background: rgba(20, 168, 0, 0.1);
+  color: var(--upwork-dark);
+}
+
+.admin-quick-action-report .admin-quick-action-icon {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+}
+
+.admin-quick-action-system .admin-quick-action-icon {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--warning);
+}
+
+.admin-quick-action-cache .admin-quick-action-icon {
+  background: rgba(51, 154, 240, 0.1);
+  color: #339af0;
+}
+
+.admin-quick-action-email .admin-quick-action-icon {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.admin-quick-action-content {
+  flex: 1;
+}
+
+.admin-quick-action-content h4 {
+  margin: 0 0 0.25rem 0;
+  color: var(--gray-900);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.admin-quick-action-content p {
+  margin: 0;
+  color: var(--gray-600);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.admin-system-status {
+  padding-top: 1rem;
+  border-top: 2px solid var(--upwork-extra-light);
+}
+
+.admin-system-status h4 {
+  margin: 0 0 1rem 0;
+  color: var(--gray-900);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.admin-status-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+}
+
+.admin-status-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--gray-700);
+}
+
+.admin-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.admin-status-online .admin-status-dot {
+  background: var(--success);
+}
+
+.admin-status-warning .admin-status-dot {
+  background: var(--warning);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .admin-status-items {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 576px) {
+  .admin-quick-actions-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .admin-status-items {
+    grid-template-columns: 1fr;
+  }
+}

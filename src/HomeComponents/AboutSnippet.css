@@ -1,0 +1,166 @@
+/* CSS (About.css) */
+:root {
+  --navy: #0a1a44;
+  --light: #4da3ff;
+  --white: #ffffff;
+  --muted: #6b7590;
+  --shadow: 0 6px 16px rgba(10, 26, 68, 0.08);
+}
+
+/* HOME SNIPPET */
+.about-snippet {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  padding: 40px 20px;
+  background: var(--white);
+  align-items: center;
+}
+
+.snippet-content h2 {
+  font-size: 28px;
+  color: var(--navy);
+}
+
+.snippet-content p {
+  color: var(--muted);
+  margin: 10px 0 20px;
+}
+
+.know-more-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--navy);
+  color: var(--white);
+  padding: 10px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.snippet-image img {
+  width: 100%;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+
+/* ABOUT PAGE */
+.about-page {
+  background: #f9fbff;
+  padding-bottom: 40px;
+}
+
+/* Hero */
+.about-hero {
+  display: flex;
+  gap: 30px;
+  padding: 50px 20px;
+  align-items: center;
+}
+
+.hero-text h1 {
+  color: var(--navy);
+  font-size: 36px;
+}
+
+.hero-text p {
+  color: var(--muted);
+  margin-top: 10px;
+  font-size: 16px;
+}
+
+.hero-image {
+  width: 50%;
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+
+/* Mission */
+.about-mission {
+  display: flex;
+  gap: 30px;
+  padding: 50px 20px;
+  align-items: center;
+}
+
+.mission-text h2 {
+  font-size: 30px;
+  color: var(--navy);
+}
+
+.mission-text p {
+  color: var(--muted);
+  margin: 8px 0;
+}
+
+.mission-image {
+  width: 45%;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+/* Why Choose Us */
+.why-choose {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.why-choose h2 {
+  font-size: 32px;
+  color: var(--navy);
+  margin-bottom: 20px;
+}
+
+.why-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.why-card {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.why-card .icon {
+  font-size: 26px;
+  color: var(--light);
+  margin-bottom: 10px;
+}
+
+.why-card h3 {
+  color: var(--navy);
+  margin-bottom: 6px;
+}
+
+.why-card p {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .about-snippet,
+  .about-hero,
+  .about-mission {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+  .hero-image,
+  .mission-image {
+    width: 100%;
+  }
+  .why-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .why-grid {
+    grid-template-columns: 1fr;
+  }
+}

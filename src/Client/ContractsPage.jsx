@@ -591,11 +591,11 @@ const ContractCard = ({
                 )}
 
                 {/* ✅ Create Workspace Button (for active contracts without workspace) */}
-             
+
                 {contract.status === 'active' && contract.workspaceId && contract.workspaceId !== 'null' && (
                     <button
                         className="workspace-btn"
-                        onClick={() => navigate(`/workspace/${contract.workspaceId}`)}>
+                        onClick={() => navigate(`/client/workspace/${contract.workspaceId ? contract.workspaceId.toString() : contract._id.toString()}`)}>
                         <FaFolderOpen /> Open Workspace
                     </button>
                 )}
@@ -782,8 +782,7 @@ const ContractDetailModal = ({
                     {contract.status === 'active' && hasValidWorkspaceId && (
                         <button
                             className="workspace-btn"
-                            onClick={() => navigate(`/workspace/${contract.workspaceId}`)}
-                        >
+                            onClick={() => navigate(`/client/workspace/${contract.workspaceId ? contract.workspaceId.toString() : contract._id.toString()}`)}>
                             <FaFolderOpen /> Open Workspace
                         </button>
                     )}

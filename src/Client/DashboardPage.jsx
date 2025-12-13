@@ -38,6 +38,7 @@ const DashboardPage = () => {
   const [proposalCount, setProposalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [workspaces, setWorkspaces] = useState([]);
+  const [contracts, setContracts] = useState([]);
 
   // Add state for proposals loading
   const [proposalsLoading, setProposalsLoading] = useState(true);
@@ -114,6 +115,31 @@ const DashboardPage = () => {
     }
   }, [token]);
 
+
+  useEffect(() => {
+    const fetchContracts = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/api/client/contracts`,
+          {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }
+        );
+
+        if (response.data.success) {
+          setContracts(response.data.contracts || response.data.data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching contracts:', error);
+      }
+    };
+
+    if (token) {
+      fetchContracts();
+    }
+  }, [token]);
+
   const quickActions = [
     {
       icon: FaPlus,
@@ -171,12 +197,11 @@ const DashboardPage = () => {
             <FaBriefcase />
             <span>Projects</span>
           </Link>
-          {/* FIXED: Workspace link - Since we can't navigate to generic workspace without ID, 
-              link to contracts page where they can access specific workspaces */}
           <Link to="/client/workspace" className="nav-item">
             <FaProjectDiagram />
-            <span>Workspace</span>
+            <span>Workspaces</span>
           </Link>
+
           <Link to="/contracts" className="nav-item">
             <FaFileContract />
             <span>Contracts</span>
@@ -239,10 +264,21 @@ const DashboardPage = () => {
             <FaCog />
             <span>Settings</span>
           </Link>
-          <button className="nav-item logout" onClick={() => {/* handle logout */ }}>
+          <button
+            className="nav-item logout"
+            onClick={() => {
+              localStorage.removeItem("token");
+              localStorage.removeItem("client");
+              localStorage.removeItem("freelancer");
+              localStorage.removeItem("role");
+
+              window.location.href = "/"; // redirect to homepage
+            }}
+          >
             <FaSignOutAlt />
             <span>Logout</span>
           </button>
+
         </div>
       </nav>
     </div>
@@ -510,7 +546,6 @@ const DashboardPage = () => {
           <section className="workspaces-section">
             <div className="section-header">
               <h2>Active Workspaces</h2>
-              {/* FIXED: Changed from non-existent /workspaces to contracts page */}
               <Link to="/contracts" className="view-all-btn">
                 View All Contracts
               </Link>
@@ -519,7 +554,7 @@ const DashboardPage = () => {
             {workspaces.length > 0 ? (
               <div className="workspaces-grid">
                 {workspaces.slice(0, 3).map(workspace => (
-                 <ClientWorkspaceCard key={workspace._id} workspace={workspace} />
+                  <ClientWorkspaceCard key={workspace._id} workspace={workspace} />
                 ))}
               </div>
             ) : (

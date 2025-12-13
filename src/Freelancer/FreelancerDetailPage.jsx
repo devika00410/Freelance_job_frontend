@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
-import { getServiceIcon, SERVICE_ICONS } from '../utils/icons';
+import { getServiceIcon } from '../utils/icons';
 import LoadingSpinner from '../Components/Common/LoadingSpinner';
 import ErrorMessage from '../Components/Common/ErrorMessage';
 import { FaStar, FaCheckCircle, FaMapMarkerAlt, FaBriefcase, FaGlobe, FaPhone, FaEnvelope, FaCalendarAlt, FaCheck } from 'react-icons/fa';

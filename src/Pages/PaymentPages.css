@@ -1,0 +1,96 @@
+:root {
+  --navy: #0a1a44;
+  --light: #4da3ff;
+  --white: #ffffff;
+  --muted: #6b7590;
+  --radius: 14px;
+  --shadow: 0 6px 18px rgba(10, 26, 68, 0.08);
+}
+
+.payment-wrapper {
+  padding: 50px 20px;
+  background: #f7faff;
+  font-family: Inter, sans-serif;
+  max-width: 500px;
+  margin: auto;
+}
+
+.payment-title {
+  font-size: 32px;
+  color: var(--navy);
+  text-align: center;
+}
+
+.selected-plan {
+  text-align: center;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.amount-display {
+  text-align: center;
+  font-size: 28px;
+  color: var(--navy);
+  margin-bottom: 20px;
+  font-weight: 700;
+}
+
+/* Toggle */
+.payment-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.payment-toggle button {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--muted);
+  color: var(--white);
+}
+
+.payment-toggle .active {
+  background: var(--navy);
+}
+
+/* Card Box */
+.card-box,
+.upi-box {
+  background: var(--white);
+  padding: 20px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.card-box label,
+.upi-box label {
+  font-weight: 600;
+  color: var(--navy);
+  margin-top: 15px;
+  display: block;
+}
+
+.card-box input,
+.upi-box input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #d9dff3;
+  margin-top: 5px;
+}
+
+.pay-btn {
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: var(--light);
+  color: var(--white);
+  font-weight: 700;
+  cursor: pointer;
+}

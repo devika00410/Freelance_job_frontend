@@ -1,0 +1,209 @@
+:root {
+  --navy: #0a1a44;
+  --light: #4da3ff;
+  --white: #ffffff;
+  --muted: #6b7590;
+  --bg: #f4f8ff;
+  --shadow: 0 6px 18px rgba(10, 26, 68, 0.08);
+  --radius: 14px;
+}
+
+.about-page {
+  background: var(--bg);
+  font-family: Inter, system-ui, sans-serif;
+  color: var(--navy);
+  padding-bottom: 40px;
+}
+
+/* ================== HERO SECTION ================== */
+.about-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 60px 20px;
+  gap: 40px;
+}
+
+.about-hero-content {
+  flex: 1;
+}
+
+.about-title {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0 0 15px;
+  color: var(--navy);
+}
+
+.about-subtext {
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.6;
+  max-width: 520px;
+}
+
+.about-hero-image {
+  width: 48%;
+  height: 310px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--navy), var(--light));
+  box-shadow: var(--shadow);
+}
+
+/* ================== WHO WE ARE ================== */
+.who-we-are {
+  display: flex;
+  align-items: center;
+  padding: 60px 20px;
+  gap: 40px;
+}
+
+.who-image {
+  width: 45%;
+  height: 260px;
+  background: linear-gradient(135deg, var(--light), var(--navy));
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.who-content h2 {
+  font-size: 30px;
+  margin-bottom: 12px;
+}
+
+.who-content p {
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+/* ================== MISSION ================== */
+.mission-section {
+  display: flex;
+  align-items: center;
+  padding: 60px 20px;
+  gap: 40px;
+}
+
+.mission-content h2 {
+  font-size: 30px;
+  margin-bottom: 12px;
+}
+
+.mission-content p {
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 14px;
+  max-width: 520px;
+}
+
+.mission-list {
+  list-style: none;
+  padding: 0;
+}
+
+.mission-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  color: var(--navy);
+  font-weight: 500;
+}
+
+.mission-list svg {
+  color: var(--light);
+}
+
+.mission-image {
+  width: 45%;
+  height: 270px;
+  background: linear-gradient(135deg, var(--navy), var(--light));
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* ================== WHY CHOOSE US ================== */
+.why-choose-us {
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.why-title {
+  font-size: 34px;
+  margin-bottom: 30px;
+  color: var(--navy);
+}
+
+.why-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.why-card {
+  background: var(--white);
+  padding: 22px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.why-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 26px rgba(10, 26, 68, 0.12);
+}
+
+.why-icon {
+  font-size: 30px;
+  color: var(--light);
+  margin-bottom: 10px;
+}
+
+.why-card h3 {
+  margin: 6px 0;
+  font-size: 18px;
+  color: var(--navy);
+}
+
+.why-card p {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ================== RESPONSIVE ================== */
+@media (max-width: 1000px) {
+  .about-hero,
+  .who-we-are,
+  .mission-section {
+    flex-direction: column;
+  }
+
+  .about-hero-image,
+  .who-image,
+  .mission-image {
+    width: 100%;
+  }
+}
+
+@media (max-width: 700px) {
+  .why-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .about-title {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 520px) {
+  .why-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .about-title {
+    font-size: 26px;
+  }
+}

@@ -29,18 +29,45 @@ const FreelancerWorkspaceCard = ({ workspace }) => {
     e.preventDefault();
     e.stopPropagation();
     
-    console.log('📍 Workspace Card Clicked!');
-    console.log('Workspace ID:', workspace._id);
-    console.log('Workspace Title:', workspace.projectTitle);
+    console.log('📍 Freelancer Workspace Card Clicked!');
+    console.log('Workspace ID:', workspace._id || workspace.workspaceId);
+    console.log('Workspace Title:', workspace.projectTitle || workspace.title);
     
-    if (!workspace._id) {
+    const workspaceId = workspace._id || workspace.workspaceId;
+    
+    if (!workspaceId) {
       console.error('ERROR: No workspace ID found!');
       alert('No workspace ID found');
       return;
     }
     
-    // Use unified route
-    navigate(`/workspace/${workspace._id}`);
+    // OLD: navigate(`/workspace/${workspace._id}`);
+    // NEW: Use FREELANCER role-based route
+    navigate(`/freelancer/workspace/${workspaceId}`);
+  };
+
+  const getDisplayTitle = () => {
+    return workspace.projectTitle || workspace.title || 'Project';
+  };
+
+  const getClientName = () => {
+    return workspace.clientName || workspace.client?.name || 'Client';
+  };
+
+  const getBudget = () => {
+    return workspace.totalBudget || workspace.budget || 0;
+  };
+
+  const getProgress = () => {
+    return workspace.overallProgress || 0;
+  };
+
+  const getCurrentPhase = () => {
+    return workspace.currentPhase || 1;
+  };
+
+  const getStatus = () => {
+    return workspace.status || 'active';
   };
 
   return (
@@ -54,17 +81,17 @@ const FreelancerWorkspaceCard = ({ workspace }) => {
           <FaProjectDiagram />
         </div>
         <div className="workspace-title-section">
-          <h4 className="workspace-title">{workspace.projectTitle || 'Untitled Project'}</h4>
+          <h4 className="workspace-title">{getDisplayTitle()}</h4>
           <div className="workspace-meta">
             <span className="workspace-status">
               <span 
                 className="status-dot" 
-                style={{ backgroundColor: getStatusColor(workspace.status) }}
+                style={{ backgroundColor: getStatusColor(getStatus()) }}
               />
-              {workspace.status || 'active'}
+              {getStatus()}
             </span>
             <span className="workspace-phase">
-              Phase {workspace.currentPhase || 1}
+              Phase {getCurrentPhase()}
             </span>
           </div>
         </div>
@@ -79,14 +106,14 @@ const FreelancerWorkspaceCard = ({ workspace }) => {
             <FaUser className="info-icon" />
             <div>
               <span className="info-label">Client</span>
-              <span className="info-value">{workspace.clientName || 'Client'}</span>
+              <span className="info-value">{getClientName()}</span>
             </div>
           </div>
           <div className="workspace-budget">
             <FaDollarSign className="info-icon" />
             <div>
               <span className="info-label">Budget</span>
-              <span className="info-value">${workspace.totalBudget || 0}</span>
+              <span className="info-value">${getBudget()}</span>
             </div>
           </div>
         </div>
@@ -94,12 +121,12 @@ const FreelancerWorkspaceCard = ({ workspace }) => {
         <div className="progress-section">
           <div className="progress-header">
             <span className="progress-label">Progress</span>
-            <span className="progress-percentage">{workspace.overallProgress || 0}%</span>
+            <span className="progress-percentage">{getProgress()}%</span>
           </div>
           <div className="progress-bar">
             <div 
               className="progress-fill"
-              style={{ width: `${workspace.overallProgress || 0}%` }}
+              style={{ width: `${getProgress()}%` }}
             />
           </div>
         </div>
@@ -108,7 +135,7 @@ const FreelancerWorkspaceCard = ({ workspace }) => {
       <div className="workspace-card-footer">
         <div className="last-updated">
           <FaClock className="clock-icon" />
-          <span>Updated 2 days ago</span>
+          <span>Updated recently</span>
         </div>
       </div>
     </div>

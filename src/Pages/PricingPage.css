@@ -1,0 +1,155 @@
+:root {
+  --navy: #0a1a44;
+  --light: #4da3ff;
+  --white: #ffffff;
+  --muted: #6b7590;
+  --shadow: 0 6px 18px rgba(10, 26, 68, 0.08);
+  --radius: 14px;
+}
+
+.pricing-wrapper {
+  padding: 50px 20px;
+  background: #f7faff;
+  text-align: center;
+  font-family: Inter, sans-serif;
+}
+
+.pricing-title {
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.pricing-desc {
+  color: var(--muted);
+  margin-bottom: 30px;
+  font-size: 16px;
+}
+
+/* Billing Toggle */
+.billing-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 30px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.billing-toggle .active {
+  color: var(--navy);
+}
+
+.switch {
+  position: relative;
+  width: 48px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--muted);
+  transition: 0.3s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: '';
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--light);
+}
+
+input:checked + .slider:before {
+  transform: translateX(24px);
+}
+
+/* Pricing Grid */
+.pricing-grid {
+  margin-top: 30px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  padding: 10px;
+}
+
+.pricing-card {
+  background: var(--white);
+  padding: 25px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: 0.2s;
+}
+
+.pricing-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 26px rgba(10, 26, 68, 0.12);
+}
+
+.price {
+  font-size: 30px;
+  color: var(--navy);
+  margin-bottom: 10px;
+}
+
+.pricing-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+  text-align: left;
+  color: var(--muted);
+}
+
+.pricing-card li {
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.choose-btn {
+  width: 100%;
+  padding: 10px;
+  background: var(--navy);
+  color: var(--white);
+  font-weight: 600;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+}
+
+.enterprise-btn {
+  background: var(--light);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+}
