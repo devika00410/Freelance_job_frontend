@@ -1,6 +1,6 @@
 /* ===== ROOT VARIABLES ===== */
 :root {
-  /* Upwork Color Palette */
+
   --upwork-dark: #14a800;
   --upwork-medium: #5bbc2e;
   --upwork-light: #b2ff9e;
@@ -50,6 +50,7 @@
   min-height: 100vh;
   background: var(--upwork-bg);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  width: 1500px;
 }
 
 /* ===== SIDEBAR ===== */

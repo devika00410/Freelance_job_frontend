@@ -34,35 +34,6 @@ const ContractsPage = () => {
     const [filter, setFilter] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
 
-    // Dummy data for fallback
-    const dummyContracts = [
-        {
-            _id: '1',
-            contractId: 'CT-2024-001',
-            title: 'E-commerce Website Development',
-            serviceType: 'Web Development',
-            status: 'active',
-            totalBudget: 5000,
-            startDate: '2024-01-15',
-            endDate: '2024-03-15',
-            clientSigned: true,
-            freelancerSigned: true,
-            clientSignedAt: '2024-01-10',
-            freelancerSignedAt: '2024-01-12',
-            phases: [
-                { phase: 1, title: 'Design & Planning', amount: 1500, status: 'paid' },
-                { phase: 2, title: 'Frontend Development', amount: 2000, status: 'in-progress' },
-                { phase: 3, title: 'Backend Integration', amount: 1500, status: 'pending' }
-            ],
-            freelancer: {
-                _id: 'f1',
-                name: 'Sarah Johnson',
-                rating: 4.8,
-                profilePhoto: null
-            }
-        }
-    ];
-
     useEffect(() => {
         fetchContracts();
         fetchContractStats();
@@ -71,23 +42,62 @@ const ContractsPage = () => {
     const fetchContracts = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:3000/api/client/contracts', {
+            console.log('🔍 Fetching contracts...');
+
+            const response = await axios.get(`${API_URL}/api/client/contracts`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
-                }
+                },
+                timeout: 10000
             });
 
-            // Log the response to check for workspaceId
-            console.log('Contracts API Response:', response.data);
+            console.log('✅ Contracts API Response:', response.data);
 
-            setContracts(response.data.contracts || response.data);
+            const contractsData = response.data.contracts || response.data || [];
+
+            // Fetch workspaceId for each contract if not present
+            const contractsWithWorkspace = await Promise.all(
+                contractsData.map(async (contract) => {
+                    if (!contract.workspaceId) {
+                        try {
+                            const workspaceResponse = await axios.get(
+                                `${API_URL}/api/workspaces/contract/${contract._id}`,
+                                {
+                                    headers: { 'Authorization': `Bearer ${token}` },
+                                    timeout: 5000
+                                }
+                            );
+                            if (workspaceResponse.data.workspaceId) {
+                                contract.workspaceId = workspaceResponse.data.workspaceId;
+                            }
+                        } catch (wsError) {
+                            console.log(`No workspace found for contract ${contract._id}`);
+                        }
+                    }
+                    return contract;
+                })
+            );
+
+            setContracts(contractsWithWorkspace);
         } catch (error) {
-            console.error('Error fetching contracts:', error);
-            // Add workspaceId to dummy data
-            setContracts(dummyContracts.map(contract => ({
-                ...contract,
-                workspaceId: 'demo-workspace-id'
-            })));
+            console.error('❌ Error fetching contracts:', error);
+            // Fetch from contracts page if main endpoint fails
+            try {
+                const token = localStorage.getItem('token');
+                const fallbackResponse = await axios.get(
+                    `${API_URL}/api/contracts`,
+                    {
+                        headers: { 'Authorization': `Bearer ${token}` },
+                        timeout: 5000
+                    }
+                );
+                if (fallbackResponse.data) {
+                    setContracts(fallbackResponse.data.contracts || fallbackResponse.data || []);
+                }
+            } catch (fallbackError) {
+                console.error('Fallback also failed:', fallbackError);
+                setContracts([]);
+            }
         } finally {
             setLoading(false);
         }
@@ -96,23 +106,35 @@ const ContractsPage = () => {
     const fetchContractStats = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:3000/api/client/contracts/stats', {
+            const response = await axios.get(`${API_URL}/api/client/contracts/stats`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
-                }
+                },
+                timeout: 5000
             });
             setStats(response.data);
         } catch (error) {
             console.error('Error fetching contract stats:', error);
-            // Set default stats
+            // Calculate stats from contracts
+            const totalContracts = contracts.length;
+            const activeContracts = contracts.filter(c => c.status === 'active').length;
+            const completedContracts = contracts.filter(c => c.status === 'completed').length;
+            const pendingSignatures = contracts.filter(c => c.status === 'sent').length;
+            const totalContractValue = contracts.reduce((sum, c) => sum + (c.totalBudget || 0), 0);
+            const totalPaid = contracts.reduce((sum, c) => {
+                const phases = c.phases || [];
+                return sum + phases
+                    .filter(p => p.status === 'paid')
+                    .reduce((amt, p) => amt + (p.amount || 0), 0);
+            }, 0);
+
             setStats({
-                totalContracts: dummyContracts.length,
-                activeContracts: dummyContracts.filter(c => c.status === 'active').length,
-                completedContracts: 0,
-                pendingSignatures: dummyContracts.filter(c => c.status === 'sent').length,
-                totalContractValue: dummyContracts.reduce((sum, c) => sum + c.totalBudget, 0),
-                totalPaid: dummyContracts.reduce((sum, c) =>
-                    sum + c.phases.filter(p => p.status === 'paid').reduce((amt, p) => amt + p.amount, 0), 0)
+                totalContracts,
+                activeContracts,
+                completedContracts,
+                pendingSignatures,
+                totalContractValue,
+                totalPaid
             });
         }
     };
@@ -121,84 +143,204 @@ const ContractsPage = () => {
         try {
             const token = localStorage.getItem('token');
 
-            // 1. CLIENT SIGNS THE CONTRACT
-            const response = await axios.put(
+            console.log(`✍️ Signing contract ${contractId}...`);
+
+            // 1. Sign the contract
+            const signResponse = await axios.put(
                 `${API_URL}/api/client/contracts/${contractId}/sign`,
                 { signature: "Digital Signature" },
                 {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    timeout: 10000
                 }
             );
-            console.log("Sign response:", response.data);
 
-            if (!response.data.success) {
-                alert(response.data.message || "Failed to sign contract");
+            console.log("Sign response:", signResponse.data);
+
+            if (!signResponse.data.success) {
+                alert(signResponse.data.message || "Failed to sign contract");
                 return;
             }
 
-            let workspaceId =
-                response.data.contract?.workspaceId ||
-                response.data.workspaceId ||
-                null;
+            let workspaceId = signResponse.data.contract?.workspaceId ||
+                signResponse.data.workspaceId;
 
-            // 2. IF BACKEND DIDN'T AUTO-CREATE WORKSPACE, CALL CREATE-WORKSPACE ENDPOINT
+            // 2. If no workspace, create one
             if (!workspaceId) {
                 try {
+                    console.log('🔄 Creating workspace...');
                     const createRes = await axios.post(
-                        `${API_URL}/client/contracts/${contractId}/create-workspace`,
+                        `${API_URL}/api/contracts/${contractId}/create-workspace`,
                         {},
-                        { headers: { Authorization: `Bearer ${token}` } }
+                        {
+                            headers: { 'Authorization': `Bearer ${token}` },
+                            timeout: 10000
+                        }
                     );
 
-                    workspaceId =
-                        createRes.data.workspace?.workspaceId ||
-                        createRes.data.workspaceId ||
-                        null;
-                } catch (err) {
-                    console.error("Create workspace error:", err.response?.data || err.message);
+                    workspaceId = createRes.data.workspaceId ||
+                        createRes.data.workspace?.workspaceId;
+
+                    console.log('✅ Workspace created:', workspaceId);
+                } catch (createError) {
+                    console.error("Create workspace error:", createError);
+                    // Try alternative endpoint
+                    try {
+                        const altRes = await axios.post(
+                            `${API_URL}/api/workspaces/create-from-contract/${contractId}`,
+                            {},
+                            { headers: { 'Authorization': `Bearer ${token}` } }
+                        );
+                        workspaceId = altRes.data.workspaceId;
+                    } catch (altError) {
+                        console.error("Alternative endpoint also failed:", altError);
+                    }
                 }
             }
 
-            // 3. REDIRECT TO WORKSPACE
+            // 3. Update contract with workspace ID
             if (workspaceId) {
-                alert("Workspace ready. Redirecting…");
-                navigate(`/workspace/${workspaceId}`);
-                return;
+                // Update local state
+                setContracts(prev => prev.map(contract =>
+                    contract._id === contractId
+                        ? { ...contract, workspaceId, status: 'active' }
+                        : contract
+                ));
+
+                alert("✅ Contract signed! Workspace created.");
+
+                // Redirect to workspace
+                setTimeout(() => {
+                    navigate(`/client/workspace/${workspaceId}`);
+                }, 1000);
+            } else {
+                alert("✅ Contract signed! Please create workspace manually.");
+                fetchContracts();
             }
 
-            // 4. FALLBACK IF WORKSPACE STILL NULL
-            alert("Contract signed. Waiting for workspace.");
-            fetchContracts();
-
         } catch (error) {
-            console.error("Sign error:", error.response?.data || error.message);
+            console.error("❌ Sign error:", error.response?.data || error.message);
             alert(error.response?.data?.message || "Error signing contract");
         }
     };
 
+    const handleCreateWorkspace = async (contractId, contractTitle) => {
+        if (!window.confirm(`Create workspace for contract: "${contractTitle}"?`)) {
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('token');
+
+            console.log('🔄 Creating workspace for contract:', contractId);
+
+            // Try multiple endpoints for workspace creation
+            const endpoints = [
+                `${API_URL}/api/contracts/${contractId}/create-workspace`,
+                `${API_URL}/api/workspaces/create-from-contract/${contractId}`,
+                `${API_URL}/api/client/contracts/${contractId}/create-workspace`
+            ];
+
+            let workspaceId = null;
+            let success = false;
+
+            for (const endpoint of endpoints) {
+                try {
+                    console.log(`Trying endpoint: ${endpoint}`);
+                    const response = await axios.post(
+                        endpoint,
+                        {},
+                        {
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            timeout: 10000
+                        }
+                    );
+
+                    console.log('Create workspace response:', response.data);
+
+                    if (response.data.success || response.data.workspaceId) {
+                        workspaceId = response.data.workspaceId ||
+                            response.data.workspace?.workspaceId ||
+                            response.data.workspace?._id;
+
+                        if (workspaceId) {
+                            success = true;
+                            console.log(`✅ Workspace created via ${endpoint}:`, workspaceId);
+                            break;
+                        }
+                    }
+                } catch (endpointError) {
+                    console.log(`Endpoint ${endpoint} failed:`, endpointError.message);
+                    continue;
+                }
+            }
+
+            if (success && workspaceId) {
+                // Update contract in local state
+                setContracts(prev => prev.map(contract =>
+                    contract._id === contractId
+                        ? { ...contract, workspaceId }
+                        : contract
+                ));
+
+                alert(`✅ Workspace created successfully! Redirecting...`);
+
+                // Redirect to workspace
+                setTimeout(() => {
+                    navigate(`/client/workspace/${workspaceId}`);
+                }, 1500);
+            } else {
+                // Fallback: create using contract details
+                alert(`⚠️ Could not create workspace via API. Using contract ID as workspace ID.`);
+
+                // Use contract ID as workspace ID for now
+                const tempWorkspaceId = contractId;
+
+                // Update contract
+                setContracts(prev => prev.map(contract =>
+                    contract._id === contractId
+                        ? { ...contract, workspaceId: tempWorkspaceId }
+                        : contract
+                ));
+
+                // Navigate with contract ID as workspace ID
+                setTimeout(() => {
+                    navigate(`/client/workspace/${tempWorkspaceId}`);
+                }, 1000);
+            }
+
+        } catch (error) {
+            console.error('❌ Error creating workspace:', error);
+            alert(error.response?.data?.message || 'Failed to create workspace');
+        }
+    };
 
     const handleSendContract = async (contractId) => {
         try {
             const token = localStorage.getItem('token');
             const response = await axios.put(
-                `http://localhost:3000/api/client/contracts/${contractId}/send`,
+                `${API_URL}/api/client/contracts/${contractId}/send`,
                 {},
                 {
                     headers: {
                         'Authorization': `Bearer ${token}`
-                    }
+                    },
+                    timeout: 10000
                 }
             );
 
-            if (response.status === 200) {
-                alert('Contract sent to freelancer!');
+            if (response.status === 200 || response.data.success) {
+                alert('✅ Contract sent to freelancer!');
                 fetchContracts();
             }
         } catch (error) {
-            console.error('Error sending contract:', error);
+            console.error('❌ Error sending contract:', error);
             alert('Failed to send contract');
         }
     };
@@ -211,68 +353,23 @@ const ContractsPage = () => {
         try {
             const token = localStorage.getItem('token');
             const response = await axios.put(
-                `http://localhost:3000/api/client/contracts/${contractId}/cancel`,
+                `${API_URL}/api/client/contracts/${contractId}/cancel`,
                 {},
                 {
                     headers: {
                         'Authorization': `Bearer ${token}`
-                    }
+                    },
+                    timeout: 10000
                 }
             );
 
-            if (response.status === 200) {
-                alert('Contract cancelled successfully!');
+            if (response.status === 200 || response.data.success) {
+                alert('✅ Contract cancelled successfully!');
                 fetchContracts();
             }
         } catch (error) {
-            console.error('Error cancelling contract:', error);
+            console.error('❌ Error cancelling contract:', error);
             alert('Failed to cancel contract');
-        }
-    };
-
-    // NEW: Add handleCreateWorkspace function
-    const handleCreateWorkspace = async (contractId, contractTitle) => {
-        if (!window.confirm(`Create workspace for contract: "${contractTitle}"?`)) {
-            return;
-        }
-
-        try {
-            const token = localStorage.getItem('token');
-
-            console.log('🔄 Creating workspace for contract:', contractId);
-
-            const response = await axios.post(
-                `${API_URL}/client/contracts/${contractId}/create-workspace`,
-                { forceCreate: true },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                }
-            );
-
-            console.log('Create workspace response:', response.data);
-
-            if (response.data.success) {
-                const { workspaceId, action } = response.data;
-
-                if (action === 'created' || action === 'created_fallback') {
-                    alert(`✅ Workspace created successfully! ID: ${workspaceId}\nRedirecting to workspace...`);
-                    navigate(`/workspace/${workspaceId}`);
-                } else if (action === 'existing') {
-                    alert(`ℹ️ Workspace already exists. Redirecting...`);
-                    navigate(`/workspace/${workspaceId}`);
-                }
-
-                // Refresh contracts list
-                fetchContracts();
-            } else {
-                alert(`❌ ${response.data.message}`);
-            }
-        } catch (error) {
-            console.error('Error creating workspace:', error);
-            alert(error.response?.data?.message || 'Failed to create workspace');
         }
     };
 
@@ -292,31 +389,40 @@ const ContractsPage = () => {
     };
 
     const calculateTotalPaid = (phases) => {
-        return phases.filter(phase => phase.status === 'paid')
-            .reduce((total, phase) => total + phase.amount, 0);
+        const phasesArray = phases || [];
+        return phasesArray
+            .filter(phase => phase.status === 'paid')
+            .reduce((total, phase) => total + (phase.amount || 0), 0);
     };
 
     const getCurrentPhase = (phases) => {
-        return phases.find(phase =>
-            ['pending', 'in-progress'].includes(phase.status)
-        ) || phases[phases.length - 1];
+        const phasesArray = phases || [];
+        const current = phasesArray.find(phase =>
+            ['pending', 'in-progress', 'awaiting_approval'].includes(phase.status)
+        ) || phasesArray[phasesArray.length - 1];
+        return current;
     };
 
     const filteredContracts = contracts.filter(contract => {
         const matchesFilter = filter === 'all' || contract.status === filter;
-        const matchesSearch = contract.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            contract.contractId.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch =
+            (contract.title?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+            (contract.contractId?.toLowerCase() || '').includes(searchTerm.toLowerCase());
         return matchesFilter && matchesSearch;
     });
 
     const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
+        if (!dateString) return 'N/A';
+        try {
+            return new Date(dateString).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        } catch (error) {
+            return 'Invalid date';
+        }
     };
-
 
     if (loading) {
         return (
@@ -389,7 +495,7 @@ const ContractsPage = () => {
                             <FaDollarSign />
                         </div>
                         <div className="contract-stat-info">
-                            <h3>${stats.totalContractValue || contracts.reduce((sum, c) => sum + c.totalBudget, 0)}</h3>
+                            <h3>${stats.totalContractValue || contracts.reduce((sum, c) => sum + (c.totalBudget || 0), 0)}</h3>
                             <p>Total Contract Value</p>
                         </div>
                     </div>
@@ -505,14 +611,22 @@ const ContractCard = ({
     const hasValidWorkspaceId = contract.workspaceId &&
         contract.workspaceId !== 'null' &&
         contract.workspaceId !== null &&
-        contract.workspaceId !== 'demo-workspace-id';
+        contract.workspaceId !== undefined &&
+        contract.workspaceId !== '';
+
+    console.log('📝 Contract details for navigation:', {
+        _id: contract._id,
+        contractId: contract.contractId,
+        workspaceId: contract.workspaceId,
+        title: contract.title
+    });
 
     return (
         <div className="contract-card-item">
             <div className="contract-card-header">
                 <div className="contract-card-basic-info">
-                    <h3 className="contract-card-title">{contract.title}</h3>
-                    <span className="contract-card-id">{contract.contractId}</span>
+                    <h3 className="contract-card-title">{contract.title || 'Untitled Contract'}</h3>
+                    <span className="contract-card-id">{contract.contractId || contract._id}</span>
                 </div>
                 <div className="contract-card-meta">
                     {getStatusBadge(contract.status)}
@@ -526,11 +640,11 @@ const ContractCard = ({
             <div className="contract-card-content">
                 <div className="contract-card-parties">
                     <div className="contract-party-info">
-                        <strong>Service:</strong> {contract.serviceType}
+                        <strong>Service:</strong> {contract.serviceType || 'Not specified'}
                     </div>
                     {contract.freelancer && (
                         <div className="contract-party-info">
-                            <strong>Freelancer:</strong> {contract.freelancer.name}
+                            <strong>Freelancer:</strong> {contract.freelancer.name || 'Freelancer'}
                         </div>
                     )}
                 </div>
@@ -538,7 +652,7 @@ const ContractCard = ({
                 <div className="contract-card-financials">
                     <div className="contract-financial-item">
                         <FaDollarSign />
-                        <span>Total: ${contract.totalBudget}</span>
+                        <span>Total: ${contract.totalBudget || 0}</span>
                     </div>
                     <div className="contract-financial-item">
                         <FaCheck />
@@ -546,17 +660,17 @@ const ContractCard = ({
                     </div>
                     <div className="contract-financial-item">
                         <FaClock />
-                        <span>Due: ${contract.totalBudget - totalPaid}</span>
+                        <span>Due: ${(contract.totalBudget || 0) - totalPaid}</span>
                     </div>
                 </div>
 
                 <div className="contract-card-progress">
                     <div className="contract-progress-info">
-                        <strong>Current Phase:</strong> {currentPhase?.title}
+                        <strong>Current Phase:</strong> {currentPhase?.title || 'No active phase'}
                     </div>
                     <div className="contract-phase-status">
-                        <span className={`contract-phase-badge ${currentPhase?.status}`}>
-                            {currentPhase?.status}
+                        <span className={`contract-phase-badge ${currentPhase?.status || 'pending'}`}>
+                            {currentPhase?.status || 'pending'}
                         </span>
                     </div>
                 </div>
@@ -575,12 +689,12 @@ const ContractCard = ({
                     </button>
                 )}
 
-                {/* {contract.status === 'sent' && !contract.clientSigned && (
+                {contract.status === 'sent' && !contract.clientSigned && (
                     <button className="contracts-primary-button" onClick={() => onSign(contract._id)}>
                         <FaCheck />
                         Sign Contract
                     </button>
-                )} */}
+                )}
 
                 {['draft', 'sent', 'pending', 'active'].includes(contract.status) && (
                     <button className="contracts-cancel-button" onClick={() => onCancel(contract._id)}>
@@ -589,20 +703,19 @@ const ContractCard = ({
                     </button>
                 )}
 
-                {/* ✅ Create Workspace Button (for active contracts without workspace) */}
-
-                {contract.status === 'active' && contract.workspaceId && contract.workspaceId !== 'null' && (
+                {/* Workspace buttons */}
+                {contract.status === 'active' && hasValidWorkspaceId && (
                     <button
                         className="workspace-btn"
-                        onClick={() => navigate(`/client/workspace/${contract.workspaceId ? contract.workspaceId.toString() : contract._id.toString()}`)}>
+                        onClick={() => navigate(`/client/workspace/${contract.workspaceId}`)}>
                         <FaFolderOpen /> Open Workspace
                     </button>
                 )}
 
-                {contract.status === 'active' && (!contract.workspaceId || contract.workspaceId === 'null') && (
+                {contract.status === 'active' && !hasValidWorkspaceId && (
                     <button
                         className="workspace-create-btn"
-                        onClick={() => onCreateWorkspace(contract.contractId, contract.title)}>
+                        onClick={() => onCreateWorkspace(contract._id, contract.title)}>
                         <FaFolderPlus /> Create Workspace
                     </button>
                 )}
@@ -611,7 +724,7 @@ const ContractCard = ({
     );
 };
 
-// Contract Detail Modal Component - UPDATED
+// Contract Detail Modal Component
 const ContractDetailModal = ({
     contract,
     onClose,
@@ -628,7 +741,8 @@ const ContractDetailModal = ({
     const hasValidWorkspaceId = contract.workspaceId &&
         contract.workspaceId !== 'null' &&
         contract.workspaceId !== null &&
-        contract.workspaceId !== 'demo-workspace-id';
+        contract.workspaceId !== undefined &&
+        contract.workspaceId !== '';
 
     return (
         <div className="contract-modal-overlay">
@@ -644,15 +758,15 @@ const ContractDetailModal = ({
                         <div className="contract-detail-grid">
                             <div className="contract-detail-item">
                                 <label>Contract ID</label>
-                                <p>{contract.contractId}</p>
+                                <p>{contract.contractId || contract._id}</p>
                             </div>
                             <div className="contract-detail-item">
                                 <label>Title</label>
-                                <p>{contract.title}</p>
+                                <p>{contract.title || 'Untitled Contract'}</p>
                             </div>
                             <div className="contract-detail-item">
                                 <label>Service Type</label>
-                                <p>{contract.serviceType}</p>
+                                <p>{contract.serviceType || 'Not specified'}</p>
                             </div>
                             <div className="contract-detail-item">
                                 <label>Status</label>
@@ -663,7 +777,7 @@ const ContractDetailModal = ({
                                 <p>
                                     {hasValidWorkspaceId ? (
                                         <span className="workspace-status-active">
-                                            ✅ Available (ID: {contract.workspaceId.substring(0, 15)}...)
+                                            ✅ Available (ID: {contract.workspaceId.substring(0, 10)}...)
                                         </span>
                                     ) : (
                                         <span className="workspace-status-missing">
@@ -704,7 +818,7 @@ const ContractDetailModal = ({
                                 <FaDollarSign />
                                 <div>
                                     <label>Total Budget</label>
-                                    <p>${contract.totalBudget}</p>
+                                    <p>${contract.totalBudget || 0}</p>
                                 </div>
                             </div>
                             <div className="contract-financial-card">
@@ -718,35 +832,37 @@ const ContractDetailModal = ({
                                 <FaClock />
                                 <div>
                                     <label>Balance Due</label>
-                                    <p>${contract.totalBudget - totalPaid}</p>
+                                    <p>${(contract.totalBudget || 0) - totalPaid}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="contract-modal-section">
-                        <h3>Phases & Milestones</h3>
-                        <div className="contract-phases-list">
-                            {contract.phases.map((phase) => (
-                                <div key={phase.phase} className={`contract-phase-item ${phase.status}`}>
-                                    <div className="contract-phase-header">
-                                        <h4>Phase {phase.phase}: {phase.title}</h4>
-                                        <span className={`contract-phase-status-badge ${phase.status}`}>
-                                            {phase.status}
-                                        </span>
-                                    </div>
-                                    <div className="contract-phase-details">
-                                        <span className="contract-phase-amount">${phase.amount}</span>
-                                        {phase.completedDate && (
-                                            <span className="contract-phase-date">
-                                                Completed: {formatDate(phase.completedDate)}
+                    {contract.phases && contract.phases.length > 0 && (
+                        <div className="contract-modal-section">
+                            <h3>Phases & Milestones</h3>
+                            <div className="contract-phases-list">
+                                {contract.phases.map((phase, index) => (
+                                    <div key={phase._id || `phase-${index}`} className={`contract-phase-item ${phase.status}`}>
+                                        <div className="contract-phase-header">
+                                            <h4>Phase {phase.phase || index + 1}: {phase.title || 'Untitled Phase'}</h4>
+                                            <span className={`contract-phase-status-badge ${phase.status}`}>
+                                                {phase.status}
                                             </span>
-                                        )}
+                                        </div>
+                                        <div className="contract-phase-details">
+                                            <span className="contract-phase-amount">${phase.amount || 0}</span>
+                                            {phase.completedDate && (
+                                                <span className="contract-phase-date">
+                                                    Completed: {formatDate(phase.completedDate)}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     {contract.terms && (
                         <div className="contract-modal-section">
@@ -767,22 +883,20 @@ const ContractDetailModal = ({
                         Download PDF
                     </button>
 
-                    {/* ✅ Create Workspace Button (for active contracts without workspace) */}
-                    {contract.status === 'active' && !hasValidWorkspaceId && (
-                        <button
-                            className="workspace-create-btn"
-                            onClick={() => onCreateWorkspace(contract._id || contract.contractId, contract.title)}
-                        >
-                            <FaFolderPlus /> Create Workspace
-                        </button>
-                    )}
-
-                    {/* ✅ Open Workspace Button (for active contracts with valid workspace) */}
+                    {/* Workspace buttons */}
                     {contract.status === 'active' && hasValidWorkspaceId && (
                         <button
                             className="workspace-btn"
-                            onClick={() => navigate(`/client/workspace/${contract.workspaceId ? contract.workspaceId.toString() : contract._id.toString()}`)}>
+                            onClick={() => navigate(`/client/workspace/${contract._id}`)}>
                             <FaFolderOpen /> Open Workspace
+                        </button>
+                    )}
+
+                    {contract.status === 'active' && !hasValidWorkspaceId && (
+                        <button
+                            className="workspace-create-btn"
+                            onClick={() => onCreateWorkspace(contract._id, contract.title)}>
+                            <FaFolderPlus /> Create Workspace
                         </button>
                     )}
                 </div>

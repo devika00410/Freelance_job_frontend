@@ -8,7 +8,10 @@ import {
   FaEnvelope,
   FaBookmark,
   FaCalendar,
-  FaBriefcase
+  FaBriefcase,
+  FaPhone,
+  FaShareAlt,
+  FaDownload
 } from 'react-icons/fa';
 import './ProfileHeader.css';
 
@@ -25,43 +28,22 @@ const ProfileHeader = ({ profile }) => {
 
   const { userInfo, verificationStatus } = profile;
 
-  // Debug: Check what image data we have
-  console.log('🖼️ Profile image data:', {
-    profilePicture: userInfo.profilePicture,
-    coverPhoto: userInfo.coverPhoto,
-    hasProfilePicture: !!userInfo.profilePicture,
-    hasCoverPhoto: !!userInfo.coverPhoto,
-    profilePictureType: typeof userInfo.profilePicture,
-    coverPhotoType: typeof userInfo.coverPhoto,
-    fullUserInfo: userInfo
-  });
-
-  // Simple function to get image URL - data URLs should work directly
+  // Simple function to get image URL
   const getImageUrl = (image, defaultImage) => {
-    if (!image) {
-      console.log(`📸 Using default image: ${defaultImage}`);
-      return defaultImage;
-    }
+    if (!image) return defaultImage;
     
-    // If it's a data URL (starts with data:image/), use it directly
     if (typeof image === 'string' && image.startsWith('data:image/')) {
-      console.log(`📸 Using data URL for image (length: ${image.length})`);
       return image;
     }
     
-    // If it's a regular URL, use it
     if (typeof image === 'string' && (image.startsWith('http') || image.startsWith('/'))) {
-      console.log(`📸 Using URL for image: ${image}`);
       return image;
     }
     
-    // Check if it's in the profile data structure
     if (typeof image === 'string' && image.length > 0) {
-      console.log(`📸 Using string image: ${image.substring(0, 50)}...`);
       return image;
     }
     
-    console.log(`📸 Falling back to default image: ${defaultImage}`);
     return defaultImage;
   };
 
@@ -82,7 +64,7 @@ const ProfileHeader = ({ profile }) => {
   const getAvailabilityDisplay = (availability) => {
     const availabilityOptions = {
       'full-time': 'Available for full-time',
-      'part-time': 'Available for part-time',
+      'part-time': 'Available part-time',
       'not-available': 'Not available',
       'available': 'Available',
       'busy': 'Currently busy'
@@ -115,6 +97,15 @@ const ProfileHeader = ({ profile }) => {
     }
   };
 
+  // Format rate with proper display
+  const formatRate = () => {
+    if (!userInfo.ratePerHour || userInfo.ratePerHour === 0) return 'Rate not set';
+    return `$${userInfo.ratePerHour}/hr`;
+  };
+
+  // Check if profile is verified
+  const isVerified = verificationStatus?.isIdentityVerified || verificationStatus?.isEmailVerified;
+
   return (
     <div className="header-main-container">
       {/* Cover Section */}
@@ -124,104 +115,127 @@ const ProfileHeader = ({ profile }) => {
           alt="Cover" 
           className="header-cover-image"
           onError={(e) => {
-            console.error('❌ Cover image failed to load:', coverPhotoUrl);
-            e.target.src = '/default-cover.jpg';
-            // If default also fails, use gradient background
-            e.target.onerror = null;
-            e.target.style.background = 'linear-gradient(135deg, #0a1a3c 0%, #1e3a8a 100%)';
+            e.target.style.background = 'linear-gradient(135deg, #0a1f3d 0%, #08182f 100%)';
             e.target.style.display = 'flex';
             e.target.style.alignItems = 'center';
             e.target.style.justifyContent = 'center';
             e.target.style.color = 'white';
-            e.target.innerHTML = '<span>Cover Image</span>';
+            e.target.innerHTML = '<span style="font-size: 24px; font-weight: 600;">Professional Profile</span>';
           }}
         />
         <div className="header-cover-overlay"></div>
+        
+        {/* Cover Action Buttons */}
+        <div className="header-cover-actions">
+          <button className="cover-action-btn share-btn">
+            <FaShareAlt size={16} />
+            Share
+          </button>
+          <button className="cover-action-btn download-btn">
+            <FaDownload size={16} />
+            Download CV
+          </button>
+        </div>
       </div>
       
       {/* Main Content */}
       <div className="header-content-wrapper">
-        {/* Avatar */}
-        <div className="header-avatar-container">
-          <img 
-            src={profilePictureUrl} 
-            alt={userInfo.fullName || 'User'}
-            className="header-avatar-image"
-            onError={(e) => {
-              console.error('❌ Profile image failed to load:', profilePictureUrl);
-              e.target.src = '/default-avatar.jpg';
-              // If default also fails, show user icon
-              e.target.onerror = null;
-              e.target.style.display = 'none';
-              // Create fallback div
-              const fallbackDiv = document.createElement('div');
-              fallbackDiv.className = 'header-avatar-fallback';
-              fallbackDiv.innerHTML = '<FaUser size={48} color="#64748b" />';
-              fallbackDiv.style.width = '100%';
-              fallbackDiv.style.height = '100%';
-              fallbackDiv.style.display = 'flex';
-              fallbackDiv.style.alignItems = 'center';
-              fallbackDiv.style.justifyContent = 'center';
-              fallbackDiv.style.background = '#f8fafc';
-              fallbackDiv.style.borderRadius = '16px';
-              e.target.parentNode.appendChild(fallbackDiv);
-            }}
-          />
-          {verificationStatus?.isIdentityVerified && (
-            <div className="header-verified-badge" title="Identity Verified">
-              <FaCheckCircle size={14} />
-            </div>
-          )}
+        {/* Avatar Container */}
+        <div className="header-avatar-wrapper">
+          <div className="header-avatar-container">
+            <img 
+              src={profilePictureUrl} 
+              alt={userInfo.fullName || 'User'}
+              className="header-avatar-image"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                const fallbackDiv = document.createElement('div');
+                fallbackDiv.className = 'header-avatar-fallback';
+                fallbackDiv.innerHTML = '<FaUser size={48} color="#3b82f6" />';
+                fallbackDiv.style.width = '100%';
+                fallbackDiv.style.height = '100%';
+                fallbackDiv.style.display = 'flex';
+                fallbackDiv.style.alignItems = 'center';
+                fallbackDiv.style.justifyContent = 'center';
+                fallbackDiv.style.background = '#f8fafc';
+                fallbackDiv.style.borderRadius = '16px';
+                e.target.parentNode.appendChild(fallbackDiv);
+              }}
+            />
+            
+            {/* Verified Badge */}
+            {isVerified && (
+              <div className="header-verified-badge" title="Verified Professional">
+                <FaCheckCircle size={20} />
+                <span>Verified</span>
+              </div>
+            )}
+          </div>
+          
+          {/* Quick Contact Info */}
+          <div className="header-contact-info">
+            {userInfo.contactPhone && (
+              <div className="contact-info-item">
+                <FaPhone size={14} />
+                <span>{userInfo.contactPhone}</span>
+              </div>
+            )}
+            {userInfo.email && (
+              <div className="contact-info-item">
+                <FaEnvelope size={14} />
+                <span>{userInfo.email}</span>
+              </div>
+            )}
+          </div>
         </div>
         
-        {/* Details Section */}
+        {/* Profile Details */}
         <div className="header-details-section">
           <div className="header-info-section">
+            {/* Name and Title */}
             <div className="header-name-section">
               <h1 className="header-name">
-                {userInfo.fullName || 'Devik'}
-                {verificationStatus?.isIdentityVerified && (
-                  <FaCheckCircle color="#10b981" size={24} title="Verified" />
-                )}
+                {userInfo.fullName || 'Professional Freelancer'}
+                <span className="header-pro-badge">PRO</span>
               </h1>
-              {verificationStatus?.isEmailVerified && (
-                <span className="header-email-verified" title="Email Verified">
-                  <FaEnvelope size={16} />
-                  Email Verified
-                </span>
-              )}
+              <h2 className="header-title">
+                {userInfo.professionalTitle || 'Freelance Professional'}
+              </h2>
             </div>
             
-            <h2 className="header-title">{userInfo.professionalTitle || 'Freelancer'}</h2>
-            
-            {/* Quick Stats */}
-            <div className="header-stats-row">
-              <div className="header-stat-item">
-                <FaStar color="#f59e0b" />
-                <span className="rating-value">{getUserRating()}</span>
-                <span className="rating-count">({getCompletedProjects()} projects)</span>
+            {/* Location and Rating */}
+            <div className="header-location-rating">
+              <div className="location-section">
+                <FaMapMarkerAlt size={16} />
+                <span className="location-text">
+                  {userInfo.currentLocation || 'Location not specified'}
+                </span>
+                <span className="member-since">
+                  • Member since {formatMemberSince(userInfo.memberSince)}
+                </span>
               </div>
               
-              {userInfo.currentLocation && userInfo.currentLocation !== 'Location not specified' && (
-                <div className="header-stat-item">
-                  <FaMapMarkerAlt color="#ef4444" />
-                  <span>{userInfo.currentLocation}</span>
+              <div className="rating-section">
+                <div className="stars-container">
+                  {[...Array(5)].map((_, i) => (
+                    <FaStar 
+                      key={i} 
+                      size={16} 
+                      className={`star-icon ${i < Math.floor(getUserRating()) ? 'filled' : 'empty'}`}
+                    />
+                  ))}
                 </div>
-              )}
-
-              {userInfo.memberSince && (
-                <div className="header-stat-item">
-                  <FaCalendar color="#8b5cf6" />
-                  <span>Member since {formatMemberSince(userInfo.memberSince)}</span>
-                </div>
-              )}
-
-              {userInfo.ratePerHour > 0 && (
-                <div className="header-stat-item">
-                  <FaClock color="#1e3a8a" />
-                  <span>${userInfo.ratePerHour}/hr</span>
-                </div>
-              )}
+                <span className="rating-value">{getUserRating().toFixed(1)}</span>
+                <span className="rating-count">({getCompletedProjects()} reviews)</span>
+              </div>
+            </div>
+            
+            {/* Availability Badge */}
+            <div className="availability-badge">
+              <span className={`status-dot ${userInfo.workAvailability?.includes('Available') ? 'available' : 'busy'}`}></span>
+              <span className="status-text">
+                {getAvailabilityDisplay(userInfo.workAvailability)}
+              </span>
             </div>
           </div>
           
@@ -229,11 +243,15 @@ const ProfileHeader = ({ profile }) => {
           <div className="header-actions-section">
             <button className="header-primary-btn">
               <FaEnvelope />
-              Contact Me
+              Send Message
             </button>
             <button className="header-secondary-btn">
               <FaBookmark />
               Save Profile
+            </button>
+            <button className="header-cta-btn">
+              <FaBriefcase />
+              Hire Now
             </button>
           </div>
         </div>
@@ -242,39 +260,67 @@ const ProfileHeader = ({ profile }) => {
       {/* Stats Grid */}
       <div className="header-stats-grid">
         <div className="header-stat-card">
-          <div className="header-stat-number">{calculateExperienceYears()}</div>
-          <div className="header-stat-label">Years Experience</div>
-        </div>
-        
-        <div className="header-stat-card">
-          <div className="header-stat-number success-rate">{getSuccessRate()}%</div>
-          <div className="header-stat-label">Success Rate</div>
-        </div>
-        
-        <div className="header-stat-card">
-          <div className="header-stat-text">{userInfo.responseTime || 'Within 24 hours'}</div>
-          <div className="header-stat-label">Avg Response</div>
-        </div>
-        
-        <div className="header-stat-card">
-          <div className="header-stat-number">{getCompletedProjects()}</div>
-          <div className="header-stat-label">Projects Done</div>
-        </div>
-
-        <div className="header-stat-card">
-          <div className="header-stat-text availability">
-            <span className={`availability-dot ${userInfo.workAvailability?.toLowerCase().includes('not available') ? 'unavailable' : 'available'}`}></span>
-            {getAvailabilityDisplay(userInfo.workAvailability)}
+          <div className="header-stat-icon">
+            <FaBriefcase size={24} />
           </div>
-          <div className="header-stat-label">Availability</div>
+          <div className="header-stat-content">
+            <div className="header-stat-number">{calculateExperienceYears()}</div>
+            <div className="header-stat-label">Years Experience</div>
+          </div>
+        </div>
+        
+        <div className="header-stat-card">
+          <div className="header-stat-icon">
+            <FaCheckCircle size={24} />
+          </div>
+          <div className="header-stat-content">
+            <div className="header-stat-number success-rate">{getSuccessRate()}%</div>
+            <div className="header-stat-label">Success Rate</div>
+          </div>
+        </div>
+        
+        <div className="header-stat-card">
+          <div className="header-stat-icon">
+            <FaClock size={24} />
+          </div>
+          <div className="header-stat-content">
+            <div className="header-stat-text">{userInfo.responseTime || 'Within 24h'}</div>
+            <div className="header-stat-label">Avg Response</div>
+          </div>
+        </div>
+        
+        <div className="header-stat-card">
+          <div className="header-stat-icon">
+            <FaStar size={24} />
+          </div>
+          <div className="header-stat-content">
+            <div className="header-stat-number">{getCompletedProjects()}+</div>
+            <div className="header-stat-label">Projects Done</div>
+          </div>
         </div>
 
-        {userInfo.ratePerHour > 0 && (
-          <div className="header-stat-card">
-            <div className="header-stat-number rate">${userInfo.ratePerHour}/hr</div>
+        <div className="header-stat-card">
+          <div className="header-stat-icon">
+            <FaEnvelope size={24} />
+          </div>
+          <div className="header-stat-content">
+            <div className="availability-display">
+              <span className={`availability-dot ${userInfo.workAvailability?.toLowerCase().includes('available') ? 'active' : 'inactive'}`}></span>
+              {userInfo.workAvailability?.includes('Available') ? 'Available' : 'Busy'}
+            </div>
+            <div className="header-stat-label">Availability</div>
+          </div>
+        </div>
+
+        <div className="header-stat-card">
+          <div className="header-stat-icon">
+            <FaClock size={24} />
+          </div>
+          <div className="header-stat-content">
+            <div className="header-stat-number rate">{formatRate()}</div>
             <div className="header-stat-label">Hourly Rate</div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

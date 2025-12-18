@@ -1,305 +1,281 @@
-.freelancer-workspace-list-container {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
+/* =========================================================
+   FREELANCER WORKSPACE LIST – DETAILED PROFESSIONAL CSS
+   Theme: Navy Blue • Light Blue • White
+   Style: Clean • Horizontal Cards • Corporate UI
+   ========================================================= */
+
+/* -----------------------------
+   CSS VARIABLES (DESIGN TOKENS)
+-------------------------------- */
+:root {
+  --navy-900: #0b1f3b;
+  --navy-800: #112a4d;
+  --navy-700: #173a6b;
+
+  --blue-100: #e8f1ff;
+  --blue-200: #d6e6ff;
+  --blue-300: #c2d8ff;
+
+  --white: #ffffff;
+  --border: #dbe4f0;
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+
+  --shadow-sm: 0 4px 10px rgba(11, 31, 59, 0.06);
+  --shadow-md: 0 10px 30px rgba(11, 31, 59, 0.08);
+  --shadow-lg: 0 20px 40px rgba(11, 31, 59, 0.12);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --transition: all 0.25s ease;
 }
 
+/* -----------------------------
+   PAGE / WRAPPER
+-------------------------------- */
+.freelancer-workspace-list-container {
+  min-height: 100vh;
+  padding: 2rem 2.5rem;
+  background: linear-gradient(180deg, var(--navy-900), var(--navy-800));
+}
+
+/* -----------------------------
+   HEADER SECTION
+-------------------------------- */
 .workspace-list-header {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 2rem;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow-md);
   margin-bottom: 2rem;
-  flex-wrap: wrap;
-  gap: 1rem;
+}
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .header-left h1 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-primary);
   margin: 0;
-  color: #333;
-  font-size: 2rem;
 }
 
 .workspace-count {
-  color: #666;
-  margin: 0.5rem 0 0 0;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
 }
 
 .header-right {
   display: flex;
-  gap: 1rem;
   align-items: center;
+  gap: 0.75rem;
 }
 
+/* -----------------------------
+   BUTTONS (SHARED)
+-------------------------------- */
+.btn-primary,
+.btn-secondary,
 .btn-refresh {
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
-  color: #495057;
-  padding: 0.5rem;
-  border-radius: 4px;
+  font-size: 0.85rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--blue-100);
+  color: var(--navy-900);
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.btn-refresh:hover {
-  background: #e9ecef;
-  border-color: #ced4da;
+  transition: var(--transition);
 }
 
 .btn-primary {
-  background: #007bff;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background 0.2s;
+  background: var(--navy-700);
+  color: var(--white);
+  border-color: var(--navy-700);
 }
 
 .btn-primary:hover {
-  background: #0056b3;
-  color: white;
+  background: var(--navy-800);
 }
 
-.btn-secondary {
-  background: #6c757d;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background 0.2s;
+.btn-secondary:hover,
+.btn-refresh:hover {
+  background: var(--blue-200);
 }
 
-.btn-secondary:hover {
-  background: #545b62;
-  color: white;
-}
-
-/* Loading state */
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 50vh;
-  text-align: center;
-}
-
-.spinner {
-  font-size: 3rem;
-  color: #007bff;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* Error state */
-.error-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 70vh;
-  text-align: center;
-  padding: 2rem;
-}
-
-.error-icon {
-  font-size: 4rem;
-  color: #dc3545;
-  margin-bottom: 1rem;
-}
-
-.error-message {
-  color: #666;
-  margin-bottom: 2rem;
-  max-width: 600px;
-}
-
-.error-actions {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.debug-info {
-  background: #f8f9fa;
-  padding: 1rem;
-  border-radius: 4px;
-  border: 1px solid #dee2e6;
-  text-align: left;
-  margin-top: 2rem;
-}
-
-.debug-info small {
-  display: block;
-  color: #666;
-  margin: 0.25rem 0;
-}
-
-/* Empty state */
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  text-align: center;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 2px dashed #dee2e6;
-  margin: 2rem 0;
-}
-
-.empty-icon {
-  font-size: 4rem;
-  color: #6c757d;
-  margin-bottom: 1rem;
-}
-
-.empty-state h3 {
-  margin: 1rem 0;
-  color: #333;
-}
-
-.empty-state p {
-  color: #666;
-  max-width: 500px;
-  margin-bottom: 1rem;
-}
-
-.empty-subtext {
-  font-size: 0.9rem;
-  color: #888;
-}
-
-.empty-actions {
-  display: flex;
-  gap: 1rem;
-  margin: 2rem 0;
-}
-
-.empty-tips {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  margin-top: 2rem;
-  max-width: 500px;
-  text-align: left;
-  border: 1px solid #dee2e6;
-}
-
-.empty-tips h4 {
-  margin-top: 0;
-  color: #333;
-}
-
-.empty-tips ul {
-  margin: 1rem 0 0 0;
-  padding-left: 1.5rem;
-}
-
-.empty-tips li {
-  margin: 0.5rem 0;
-  color: #555;
-}
-
-/* Workspaces grid */
+/* -----------------------------
+   WORKSPACE LIST (HORIZONTAL)
+-------------------------------- */
 .workspaces-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  display: flex;
+  align-items: stretch;
   gap: 1.5rem;
-  margin-bottom: 2rem;
+  overflow-x: auto;
+  padding-bottom: 1rem;
 }
 
-/* Stats section */
+.workspaces-grid::-webkit-scrollbar {
+  height: 6px;
+}
+
+.workspaces-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.workspaces-grid::-webkit-scrollbar-thumb {
+  background: var(--blue-300);
+  border-radius: 10px;
+}
+
+/* -----------------------------
+   WORKSPACE CARD
+-------------------------------- */
+.workspace-card {
+  min-width: 320px;
+  max-width: 360px;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: var(--transition);
+}
+
+.workspace-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Card Header */
+.workspace-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.workspace-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.workspace-status {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  background: var(--blue-100);
+  color: var(--navy-900);
+}
+
+/* Card Body */
+.workspace-card p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0.5rem 0 1rem;
+}
+
+/* Card Footer */
+.workspace-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1.25rem;
+}
+
+.workspace-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* -----------------------------
+   STATISTICS SECTION
+-------------------------------- */
 .workspace-stats {
+  margin-top: 2.5rem;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
-  margin-top: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.25rem;
 }
 
 .stat-card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  border: 1px solid #dee2e6;
+  background: var(--white);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
   text-align: center;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .stat-number {
-  display: block;
-  font-size: 2rem;
-  font-weight: bold;
-  color: #007bff;
-  margin-bottom: 0.5rem;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--navy-900);
 }
 
 .stat-label {
-  color: #666;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+/* -----------------------------
+   EMPTY / ERROR / LOADING STATES
+-------------------------------- */
+.empty-state,
+.error-container,
+.loading-container {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 3rem 2rem;
+  text-align: center;
+  box-shadow: var(--shadow-md);
+}
+
+.empty-state h3,
+.error-container h3 {
+  font-size: 1rem;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p,
+.error-message {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* -----------------------------
+   RESPONSIVE ADJUSTMENTS
+-------------------------------- */
+@media (max-width: 1024px) {
   .freelancer-workspace-list-container {
-    padding: 1rem;
+    padding: 1.5rem;
   }
-  
+}
+
+@media (max-width: 768px) {
   .workspace-list-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 1rem;
   }
-  
-  .header-right {
-    width: 100%;
-    justify-content: space-between;
-  }
-  
-  .workspaces-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .workspace-stats {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .empty-actions {
-    flex-direction: column;
-    width: 100%;
-  }
-  
-  .error-actions {
-    flex-direction: column;
-    width: 100%;
-  }
-  
-  .btn-primary, .btn-secondary {
-    width: 100%;
-    justify-content: center;
+
+  .workspace-card {
+    min-width: 280px;
   }
 }

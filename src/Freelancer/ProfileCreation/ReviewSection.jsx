@@ -1,234 +1,329 @@
 import React from 'react';
 import './ReviewSection.css';
 
-const ReviewSection = ({ data, onSubmit, isSubmitting = false }) => {
-  const { basicInfo, professional, skills, portfolio, experience, services } = data;
+const ReviewSection = ({ data, completionScore, onSubmit, canPublish, isSubmitting = false }) => {
+  // Safely destructure with default empty objects to prevent undefined errors
+  const { 
+    basicInfo = {}, 
+    professionalService = {}, 
+    skillsTools = {}, 
+    professionalOverview = {}, 
+    experiencePortfolio = {}, 
+    pricingAvailability = {}, 
+    educationCertifications = {} 
+  } = data || {};
 
-  const calculateCompletion = () => {
-    const sections = [basicInfo, professional, skills, portfolio, experience, services];
-    let completedFields = 0;
-    let totalFields = 0;
-
-    sections.forEach(section => {
-      Object.values(section).forEach(value => {
-        if (Array.isArray(value)) {
-          totalFields++;
-          if (value.length > 0) completedFields++;
-        } else if (typeof value === 'object') {
-          Object.values(value).forEach(subValue => {
-            totalFields++;
-            if (subValue && subValue.toString().length > 0) completedFields++;
-          });
-        } else {
-          totalFields++;
-          if (value && value.toString().length > 0) completedFields++;
-        }
-      });
-    });
-
-    return Math.round((completedFields / totalFields) * 100);
+  // Ensure nested objects have default values
+  const safeBasicInfo = {
+    fullName: '',
+    country: '',
+    email: '',
+    phone: '',
+    profilePhoto: null,
+    ...basicInfo
   };
 
-  const completionPercentage = calculateCompletion();
+  const safeProfessionalService = {
+    professionalTitle: '',
+    primaryService: '',
+    ...professionalService
+  };
+
+  const safeSkillsTools = {
+    yearsOfExperience: '',
+    skills: [],
+    ...skillsTools
+  };
+
+  const safeProfessionalOverview = {
+    summary: '',
+    ...professionalOverview
+  };
+
+  const safeExperiencePortfolio = {
+    experiences: [],
+    portfolioItems: [],
+    ...experiencePortfolio
+  };
+
+  const safePricingAvailability = {
+    pricingType: '',
+    rate: null,
+    availabilityType: '',
+    ...pricingAvailability
+  };
+
+  const safeEducationCertifications = {
+    ...educationCertifications
+  };
+
+  const getVisibilityLevel = (score) => {
+    if (score < 50) return { level: 'hidden', label: 'Hidden', color: '#dc3545', description: 'Profile will be hidden from search' };
+    if (score < 70) return { level: 'basic', label: 'Basic', color: '#ffc107', description: 'Low visibility in search results' };
+    if (score < 85) return { level: 'good', label: 'Good', color: '#198754', description: 'Normal visibility' };
+    if (score < 100) return { level: 'strong', label: 'Strong', color: '#0d6efd', description: 'Boosted visibility' };
+    return { level: 'excellent', label: 'Excellent', color: '#6610f2', description: 'Priority visibility in search results' };
+  };
+
+  const visibility = getVisibilityLevel(completionScore);
 
   const handlePublish = () => {
-    console.log('Publishing profile with data:', data);
-    
-    // Validate minimum requirements
-    if (!basicInfo.fullName || !basicInfo.professionalHeadline || !professional.bio) {
-      alert('Please complete all required fields: Full Name, Professional Headline, and Bio');
+    if (!canPublish) {
+      alert('Cannot publish profile. Please complete all mandatory fields:\n\n• Profile photo\n• Basic information\n• Professional title & service\n• 250+ word overview\n• 2+ portfolio projects\n• Pricing information');
       return;
     }
 
-    if (completionPercentage < 50) {
+    if (completionScore < 60) {
       const confirmPublish = window.confirm(
-        `Your profile is only ${completionPercentage}% complete. Are you sure you want to publish?`
+        `Your profile is only ${completionScore}% complete (minimum 60% required for publishing).\n\nProfiles with higher completion get more visibility.\n\nAre you sure you want to publish now?`
       );
       if (!confirmPublish) return;
     }
 
-    // Call the onSubmit prop passed from parent
     if (onSubmit) {
       onSubmit();
-    } else {
-      console.log('Profile data ready for submission:', data);
-      alert('Profile is ready! Connect this to your backend API.');
     }
   };
 
   const handleSaveDraft = () => {
     console.log('Saving draft:', data);
-    alert('Draft saved successfully!');
+    alert('Draft saved successfully! You can continue editing later.');
   };
 
-  return (
-    <div className="review-section">
-      <h2>Review Your Profile</h2>
-      <p className="section-description">
-        Review all your information before publishing your profile.
-      </p>
+  const calculateSectionScore = (section) => {
+    switch(section) {
+      case 'basicInfo':
+        return Math.min(20, completionScore >= 20 ? 20 : completionScore);
+      case 'professionalService':
+        return Math.min(15, Math.max(0, completionScore - 20));
+      case 'skillsTools':
+        return Math.min(15, Math.max(0, completionScore - 35));
+      case 'professionalOverview':
+        return Math.min(15, Math.max(0, completionScore - 50));
+      case 'experiencePortfolio':
+        return Math.min(20, Math.max(0, completionScore - 65));
+      case 'pricingAvailability':
+        return Math.min(10, Math.max(0, completionScore - 85));
+      case 'educationCertifications':
+        return Math.min(5, Math.max(0, completionScore - 95));
+      default:
+        return 0;
+    }
+  };
 
-      {/* Profile Completion */}
-      <div className="completion-card">
-        <div className="completion-header">
-          <h3>Profile Completion</h3>
-          <div className="completion-percentage">{completionPercentage}%</div>
-        </div>
-        <div className="progress-bar">
-          <div 
-            className="progress-fill" 
-            style={{ width: `${completionPercentage}%` }}
-          ></div>
-        </div>
-        <p className="completion-message">
-          {completionPercentage >= 80 
-            ? 'Great! Your profile is ready to publish.'
-            : completionPercentage >= 50
-            ? 'Good start! Consider adding more information.'
-            : 'Your profile needs more information to attract clients.'
-          }
+  const sections = [
+    { key: 'basicInfo', title: 'Basic Information', maxPoints: 20, icon: '👤' },
+    { key: 'professionalService', title: 'Service & Title', maxPoints: 15, icon: '🎯' },
+    { key: 'skillsTools', title: 'Skills & Tools', maxPoints: 15, icon: '💡' },
+    { key: 'professionalOverview', title: 'Professional Overview', maxPoints: 15, icon: '📝' },
+    { key: 'experiencePortfolio', title: 'Experience & Portfolio', maxPoints: 20, icon: '💼' },
+    { key: 'pricingAvailability', title: 'Pricing & Availability', maxPoints: 10, icon: '💰' },
+    { key: 'educationCertifications', title: 'Education & Certifications', maxPoints: 5, icon: '🎓' }
+  ];
+
+  const wordCount = safeProfessionalOverview.summary.trim().split(/\s+/).length;
+
+  return (
+    <div className="review-publish-section">
+      <div className="section-header">
+        <h2>Review & Publish Your Profile</h2>
+        <p className="section-description">
+          Review all information before publishing. Your profile visibility depends on completion score.
         </p>
       </div>
 
-      {/* Profile Preview Sections */}
-      <div className="preview-sections">
-        {/* Basic Info Preview */}
-        <div className="preview-section">
-          <h3>Basic Information</h3>
-          <div className="preview-content">
-            <div className="preview-row">
-              <strong>Name:</strong> {basicInfo.fullName || 'Not provided'}
-            </div>
-            <div className="preview-row">
-              <strong>Headline:</strong> {basicInfo.professionalHeadline || 'Not provided'}
-            </div>
-            <div className="preview-row">
-              <strong>Location:</strong> {basicInfo.location || 'Not provided'}
-            </div>
-            <div className="preview-row">
-              <strong>Contact:</strong> {basicInfo.email || 'Not provided'}
-            </div>
-            <div className="preview-row">
-              <strong>Profile Photo:</strong> 
-              {basicInfo.profilePhoto ? (
-                <span style={{color: 'green'}}>✓ Uploaded</span>
-              ) : (
-                <span style={{color: 'red'}}>Not uploaded</span>
-              )}
-            </div>
-            <div className="preview-row">
-              <strong>Cover Photo:</strong> 
-              {basicInfo.coverPhoto ? (
-                <span style={{color: 'green'}}>✓ Uploaded</span>
-              ) : (
-                <span style={{color: 'red'}}>Not uploaded</span>
-              )}
+      {/* Profile Summary Card */}
+      <div className="summary-card">
+        <div className="summary-header">
+          <div className="summary-title">
+            <h3>Profile Summary</h3>
+            <div className="visibility-badge" style={{ backgroundColor: visibility.color }}>
+              {visibility.label} Visibility
             </div>
           </div>
-        </div>
-
-        {/* Professional Preview */}
-        <div className="preview-section">
-          <h3>Professional Overview</h3>
-          <div className="preview-content">
-            <div className="preview-row">
-              <strong>Title:</strong> {professional.professionalTitle || 'Not provided'}
+          <div className="completion-display">
+            <div className="completion-circle">
+              <svg width="120" height="120" viewBox="0 0 120 120">
+                <circle cx="60" cy="60" r="54" fill="none" stroke="#e9ecef" strokeWidth="12" />
+                <circle cx="60" cy="60" r="54" fill="none" stroke={visibility.color} strokeWidth="12" 
+                  strokeDasharray={`${(completionScore / 100) * 339.292} 339.292`} 
+                  strokeLinecap="round" transform="rotate(-90 60 60)" />
+                <text x="60" y="65" textAnchor="middle" fill={visibility.color} fontSize="28" fontWeight="bold">
+                  {completionScore}%
+                </text>
+              </svg>
             </div>
-            <div className="preview-row">
-              <strong>Experience:</strong> {professional.yearsOfExperience || 'Not provided'}
-            </div>
-            <div className="preview-row">
-              <strong>Availability:</strong> {professional.availability || 'Not provided'}
-            </div>
-            <div className="preview-row">
-              <strong>Bio:</strong> 
-              <p className="bio-preview">
-                {professional.bio || 'No bio provided'}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Skills Preview */}
-        <div className="preview-section">
-          <h3>Skills & Expertise</h3>
-          <div className="preview-content">
-            <div className="preview-row">
-              <strong>Technical Skills:</strong>
-              <div className="skills-preview">
-                {skills.technicalSkills.length > 0 
-                  ? skills.technicalSkills.map(skill => (
-                      <span key={skill.name} className="skill-preview-tag">
-                        {skill.name} ({skill.level})
-                      </span>
-                    ))
-                  : 'No skills added'
-                }
-              </div>
-            </div>
-            <div className="preview-row">
-              <strong>Service Categories:</strong>
-              <div className="categories-preview">
-                {skills.serviceCategories.length > 0 
-                  ? skills.serviceCategories.join(', ')
-                  : 'No categories selected'
-                }
+            <div className="completion-details">
+              <p className="visibility-description">{visibility.description}</p>
+              <div className="score-breakdown">
+                <span className="score-label">Total Score:</span>
+                <span className="score-value">{completionScore}/100 points</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Portfolio Preview */}
-        <div className="preview-section">
-          <h3>Portfolio</h3>
-          <div className="preview-content">
-            <div className="preview-row">
-              <strong>Projects:</strong> {portfolio.projects.length} projects added
-            </div>
-            {portfolio.projects.slice(0, 3).map(project => (
-              <div key={project.id} className="project-preview">
-                <strong>{project.title}</strong>
-                <p>{project.description ? project.description.substring(0, 100) + '...' : 'No description'}</p>
-                {project.images && project.images.length > 0 && (
-                  <small>{project.images.length} image(s) attached</small>
-                )}
+        {/* Section Breakdown */}
+        <div className="sections-breakdown">
+          {sections.map(section => {
+            const score = calculateSectionScore(section.key);
+            const percentage = Math.round((score / section.maxPoints) * 100);
+            
+            return (
+              <div key={section.key} className="section-score">
+                <div className="section-header">
+                  <span className="section-icon">{section.icon}</span>
+                  <span className="section-name">{section.title}</span>
+                  <span className="section-points">{section.maxPoints} pts</span>
+                </div>
+                <div className="progress-bar">
+                  <div 
+                    className="progress-fill" 
+                    style={{ 
+                      width: `${percentage}%`,
+                      backgroundColor: percentage >= 100 ? '#198754' : 
+                                     percentage >= 80 ? '#0d6efd' : 
+                                     percentage >= 60 ? '#ffc107' : '#dc3545'
+                    }}
+                  ></div>
+                </div>
+                <div className="score-details">
+                  <span className="score-percentage">{percentage}%</span>
+                  <span className="score-achieved">{score}/{section.maxPoints} points</span>
+                </div>
               </div>
-            ))}
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Profile Preview */}
+      <div className="preview-card">
+        <h3>Profile Preview</h3>
+        <div className="preview-content">
+          {/* Basic Info Preview */}
+          <div className="preview-section">
+            <h4>👤 Basic Information</h4>
+            <div className="preview-grid">
+              <div className="preview-item">
+                <strong>Name:</strong> {safeBasicInfo.fullName || 'Not provided'}
+              </div>
+              <div className="preview-item">
+                <strong>Location:</strong> {safeBasicInfo.country || 'Not provided'}
+              </div>
+              <div className="preview-item">
+                <strong>Email:</strong> {safeBasicInfo.email || 'Not provided'}
+              </div>
+              <div className="preview-item">
+                <strong>Profile Photo:</strong> 
+                {safeBasicInfo.profilePhoto ? '✓ Uploaded' : '❌ Missing'}
+              </div>
+            </div>
+          </div>
+
+          {/* Professional Info */}
+          <div className="preview-section">
+            <h4>🎯 Professional Details</h4>
+            <div className="preview-grid">
+              <div className="preview-item">
+                <strong>Title:</strong> {safeProfessionalService.professionalTitle || 'Not provided'}
+              </div>
+              <div className="preview-item">
+                <strong>Primary Service:</strong> {safeProfessionalService.primaryService || 'Not selected'}
+              </div>
+              <div className="preview-item">
+                <strong>Experience:</strong> {safeSkillsTools.yearsOfExperience || 'Not specified'}
+              </div>
+              <div className="preview-item">
+                <strong>Skills:</strong> {safeSkillsTools.skills?.length || 0} skill(s) added
+              </div>
+            </div>
+          </div>
+
+          {/* Portfolio & Experience */}
+          <div className="preview-section">
+            <h4>💼 Work & Portfolio</h4>
+            <div className="preview-grid">
+              <div className="preview-item">
+                <strong>Work Experience:</strong> {safeExperiencePortfolio.experiences?.length || 0} position(s)
+                {safeExperiencePortfolio.experiences?.length < 1 && ' ⚠️'}
+              </div>
+              <div className="preview-item">
+                <strong>Portfolio Projects:</strong> {safeExperiencePortfolio.portfolioItems?.length || 0} project(s)
+                {safeExperiencePortfolio.portfolioItems?.length < 2 && ' ⚠️'}
+              </div>
+              <div className="preview-item">
+                <strong>Professional Summary:</strong> 
+                {wordCount >= 250 ? '✓ Complete' : `❌ Too short (${wordCount}/250 words)`}
+              </div>
+            </div>
+          </div>
+
+          {/* Pricing */}
+          <div className="preview-section">
+            <h4>💰 Pricing & Availability</h4>
+            <div className="preview-grid">
+              <div className="preview-item">
+                <strong>Pricing Type:</strong> {safePricingAvailability.pricingType || 'Not set'}
+              </div>
+              <div className="preview-item">
+                <strong>Rate:</strong> {safePricingAvailability.rate ? `$${safePricingAvailability.rate}` : 'Not set'}
+              </div>
+              <div className="preview-item">
+                <strong>Availability:</strong> {safePricingAvailability.availabilityType || 'Not set'}
+              </div>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Experience Preview */}
-        <div className="preview-section">
-          <h3>Experience & Education</h3>
-          <div className="preview-content">
-            <div className="preview-row">
-              <strong>Work Experience:</strong> {experience.workExperience.length} positions
-            </div>
-            <div className="preview-row">
-              <strong>Education:</strong> {experience.education.length} entries
-            </div>
-            <div className="preview-row">
-              <strong>Certifications:</strong> {experience.certifications.length} certifications
-            </div>
+      {/* Publishing Requirements */}
+      <div className="requirements-card">
+        <h3>Publishing Requirements</h3>
+        <div className="requirements-list">
+          <div className={`requirement-item ${safeBasicInfo.profilePhoto ? 'met' : 'not-met'}`}>
+            <span className="requirement-check">{safeBasicInfo.profilePhoto ? '✓' : '!'}</span>
+            <span className="requirement-text">Profile photo uploaded</span>
+          </div>
+          <div className={`requirement-item ${safeBasicInfo.fullName && safeBasicInfo.email && safeBasicInfo.phone ? 'met' : 'not-met'}`}>
+            <span className="requirement-check">{safeBasicInfo.fullName && safeBasicInfo.email && safeBasicInfo.phone ? '✓' : '!'}</span>
+            <span className="requirement-text">Basic information complete</span>
+          </div>
+          <div className={`requirement-item ${safeProfessionalService.professionalTitle && safeProfessionalService.primaryService ? 'met' : 'not-met'}`}>
+            <span className="requirement-check">{safeProfessionalService.professionalTitle && safeProfessionalService.primaryService ? '✓' : '!'}</span>
+            <span className="requirement-text">Professional title & service selected</span>
+          </div>
+          <div className={`requirement-item ${wordCount >= 250 ? 'met' : 'not-met'}`}>
+            <span className="requirement-check">{wordCount >= 250 ? '✓' : '!'}</span>
+            <span className="requirement-text">250+ word professional overview</span>
+          </div>
+          <div className={`requirement-item ${safeExperiencePortfolio.portfolioItems?.length >= 2 ? 'met' : 'not-met'}`}>
+            <span className="requirement-check">{safeExperiencePortfolio.portfolioItems?.length >= 2 ? '✓' : '!'}</span>
+            <span className="requirement-text">2+ portfolio projects</span>
+          </div>
+          <div className={`requirement-item ${safePricingAvailability.pricingType && safePricingAvailability.rate ? 'met' : 'not-met'}`}>
+            <span className="requirement-check">{safePricingAvailability.pricingType && safePricingAvailability.rate ? '✓' : '!'}</span>
+            <span className="requirement-text">Pricing information complete</span>
+          </div>
+          <div className={`requirement-item ${completionScore >= 60 ? 'met' : 'not-met'}`}>
+            <span className="requirement-check">{completionScore >= 60 ? '✓' : '!'}</span>
+            <span className="requirement-text">Minimum 60% profile completion</span>
           </div>
         </div>
-
-        {/* Services Preview */}
-        <div className="preview-section">
-          <h3>Services & Pricing</h3>
-          <div className="preview-content">
-            <div className="preview-row">
-              <strong>Pricing Model:</strong> {services.pricingModel}
-            </div>
-            <div className="preview-row">
-              <strong>Service Packages:</strong> {services.servicePackages.length} packages
-            </div>
-          </div>
+        
+        <div className="requirements-summary">
+          <p>
+            {canPublish ? (
+              <span className="summary-success">✅ All publishing requirements met!</span>
+            ) : (
+              <span className="summary-error">⚠️ Some requirements are not met. Complete all mandatory fields to publish.</span>
+            )}
+          </p>
         </div>
       </div>
 
       {/* Action Buttons */}
-      <div className="review-actions">
+      <div className="action-buttons">
         <button 
           type="button" 
           className="btn-secondary"
@@ -241,32 +336,31 @@ const ReviewSection = ({ data, onSubmit, isSubmitting = false }) => {
           type="button" 
           className="btn-primary"
           onClick={handlePublish}
-          disabled={completionPercentage < 20 || isSubmitting}
+          disabled={isSubmitting || !canPublish}
         >
           {isSubmitting ? (
             <>
               <span className="loading-spinner"></span>
               Publishing...
             </>
-          ) : completionPercentage < 20 ? (
-            'Complete More Fields to Publish'
+          ) : !canPublish ? (
+            'Complete Requirements to Publish'
           ) : (
-            'Publish Profile'
+            `Publish Profile (${visibility.label} Visibility)`
           )}
         </button>
       </div>
 
-      {/* Privacy Notice */}
-      <div className="privacy-notice">
-        <p>
-          <strong>Note:</strong> Your profile will be visible to potential clients. 
-          You can always edit your profile later from your dashboard.
-        </p>
-        {completionPercentage < 50 && (
-          <p style={{marginTop: '8px', fontSize: '0.8rem'}}>
-            <strong>Tip:</strong> Profiles with 50%+ completion get 3x more views!
-          </p>
-        )}
+      {/* Important Notes */}
+      <div className="important-notes">
+        <h4>Important Notes</h4>
+        <ul>
+          <li>Your profile will be visible to potential clients based on your visibility level</li>
+          <li>You can edit your profile anytime from your dashboard</li>
+          <li>Profiles with higher completion scores (85%+) get 3x more views</li>
+          <li>Email and phone verification will be required after publishing</li>
+          <li>You can upgrade your visibility by completing recommended fields</li>
+        </ul>
       </div>
     </div>
   );

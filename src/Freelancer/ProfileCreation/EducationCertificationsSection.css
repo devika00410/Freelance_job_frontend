@@ -1,0 +1,313 @@
+.education-certifications-section {
+  padding: 20px 0;
+}
+
+.education-certifications-section .section-header {
+  margin-bottom: 30px;
+}
+
+.education-certifications-section .section-header h2 {
+  margin: 0 0 10px;
+  color: #1a1a1a;
+}
+
+.education-certifications-section .section-description {
+  color: #666;
+  margin: 0 0 15px;
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+
+.education-certifications-section .points-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.education-certifications-section .points-badge {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.education-certifications-section .points-description {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.education-certifications-section .mandatory-label::after {
+  content: " *";
+  color: #dc3545;
+}
+
+.education-certifications-section .recommended-label::after {
+  content: " (Recommended)";
+  color: #6c757d;
+  font-weight: normal;
+  font-size: 0.9em;
+}
+
+.education-certifications-section .form-content {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 30px;
+}
+
+.education-certifications-section .form-group {
+  margin-bottom: 30px;
+}
+
+.education-certifications-section .form-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+  font-size: 1rem;
+}
+
+.education-certifications-section .field-help.mandatory {
+  color: #dc3545;
+  font-weight: 500;
+}
+
+.education-certifications-section .form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.education-certifications-section .form-input:focus {
+  outline: none;
+  border-color: #4dabf7;
+  box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.1);
+}
+
+/* Education Form Grid */
+.education-certifications-section .education-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.education-certifications-section .certification-form-grid,
+.education-certifications-section .course-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.education-certifications-section .full-width {
+  grid-column: 1 / -1;
+}
+
+.education-certifications-section .form-subgroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.education-certifications-section .form-sublabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #495057;
+}
+
+/* Subsections */
+.education-certifications-section .form-subsection {
+  margin-top: 40px;
+  padding-top: 30px;
+  border-top: 1px solid #dee2e6;
+}
+
+.education-certifications-section .subsection-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.education-certifications-section .subsection-description {
+  color: #6c757d;
+  font-size: 0.95rem;
+  margin-bottom: 20px;
+}
+
+/* Add Button */
+.education-certifications-section .add-button {
+  padding: 12px 24px;
+  background: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background 0.2s;
+  margin-top: 20px;
+  display: inline-block;
+}
+
+.education-certifications-section .add-button:hover:not(:disabled) {
+  background: #1565c0;
+}
+
+.education-certifications-section .add-button:disabled {
+  background: #b0bec5;
+  cursor: not-allowed;
+}
+
+/* Items List */
+.education-certifications-section .items-list {
+  margin-top: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.education-certifications-section .item-card {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  padding: 20px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.education-certifications-section .item-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.education-certifications-section .item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+.education-certifications-section .item-title {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.education-certifications-section .remove-button {
+  padding: 6px 12px;
+  background: #f8d7da;
+  color: #721c24;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.education-certifications-section .remove-button:hover {
+  background: #f5c6cb;
+}
+
+.education-certifications-section .item-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.education-certifications-section .item-detail {
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.education-certifications-section .item-detail strong {
+  color: #333;
+  margin-right: 5px;
+}
+
+.education-certifications-section .credential-link {
+  margin-left: 8px;
+  color: #1976d2;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.education-certifications-section .credential-link:hover {
+  text-decoration: underline;
+}
+
+/* Empty State */
+.education-certifications-section .empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  background: white;
+  border: 2px dashed #dee2e6;
+  border-radius: 10px;
+}
+
+.education-certifications-section .empty-icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+  opacity: 0.6;
+}
+
+.education-certifications-section .empty-text {
+  color: #6c757d;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Completion Status */
+.education-certifications-section .completion-status {
+  margin-top: 40px;
+  padding: 20px;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+}
+
+.education-certifications-section .status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.education-certifications-section .status-row:last-child {
+  border-bottom: none;
+}
+
+.education-certifications-section .status-label {
+  font-weight: 600;
+  color: #495057;
+}
+
+.education-certifications-section .status-count {
+  color: #1976d2;
+  font-weight: 600;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .education-certifications-section .education-form-grid,
+  .education-certifications-section .certification-form-grid,
+  .education-certifications-section .course-form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .education-certifications-section .item-details {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .education-certifications-section .form-content {
+    padding: 20px;
+  }
+}

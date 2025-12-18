@@ -1,0 +1,415 @@
+{
+  "services": [
+    {
+      "id": "fsd-001",
+      "name": "Full Stack Development",
+      "category": "development",
+      "description": "End-to-end web application development using modern technologies like React, Node.js, and cloud services",
+      "detailedDescription": "Get complete web solutions from frontend to backend. Our full-stack developers build scalable applications with React/Vue/Angular frontends and Node.js/Python/Django backends, including database design and cloud deployment.",
+      "rating": 4.8,
+      "reviewCount": 342,
+      "price": {
+        "min": 30,
+        "max": 100,
+        "currency": "USD"
+      },
+      "delivery": "3-6 weeks",
+      "availableTalents": 150,
+      "image": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80",
+      "thumbnail": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&q=80",
+      "tags": ["React", "Node.js", "MongoDB", "AWS", "REST API", "TypeScript"],
+      "popularSkills": ["JavaScript", "React", "Node.js", "MongoDB", "Express", "AWS"],
+      "features": [
+        "Responsive Design",
+        "Database Integration",
+        "API Development",
+        "Cloud Deployment",
+        "Performance Optimization"
+      ],
+      "successRate": 95,
+      "avgDeliveryTime": "4 weeks",
+      "popularProjects": [
+        "E-commerce Platforms",
+        "SaaS Applications",
+        "CRM Systems",
+        "Social Media Apps"
+      ]
+    },
+    {
+      "id": "mad-002",
+      "name": "Mobile App Development",
+      "category": "mobile",
+      "description": "Native and cross-platform mobile app development for iOS and Android using Flutter, React Native, and Swift",
+      "detailedDescription": "Create powerful mobile applications for iOS and Android. We specialize in native development (Swift/Kotlin) and cross-platform solutions (Flutter/React Native) with attention to performance and user experience.",
+      "rating": 4.7,
+      "reviewCount": 289,
+      "price": {
+        "min": 40,
+        "max": 120,
+        "currency": "USD"
+      },
+      "delivery": "4-8 weeks",
+      "availableTalents": 120,
+      "image": "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800&q=80",
+      "thumbnail": "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=400&q=80",
+      "tags": ["Flutter", "React Native", "iOS", "Android", "Swift", "Kotlin"],
+      "popularSkills": ["Flutter", "React Native", "iOS Development", "Android", "Firebase"],
+      "features": [
+        "App Store Deployment",
+        "Push Notifications",
+        "Offline Support",
+        "Payment Integration",
+        "Social Media Login"
+      ],
+      "successRate": 92,
+      "avgDeliveryTime": "5 weeks",
+      "popularProjects": [
+        "Fitness Tracking Apps",
+        "Food Delivery Apps",
+        "E-commerce Apps",
+        "Social Networking Apps"
+      ]
+    },
+    {
+      "id": "uxd-003",
+      "name": "UI/UX Design",
+      "category": "design",
+      "description": "User interface and experience design with wireframing, prototyping, and user testing for web and mobile",
+      "detailedDescription": "Transform your ideas into intuitive user experiences. Our designers create wireframes, prototypes, and final UI designs with user research, usability testing, and design systems.",
+      "rating": 4.9,
+      "reviewCount": 412,
+      "price": {
+        "min": 25,
+        "max": 80,
+        "currency": "USD"
+      },
+      "delivery": "2-4 weeks",
+      "availableTalents": 180,
+      "image": "https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=800&q=80",
+      "thumbnail": "https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=400&q=80",
+      "tags": ["Figma", "Adobe XD", "Wireframing", "Prototyping", "User Research"],
+      "popularSkills": ["Figma", "User Research", "Wireframing", "Prototyping", "Design Systems"],
+      "features": [
+        "User Research",
+        "Wireframes & Mockups",
+        "Interactive Prototypes",
+        "Design Systems",
+        "Usability Testing"
+      ],
+      "successRate": 96,
+      "avgDeliveryTime": "3 weeks",
+      "popularProjects": [
+        "Website Redesign",
+        "Mobile App UI",
+        "Dashboard Design",
+        "E-commerce UX"
+      ]
+    },
+    {
+      "id": "seo-004",
+      "name": "SEO Services",
+      "category": "marketing",
+      "description": "Search engine optimization to improve website visibility, rankings, and organic traffic growth",
+      "detailedDescription": "Boost your online presence with comprehensive SEO strategies. We provide keyword research, on-page optimization, technical SEO, link building, and performance tracking.",
+      "rating": 4.6,
+      "reviewCount": 267,
+      "price": {
+        "min": 20,
+        "max": 70,
+        "currency": "USD"
+      },
+      "delivery": "3-6 months",
+      "availableTalents": 95,
+      "image": "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=800&q=80",
+      "thumbnail": "https://images.unsplash.com/photo-1432888622747-4eb9a8efeb07?w=400&q=80",
+      "tags": ["Keyword Research", "On-page SEO", "Link Building", "Analytics", "Technical SEO"],
+      "popularSkills": ["Keyword Research", "Google Analytics", "Technical SEO", "Content Optimization"],
+      "features": [
+        "Keyword Analysis",
+        "On-page Optimization",
+        "Technical SEO Audit",
+        "Link Building",
+        "Ranking Reports"
+      ],
+      "successRate": 88,
+      "avgDeliveryTime": "4 months",
+      "popularProjects": [
+        "Local SEO Optimization",
+        "E-commerce SEO",
+        "Content SEO Strategy",
+        "Technical SEO Fixes"
+      ]
+    },
+    {
+      "id": "dma-005",
+      "name": "Digital Marketing",
+      "category": "marketing",
+      "description": "Comprehensive digital marketing strategies including social media, PPC, email marketing, and analytics",
+      "detailedDescription": "Grow your business with data-driven digital marketing. We create and manage campaigns across social media, Google Ads, email marketing, and content marketing with ROI tracking.",
+      "rating": 4.7,
+      "reviewCount": 321,
+      "price": {
+        "min": 25,
+        "max": 85,
+        "currency": "USD"
+      },
+      "delivery": "1-3 months",
+      "availableTalents": 140,
+      "image": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80",
+      "thumbnail": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&q=80",
+      "tags": ["Social Media", "PPC", "Email Marketing", "Content Strategy", "Analytics"],
+      "popularSkills": ["Facebook Ads", "Google Ads", "Email Marketing", "Social Media Strategy"],
+      "features": [
+        "Campaign Strategy",
+        "Social Media Management",
+        "PPC Advertising",
+        "Email Campaigns",
+        "Performance Analytics"
+      ],
+      "successRate": 90,
+      "avgDeliveryTime": "2 months",
+      "popularProjects": [
+        "Social Media Campaigns",
+        "Google Ads Management",
+        "Email Marketing Funnels",
+        "Influencer Marketing"
+      ]
+    },
+    {
+      "id": "ved-006",
+      "name": "Video Editing",
+      "category": "creative",
+      "description": "Professional video editing services for YouTube, social media, commercials, and corporate videos",
+      "detailedDescription": "Create engaging video content with professional editing. We edit footage, add effects, color grade, and optimize videos for platforms like YouTube, Instagram, and TikTok.",
+      "rating": 4.5,
+      "reviewCount": 198,
+      "price": {
+        "min": 20,
+        "max": 65,
+        "currency": "USD"
+      },
+      "delivery": "3-7 days",
+      "availableTalents": 75,
+      "image": "https://images.unsplash.com/photo-1536240478700-b869070f9279?w=800&q=80",
+      "thumbnail": "https://images.unsplash.com/photo-1536240478700-b869070f9279?w=400&q=80",
+      "tags": ["Premiere Pro", "After Effects", "Color Grading", "Motion Graphics", "YouTube"],
+      "popularSkills": ["Adobe Premiere", "After Effects", "Color Grading", "Sound Design"],
+      "features": [
+        "Multi-cam Editing",
+        "Color Correction",
+        "Motion Graphics",
+        "Sound Design",
+        "Platform Optimization"
+      ],
+      "successRate": 94,
+      "avgDeliveryTime": "5 days",
+      "popularProjects": [
+        "YouTube Videos",
+        "Social Media Ads",
+        "Corporate Videos",
+        "Product Demos"
+      ]
+    },
+    {
+      "id": "grd-007",
+      "name": "Graphic Design",
+      "category": "design",
+      "description": "Creative graphic design services including logos, branding, marketing materials, and digital graphics",
+      "detailedDescription": "Build a strong visual identity with professional graphic design. We create logos, brand guidelines, marketing materials, social media graphics, and print designs.",
+      "rating": 4.6,
+      "reviewCount": 256,
+      "price": {
+        "min": 15,
+        "max": 60,
+        "currency": "USD"
+      },
+      "delivery": "5-10 days",
+      "availableTalents": 160,
+      "image": "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&q=80",
+      "thumbnail": "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&q=80",
+      "tags": ["Logo Design", "Branding", "Illustration", "Print Design", "Adobe Creative Suite"],
+      "popularSkills": ["Photoshop", "Illustrator", "Logo Design", "Brand Identity", "Typography"],
+      "features": [
+        "Logo Design",
+        "Brand Guidelines",
+        "Marketing Collateral",
+        "Social Media Graphics",
+        "Print Design"
+      ],
+      "successRate": 93,
+      "avgDeliveryTime": "7 days",
+      "popularProjects": [
+        "Logo & Brand Identity",
+        "Business Cards",
+        "Social Media Graphics",
+        "Brochures & Flyers"
+      ]
+    },
+    {
+      "id": "cwr-008",
+      "name": "Content Writing",
+      "category": "writing",
+      "description": "High-quality content creation including blog posts, articles, website copy, and marketing content",
+      "detailedDescription": "Engage your audience with compelling content. Our writers create SEO-optimized blog posts, website copy, product descriptions, and marketing materials that convert.",
+      "rating": 4.7,
+      "reviewCount": 378,
+      "price": {
+        "min": 12,
+        "max": 50,
+        "currency": "USD"
+      },
+      "delivery": "2-5 days",
+      "availableTalents": 220,
+      "image": "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=800&q=80",
+      "thumbnail": "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=400&q=80",
+      "tags": ["Blog Writing", "SEO Content", "Copywriting", "Technical Writing", "Editing"],
+      "popularSkills": ["SEO Writing", "Copywriting", "Blog Writing", "Proofreading", "Research"],
+      "features": [
+        "SEO-Optimized Content",
+        "Blog Posts & Articles",
+        "Website Copy",
+        "Product Descriptions",
+        "Editing & Proofreading"
+      ],
+      "successRate": 96,
+      "avgDeliveryTime": "3 days",
+      "popularProjects": [
+        "Blog Content Strategy",
+        "Website Copywriting",
+        "Product Descriptions",
+        "White Papers & E-books"
+      ]
+    },
+    {
+      "id": "wpd-009",
+      "name": "WordPress Development",
+      "category": "development",
+      "description": "Custom WordPress website development with themes, plugins, and e-commerce functionality",
+      "detailedDescription": "Build powerful websites with WordPress. We create custom themes, develop plugins, set up WooCommerce stores, and optimize WordPress sites for speed and security.",
+      "rating": 4.5,
+      "reviewCount": 234,
+      "price": {
+        "min": 20,
+        "max": 70,
+        "currency": "USD"
+      },
+      "delivery": "2-4 weeks",
+      "availableTalents": 110,
+      "image": "https://images.unsplash.com/photo-1559028012-481c04fa702d?w=800&q=80",
+      "thumbnail": "https://images.unsplash.com/photo-1559028012-481c04fa702d?w=400&q=80",
+      "tags": ["WordPress", "WooCommerce", "PHP", "Theme Development", "Plugin Development"],
+      "popularSkills": ["WordPress", "PHP", "WooCommerce", "Theme Development", "CSS"],
+      "features": [
+        "Custom Theme Development",
+        "Plugin Development",
+        "WooCommerce Setup",
+        "WordPress Optimization",
+        "Security Hardening"
+      ],
+      "successRate": 91,
+      "avgDeliveryTime": "3 weeks",
+      "popularProjects": [
+        "Business Websites",
+        "E-commerce Stores",
+        "Blog Platforms",
+        "Membership Sites"
+      ]
+    },
+    {
+      "id": "dat-010",
+      "name": "Data Analytics",
+      "category": "analytics",
+      "description": "Data analysis and visualization services to derive insights and support data-driven decisions",
+      "detailedDescription": "Turn data into actionable insights. We analyze datasets, create dashboards, visualize trends, and provide recommendations for business growth and optimization.",
+      "rating": 4.8,
+      "reviewCount": 189,
+      "price": {
+        "min": 35,
+        "max": 90,
+        "currency": "USD"
+      },
+      "delivery": "2-4 weeks",
+      "availableTalents": 65,
+      "image": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
+      "thumbnail": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&q=80",
+      "tags": ["Python", "SQL", "Tableau", "Power BI", "Machine Learning", "Statistics"],
+      "popularSkills": ["Python", "SQL", "Tableau", "Data Visualization", "Statistical Analysis"],
+      "features": [
+        "Data Analysis",
+        "Dashboard Creation",
+        "Predictive Modeling",
+        "Report Generation",
+        "KPI Tracking"
+      ],
+      "successRate": 89,
+      "avgDeliveryTime": "3 weeks",
+      "popularProjects": [
+        "Business Intelligence Dashboards",
+        "Sales Analytics",
+        "Customer Behavior Analysis",
+        "Performance Metrics"
+      ]
+    }
+  ],
+  
+  "categories": [
+    {
+      "id": "development",
+      "name": "Development",
+      "description": "Web, mobile, and software development services",
+      "icon": "💻",
+      "serviceCount": 250
+    },
+    {
+      "id": "design",
+      "name": "Design",
+      "description": "UI/UX, graphic, and product design services",
+      "icon": "🎨",
+      "serviceCount": 180
+    },
+    {
+      "id": "marketing",
+      "name": "Marketing",
+      "description": "Digital marketing and SEO services",
+      "icon": "📈",
+      "serviceCount": 160
+    },
+    {
+      "id": "writing",
+      "name": "Writing",
+      "description": "Content creation and copywriting services",
+      "icon": "✍️",
+      "serviceCount": 220
+    },
+    {
+      "id": "creative",
+      "name": "Creative",
+      "description": "Video, audio, and multimedia production",
+      "icon": "🎬",
+      "serviceCount": 95
+    },
+    {
+      "id": "analytics",
+      "name": "Analytics",
+      "description": "Data analysis and business intelligence",
+      "icon": "📊",
+      "serviceCount": 75
+    },
+    {
+      "id": "mobile",
+      "name": "Mobile",
+      "description": "Mobile app development and optimization",
+      "icon": "📱",
+      "serviceCount": 120
+    }
+  ],
+  
+  "stats": {
+    "totalServices": 1100,
+    "totalFreelancers": 5000,
+    "avgRating": 4.7,
+    "successRate": 93,
+    "avgResponseTime": "2 hours",
+    "countries": 85
+  }
+}

@@ -1,23 +1,26 @@
 .services-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-  gap: 30px; /* Space between cards horizontally */
+  column-gap: 30px;
+  row-gap: 56px;
   width: 100%;
   max-width: 1500px;
   margin: 0 auto;
 }
 
-/* Ensure each card takes equal width */
+/* Center cards in each grid cell */
 .services-grid > * {
   display: flex;
   justify-content: center;
 }
 
-/* Card wrapper to ensure proper sizing */
+
+
 .service-card-container {
   width: 100%;
   max-width: 420px;
 }
+
 
 /* Loading, Error, Empty states */
 .services-loading,

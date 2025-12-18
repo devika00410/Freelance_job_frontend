@@ -1,19 +1,30 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { 
-    FaSearch, 
-    FaFilter, 
-    FaTimes, 
-    FaSortAmountDown, 
-    FaMapMarkerAlt,
-    FaStar,
+import {
+    FaFilter,
+    FaTimes,
+    FaSortAmountDown,
     FaDollarSign,
     FaClock,
     FaCheckCircle,
     FaUserCheck,
-    FaFire,
     FaAngleDown,
-    FaAngleUp
+    FaAngleUp,
+    FaUsers,
+    FaBriefcase,
+    FaGlobe,
+    FaSearch,
+    FaMapMarkerAlt,
+    FaStar,
+    FaFire,
+    FaTools,
+    FaLightbulb,
+    FaLaptopCode,
+    FaPaintBrush,
+    FaBullhorn,
+    FaPenFancy,
+    FaCode,
+    FaMobileAlt
 } from 'react-icons/fa';
 import FreelancerGrid from '../Freelancer/FreelancerGrid';
 import ServiceGrid from '../Services/ServiceGrid';
@@ -22,27 +33,42 @@ import LoadingSpinner from '../Components/Common/LoadingSpinner';
 import ErrorMessage from '../Components/Common/ErrorMessage';
 import { api } from '../utils/api';
 import { SERVICES, SERVICE_NAMES } from '../utils/constants';
+import dummyData from '../Data/dummyData.json';
 import './SearchResultsPage.css';
 
 const SearchResultsPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
-    
+
+    // Local service mappings for your new service IDs
+    const LOCAL_SERVICE_NAMES = {
+        'fsd-001': 'Full Stack Development',
+        'mad-002': 'Mobile App Development',
+        'uxd-003': 'UI/UX Design',
+        'seo-004': 'SEO Services',
+        'dma-005': 'Digital Marketing',
+        'ved-006': 'Video Editing',
+        'grd-007': 'Graphic Design',
+        'cwr-008': 'Content Writing',
+        'wpd-009': 'WordPress Development',
+        'dat-010': 'Data Analytics'
+    };
+
+    const LOCAL_SERVICES = Object.keys(LOCAL_SERVICE_NAMES);
+
     // Search states
-    const [searchType, setSearchType] = useState('freelancers'); 
+    const [searchType, setSearchType] = useState('freelancers');
     const [results, setResults] = useState([]);
-    const [servicesResults, setServicesResults] = useState([]);
-    const [freelancersResults, setFreelancersResults] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [showFilters, setShowFilters] = useState(false);
-    
+
     // Search parameters
     const query = searchParams.get('q') || '';
     const service = searchParams.get('service') || '';
     const skills = searchParams.get('skills') || '';
     const location = searchParams.get('location') || '';
-    
+
     // Filter states
     const [filters, setFilters] = useState({
         minRate: searchParams.get('minRate') || '',
@@ -50,9 +76,11 @@ const SearchResultsPage = () => {
         experienceLevel: searchParams.get('experience')?.split(',') || [],
         availability: searchParams.get('availability') || '',
         verifiedOnly: searchParams.get('verified') === 'true',
-        sortBy: searchParams.get('sort') || 'relevance'
+        sortBy: searchParams.get('sort') || 'relevance',
+        language: searchParams.get('language') || '',
+        category: searchParams.get('category') || ''
     });
-    
+
     // Pagination
     const [pagination, setPagination] = useState({
         page: parseInt(searchParams.get('page')) || 1,
@@ -60,66 +88,128 @@ const SearchResultsPage = () => {
         total: 0,
         totalPages: 1
     });
-    
+
     // Advanced filters visibility
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-    
-    // Fetch search results
+
+    // Get service icon
+    const getServiceIcon = (serviceId) => {
+        const serviceName = LOCAL_SERVICE_NAMES[serviceId]?.toLowerCase() || SERVICE_NAMES[serviceId]?.toLowerCase() || '';
+
+        if (serviceName.includes('web') || serviceName.includes('development')) {
+            return <FaLaptopCode className="related-service-icon" />;
+        } else if (serviceName.includes('design') || serviceName.includes('creative')) {
+            return <FaPaintBrush className="related-service-icon" />;
+        } else if (serviceName.includes('mobile') || serviceName.includes('app')) {
+            return <FaMobileAlt className="related-service-icon" />;
+        } else if (serviceName.includes('marketing')) {
+            return <FaBullhorn className="related-service-icon" />;
+        } else if (serviceName.includes('writing') || serviceName.includes('content')) {
+            return <FaPenFancy className="related-service-icon" />;
+        } else if (serviceName.includes('seo')) {
+            return <FaSearch className="related-service-icon" />;
+        } else {
+            return <FaTools className="related-service-icon" />;
+        }
+    };
+
+    // Get suggestion icon
+    const getSuggestionIcon = (type) => {
+        switch (type) {
+            case 'service':
+                return <FaTools className="suggestion-icon" />;
+            case 'skill':
+                return <FaLightbulb className="suggestion-icon" />;
+            default:
+                return <FaSearch className="suggestion-icon" />;
+        }
+    };
+
+   const getDummyFreelancers = (serviceId) => {
+    const serviceCategoryMap = {
+        'fsd-001': 'web-development',
+        'mad-002': 'mobile-development',
+        'uxd-003': 'ui-ux-design',
+        'seo-004': 'seo-services',
+        'dma-005': 'digital-marketing',
+        'ved-006': 'video-editing',
+        'grd-007': 'graphic-design',
+        'cwr-008': 'content-writing',
+        'wpd-009': 'web-development',
+        'dat-010': 'analytics'
+    };
+
+    if (serviceId && serviceCategoryMap[serviceId]) {
+        const category = serviceCategoryMap[serviceId];
+        return dummyData.freelancers[category] || [];
+    }
+
+    // When no service ID, return ALL freelancers
+    if (!serviceId || serviceId === '') {
+        // Flatten all freelancers from all categories
+        const allFreelancers = Object.values(dummyData.freelancers).flat();
+        console.log('Returning all freelancers:', allFreelancers.length);
+        return allFreelancers;
+    }
+
+    // Return all freelancers as fallback
+    return Object.values(dummyData.freelancers).flat();
+};
+
     const fetchResults = useCallback(async () => {
         if (!query && !service && !skills && !location) {
             setResults([]);
             return;
         }
-        
+
         setLoading(true);
         setError(null);
-        
+
         try {
             const params = {
                 page: pagination.page,
                 limit: pagination.limit,
                 ...filters
             };
-            
+
             if (query) params.q = query;
             if (service) params.service = service;
             if (skills) params.skills = skills;
             if (location) params.location = location;
-            
+
             let response;
             if (searchType === 'services') {
                 // Search services
                 const allServices = await api.getAllServices();
                 if (allServices.success) {
                     let filtered = allServices.data;
-                    
+
                     // Apply search query
                     if (query) {
                         const q = query.toLowerCase();
-                        filtered = filtered.filter(s => 
+                        filtered = filtered.filter(s =>
                             s.name.toLowerCase().includes(q) ||
                             s.description.toLowerCase().includes(q) ||
                             s.tags?.some(tag => tag.toLowerCase().includes(q))
                         );
                     }
-                    
+
                     // Apply service filter
                     if (service) {
                         filtered = filtered.filter(s => s._id === service);
                     }
-                    
+
                     // Apply category filter from skills
                     if (skills) {
                         const skillsArray = skills.toLowerCase().split(',');
-                        filtered = filtered.filter(s => 
-                            skillsArray.some(skill => 
+                        filtered = filtered.filter(s =>
+                            skillsArray.some(skill =>
                                 s.category?.toLowerCase().includes(skill) ||
                                 s.tags?.some(tag => tag.toLowerCase().includes(skill))
                             )
                         );
                     }
-                    
-                    setServicesResults(filtered);
+
                     setResults(filtered);
                     setPagination(prev => ({
                         ...prev,
@@ -128,88 +218,58 @@ const SearchResultsPage = () => {
                     }));
                 }
             } else {
-                // Search freelancers - Fixed API endpoint
+                // Search freelancers
                 try {
-                    response = await api.searchFreelancers(params);
-                    
-                    if (response.success) {
-                        setFreelancersResults(response.data);
-                        setResults(response.data);
-                        setPagination({
-                            ...pagination,
-                            total: response.pagination?.total || 0,
-                            totalPages: response.pagination?.pages || 1
-                        });
+                    let response;
+                    if (service) {
+                        response = await api.getFreelancersByServiceEnhanced(service, params);
                     } else {
-                        setError(response.message || 'Failed to fetch freelancers');
+                        response = await api.searchFreelancersEnhanced(params);
                     }
+
+                    let realFreelancers = [];
+                    if (response.success && response.data && response.data.length > 0) {
+                        realFreelancers = response.data;
+                    }
+
+                    // Get dummy freelancers
+                    const dummyFreelancers = getDummyFreelancers(service || '');
+
+                    // Combine real and dummy freelancers
+                    const combinedResults = [...realFreelancers, ...dummyFreelancers];
+
+                    // Remove duplicates by ID
+                    const uniqueResults = combinedResults.filter((freelancer, index, self) =>
+                        index === self.findIndex((f) => f.id === freelancer.id)
+                    );
+
+                    setResults(uniqueResults);
+                    setPagination(prev => ({
+                        ...prev,
+                        total: uniqueResults.length,
+                        totalPages: Math.ceil(uniqueResults.length / pagination.limit)
+                    }));
                 } catch (apiError) {
                     console.error('API Error:', apiError);
-                    // Fallback to mock data for development
-                    const mockFreelancers = [
-                        {
-                            id: 1,
-                            name: 'John Doe',
-                            title: 'UI/UX Designer',
-                            rate: '$45/hr',
-                            rating: 4.9,
-                            location: 'New York, USA',
-                            skills: ['UI Design', 'Figma', 'Prototyping'],
-                            verified: true
-                        },
-                        {
-                            id: 2,
-                            name: 'Sarah Chen',
-                            title: 'Web Developer',
-                            rate: '$60/hr',
-                            rating: 4.8,
-                            location: 'San Francisco, USA',
-                            skills: ['React', 'Node.js', 'TypeScript'],
-                            verified: true
-                        }
-                    ];
-                    setFreelancersResults(mockFreelancers);
-                    setResults(mockFreelancers);
+                    // Fallback to dummy data
+                    const filteredDummy = getDummyFreelancers(service || '');
+                    setResults(filteredDummy);
                     setPagination({
                         page: 1,
                         limit: 12,
-                        total: mockFreelancers.length,
-                        totalPages: 1
+                        total: filteredDummy.length,
+                        totalPages: Math.ceil(filteredDummy.length / 12)
                     });
                 }
             }
         } catch (err) {
             console.error('Search error:', err);
             setError('Failed to fetch search results. Please try again.');
+            setResults(getDummyFreelancers(service || ''));
         } finally {
             setLoading(false);
         }
     }, [query, service, skills, location, filters, pagination.page, searchType]);
-
-    useEffect(() => {
-        fetchResults();
-    }, [fetchResults]);
-
-    // Update URL with search parameters
-    useEffect(() => {
-        const params = new URLSearchParams();
-        
-        if (query) params.set('q', query);
-        if (service) params.set('service', service);
-        if (skills) params.set('skills', skills);
-        if (location) params.set('location', location);
-        
-        if (filters.minRate) params.set('minRate', filters.minRate);
-        if (filters.maxRate) params.set('maxRate', filters.maxRate);
-        if (filters.experienceLevel.length > 0) params.set('experience', filters.experienceLevel.join(','));
-        if (filters.availability) params.set('availability', filters.availability);
-        if (filters.verifiedOnly) params.set('verified', 'true');
-        if (filters.sortBy) params.set('sort', filters.sortBy);
-        
-        params.set('page', pagination.page.toString());
-        
-        setSearchParams(params);
-    }, [filters, pagination.page, query, service, skills, location, setSearchParams]);
 
     // Handle filter changes
     const handleFilterChange = (newFilters) => {
@@ -224,7 +284,9 @@ const SearchResultsPage = () => {
             experienceLevel: [],
             availability: '',
             verifiedOnly: false,
-            sortBy: 'relevance'
+            sortBy: 'relevance',
+            language: '',
+            category: ''
         });
         setPagination(prev => ({ ...prev, page: 1 }));
     };
@@ -254,21 +316,33 @@ const SearchResultsPage = () => {
     // Search suggestions based on query
     const getSearchSuggestions = () => {
         if (!query) return [];
-        
+
         const suggestions = [];
-        
+
         // Service name matches
+        Object.entries(LOCAL_SERVICE_NAMES).forEach(([id, name]) => {
+            if (name.toLowerCase().includes(query.toLowerCase())) {
+                suggestions.push({
+                    type: 'service',
+                    label: name,
+                    value: id,
+                    icon: getSuggestionIcon('service')
+                });
+            }
+        });
+
+        // Also check original SERVICE_NAMES
         Object.entries(SERVICE_NAMES).forEach(([id, name]) => {
             if (name.toLowerCase().includes(query.toLowerCase())) {
                 suggestions.push({
                     type: 'service',
                     label: name,
                     value: id,
-                    icon: '🔧'
+                    icon: getSuggestionIcon('service')
                 });
             }
         });
-        
+
         // Skill suggestions
         const commonSkills = ['JavaScript', 'React', 'Node.js', 'UI/UX', 'SEO', 'Marketing', 'Content', 'Design'];
         commonSkills.forEach(skill => {
@@ -277,11 +351,11 @@ const SearchResultsPage = () => {
                     type: 'skill',
                     label: skill,
                     value: skill,
-                    icon: '💡'
+                    icon: getSuggestionIcon('skill')
                 });
             }
         });
-        
+
         return suggestions.slice(0, 5);
     };
 
@@ -294,22 +368,22 @@ const SearchResultsPage = () => {
                 <div className="search-header-content">
                     <div className="search-title-section">
                         <h1 className="search-main-title">
-                            {query ? `Search Results for "${query}"` : 
-                             service ? `Browse ${SERVICE_NAMES[service] || 'Service'}` :
-                             'Search Results'}
+                            {query ? `Search Results for "${query}"` :
+                                service ? `Browse ${LOCAL_SERVICE_NAMES[service] || SERVICE_NAMES[service] || 'Service'} Talent` :
+                                    'Find Top Talent'}
                         </h1>
                         <p className="search-subtitle">
-                            {results.length > 0 
-                                ? `Found ${pagination.total} ${searchType} matching your criteria`
-                                : 'No results found. Try adjusting your search.'}
+                            {results.length > 0
+                                ? `Found ${pagination.total} ${searchType === 'freelancers' ? 'talents' : 'services'} matching your criteria`
+                                : 'Discover skilled professionals ready for your project'}
                         </p>
                     </div>
-                    
+
                     {/* Main Search Bar */}
                     <div className="main-search-wrapper">
                         <SearchBar />
                     </div>
-                    
+
                     {/* Search Type Toggle */}
                     <div className="search-type-toggle">
                         <div className="toggle-container">
@@ -317,12 +391,14 @@ const SearchResultsPage = () => {
                                 onClick={() => setSearchType('freelancers')}
                                 className={`toggle-btn ${searchType === 'freelancers' ? 'active' : ''}`}
                             >
+                                <FaUsers className="toggle-icon" />
                                 Freelancers
                             </button>
                             <button
                                 onClick={() => setSearchType('services')}
                                 className={`toggle-btn ${searchType === 'services' ? 'active' : ''}`}
                             >
+                                <FaBriefcase className="toggle-icon" />
                                 Services
                             </button>
                         </div>
@@ -351,7 +427,10 @@ const SearchResultsPage = () => {
                         <div className={`filters-content ${showFilters ? 'show' : ''}`}>
                             {/* Filters Header */}
                             <div className="filters-header">
-                                <h3 className="filters-title">Filters</h3>
+                                <h3 className="filters-title">
+                                    <FaFilter className="filters-title-icon" />
+                                    Filter Results
+                                </h3>
                                 {activeFilterCount > 0 && (
                                     <button
                                         onClick={clearFilters}
@@ -379,7 +458,7 @@ const SearchResultsPage = () => {
                                         )}
                                         {filters.experienceLevel.map(level => (
                                             <span key={level} className="filter-chip experience">
-                                                {level}
+                                                {level.charAt(0).toUpperCase() + level.slice(1)}
                                                 <button
                                                     onClick={() => handleFilterChange({
                                                         experienceLevel: filters.experienceLevel.filter(l => l !== level)
@@ -392,7 +471,7 @@ const SearchResultsPage = () => {
                                         ))}
                                         {filters.availability && (
                                             <span className="filter-chip availability">
-                                                {filters.availability}
+                                                {filters.availability.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                                                 <button
                                                     onClick={() => handleFilterChange({ availability: '' })}
                                                     className="remove-filter-btn"
@@ -447,6 +526,7 @@ const SearchResultsPage = () => {
                                             onChange={(e) => handleFilterChange({ minRate: e.target.value })}
                                             placeholder="0"
                                             className="price-input"
+                                            min="0"
                                         />
                                     </div>
                                     <div className="price-input-group">
@@ -457,6 +537,7 @@ const SearchResultsPage = () => {
                                             onChange={(e) => handleFilterChange({ maxRate: e.target.value })}
                                             placeholder="200"
                                             className="price-input"
+                                            min="0"
                                         />
                                     </div>
                                 </div>
@@ -483,7 +564,7 @@ const SearchResultsPage = () => {
                                                 className="checkbox-input"
                                             />
                                             <span className="checkbox-label">
-                                                {level}
+                                                {level.charAt(0).toUpperCase() + level.slice(1)}
                                             </span>
                                         </label>
                                     ))}
@@ -553,45 +634,41 @@ const SearchResultsPage = () => {
                                     <span>Advanced Filters</span>
                                     {showAdvancedFilters ? <FaAngleUp /> : <FaAngleDown />}
                                 </button>
-                                
+
                                 {showAdvancedFilters && (
                                     <div className="advanced-filters-content">
                                         <div className="advanced-filters-grid">
                                             <div className="advanced-filter-group">
-                                                <label className="price-label">Location</label>
-                                                <input
-                                                    type="text"
-                                                    value={location}
-                                                    onChange={(e) => {
-                                                        const params = new URLSearchParams(searchParams);
-                                                        if (e.target.value) {
-                                                            params.set('location', e.target.value);
-                                                        } else {
-                                                            params.delete('location');
-                                                        }
-                                                        setSearchParams(params);
-                                                    }}
-                                                    placeholder="City, Country"
+                                                <label className="price-label">
+                                                    <FaGlobe /> Language
+                                                </label>
+                                                <select
+                                                    value={filters.language}
+                                                    onChange={(e) => handleFilterChange({ language: e.target.value })}
                                                     className="price-input"
-                                                />
+                                                >
+                                                    <option value="">Any Language</option>
+                                                    <option value="english">English</option>
+                                                    <option value="spanish">Spanish</option>
+                                                    <option value="french">French</option>
+                                                    <option value="mandarin">Mandarin</option>
+                                                </select>
                                             </div>
                                             <div className="advanced-filter-group">
-                                                <label className="price-label">Skills (comma separated)</label>
-                                                <input
-                                                    type="text"
-                                                    value={skills}
-                                                    onChange={(e) => {
-                                                        const params = new URLSearchParams(searchParams);
-                                                        if (e.target.value) {
-                                                            params.set('skills', e.target.value);
-                                                        } else {
-                                                            params.delete('skills');
-                                                        }
-                                                        setSearchParams(params);
-                                                    }}
-                                                    placeholder="e.g., React, Node.js, UI/UX"
+                                                <label className="price-label">
+                                                    <FaBriefcase /> Category
+                                                </label>
+                                                <select
+                                                    value={filters.category}
+                                                    onChange={(e) => handleFilterChange({ category: e.target.value })}
                                                     className="price-input"
-                                                />
+                                                >
+                                                    <option value="">All Categories</option>
+                                                    <option value="web-development">Web Development</option>
+                                                    <option value="design-creative">Design & Creative</option>
+                                                    <option value="digital-marketing">Digital Marketing</option>
+                                                    <option value="writing-translation">Writing & Translation</option>
+                                                </select>
                                             </div>
                                         </div>
                                     </div>
@@ -608,16 +685,16 @@ const SearchResultsPage = () => {
                                 <div className="results-title-section">
                                     <div>
                                         <h2 className="results-title">
-                                            {searchType === 'freelancers' ? 'Freelancers' : 'Services'}
+                                            {searchType === 'freelancers' ? 'Available Talents' : 'Services'}
                                         </h2>
                                         <p className="results-count">
-                                            {loading ? 'Loading...' : 
-                                             results.length > 0 
-                                                ? `${pagination.total} results found`
-                                                : 'No results found. Try adjusting your filters.'}
+                                            {loading ? 'Searching for the best talents...' :
+                                                results.length > 0
+                                                    ? `${pagination.total} ${searchType === 'freelancers' ? 'talents' : 'services'} found`
+                                                    : 'No results found. Try adjusting your filters.'}
                                         </p>
                                     </div>
-                                    
+
                                     <div className="results-controls">
                                         <div className="page-info">
                                             Page {pagination.page} of {pagination.totalPages}
@@ -656,7 +733,7 @@ const SearchResultsPage = () => {
                                                     }}
                                                     className="suggestion-btn"
                                                 >
-                                                    <span className="suggestion-icon">{suggestion.icon}</span>
+                                                    {suggestion.icon}
                                                     {suggestion.label}
                                                 </button>
                                             ))}
@@ -670,16 +747,19 @@ const SearchResultsPage = () => {
                         {loading && (
                             <div className="loading-state">
                                 <div className="loading-spinner"></div>
-                                <p className="loading-text">Searching...</p>
+                                <p className="loading-text">Finding the best talents for you...</p>
                             </div>
                         )}
 
                         {/* Error State */}
                         {error && !loading && (
                             <div className="error-state">
-                                <div className="error-icon">⚠️</div>
+                                <div className="error-icon">
+                                    <FaTimes className="error-times-icon" />
+                                </div>
                                 <h3 className="error-title">Something went wrong</h3>
                                 <p className="error-message">{error}</p>
+                                <p className="api-info">Displaying demo data for preview</p>
                                 <button className="retry-btn" onClick={fetchResults}>
                                     Retry Search
                                 </button>
@@ -695,6 +775,7 @@ const SearchResultsPage = () => {
                                         loading={false}
                                         error={null}
                                         emptyMessage="No freelancers found. Try adjusting your search criteria."
+                                        columns={3}
                                     />
                                 ) : (
                                     <ServiceGrid
@@ -704,9 +785,11 @@ const SearchResultsPage = () => {
                                         variant="compact"
                                         columns={2}
                                         emptyMessage="No services found. Try adjusting your search criteria."
+                                        onBrowseTalent={(serviceId, serviceName) => {
+                                            navigate(`/services/${serviceId}/freelancers`);
+                                        }}
                                     />
                                 )}
-
                                 {/* Pagination */}
                                 {pagination.totalPages > 1 && (
                                     <div className="pagination-section">
@@ -716,7 +799,7 @@ const SearchResultsPage = () => {
                                                 {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
                                                 {pagination.total} results
                                             </div>
-                                            
+
                                             <div className="pagination-buttons">
                                                 <button
                                                     onClick={() => handlePageChange(pagination.page - 1)}
@@ -725,7 +808,7 @@ const SearchResultsPage = () => {
                                                 >
                                                     Previous
                                                 </button>
-                                                
+
                                                 {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
                                                     let pageNum;
                                                     if (pagination.totalPages <= 5) {
@@ -737,7 +820,7 @@ const SearchResultsPage = () => {
                                                     } else {
                                                         pageNum = pagination.page - 2 + i;
                                                     }
-                                                    
+
                                                     return (
                                                         <button
                                                             key={pageNum}
@@ -748,7 +831,7 @@ const SearchResultsPage = () => {
                                                         </button>
                                                     );
                                                 })}
-                                                
+
                                                 <button
                                                     onClick={() => handlePageChange(pagination.page + 1)}
                                                     disabled={pagination.page === pagination.totalPages}
@@ -766,7 +849,9 @@ const SearchResultsPage = () => {
                         {/* No Results State */}
                         {!loading && !error && results.length === 0 && (
                             <div className="no-results-state">
-                                <div className="no-results-icon">🔍</div>
+                                <div className="no-results-icon">
+                                    <FaSearch className="no-results-search-icon" />
+                                </div>
                                 <h3 className="no-results-title">No Results Found</h3>
                                 <p className="no-results-subtitle">
                                     We couldn't find any {searchType} matching your search criteria.
@@ -796,7 +881,7 @@ const SearchResultsPage = () => {
                     <div className="related-searches-section">
                         <h3 className="related-title">You might also be interested in</h3>
                         <div className="related-grid">
-                            {SERVICES.filter(s => s !== service)
+                            {LOCAL_SERVICES.filter(s => s !== service)
                                 .slice(0, 4)
                                 .map(serviceId => (
                                     <button
@@ -804,9 +889,9 @@ const SearchResultsPage = () => {
                                         onClick={() => navigate(`/services/${serviceId}/freelancers`)}
                                         className="related-service-card"
                                     >
-                                        <div className="related-service-icon">🔧</div>
-                                        <h4 className="related-service-name">{SERVICE_NAMES[serviceId]}</h4>
-                                        <p className="related-service-subtitle">Browse freelancers</p>
+                                        {getServiceIcon(serviceId)}
+                                        <h4 className="related-service-name">{LOCAL_SERVICE_NAMES[serviceId]}</h4>
+                                        <p className="related-service-subtitle">Browse skilled professionals</p>
                                     </button>
                                 ))}
                         </div>

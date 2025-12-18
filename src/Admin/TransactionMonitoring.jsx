@@ -1,30 +1,10 @@
 import React, { useState, useEffect } from 'react';
-// import {
-//   Box,
-//   Paper,
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableContainer,
-//   TableHead,
-//   TableRow,
-//   Typography,
-//   Chip,
-//   IconButton,
-//   TextField,
-//   MenuItem,
-//   Grid,
-//   Card,
-//   CardContent,
-//   CircularProgress,
-//   TablePagination
-// } from '@mui/material';
-// import {
-//   Visibility as ViewIcon,
-//   Flag as FlagIcon,
-//   CheckCircle as VerifyIcon,
-//   Warning as WarningIcon
-// } from '@mui/icons-material';
+import {
+  FaEye, FaFlag, FaCheckCircle, FaExclamationTriangle,
+  FaSearch, FaFilter, FaDownload
+} from 'react-icons/fa';
+import { MdRefresh, MdArrowDropDown } from 'react-icons/md';
+import './TransactionMonitoring.css'; // Create this file
 
 const TransactionMonitoring = () => {
   const [transactions, setTransactions] = useState([]);
@@ -35,7 +15,6 @@ const TransactionMonitoring = () => {
     page: 0,
     limit: 10
   });
-  const [totalTransactions, setTotalTransactions] = useState(0);
 
   useEffect(() => {
     fetchTransactions();
@@ -57,54 +36,10 @@ const TransactionMonitoring = () => {
 
       const data = await response.json();
       setTransactions(data.transactions);
-      setTotalTransactions(data.totalTransactions);
     } catch (error) {
       console.error('Error fetching transactions:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleVerifyPayment = async (transactionId) => {
-    try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`/api/admin/transactions/${transactionId}/verify-payment`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ adminNotes: 'Payment verified by admin' })
-      });
-
-      if (response.ok) {
-        fetchTransactions(); // Refresh data
-      }
-    } catch (error) {
-      console.error('Error verifying payment:', error);
-    }
-  };
-
-  const handleFlagTransaction = async (transactionId) => {
-    try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`/api/admin/transactions/${transactionId}/flag`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ 
-          flagReason: 'Suspicious activity detected',
-          adminNotes: 'Flagged for review'
-        })
-      });
-
-      if (response.ok) {
-        fetchTransactions();
-      }
-    } catch (error) {
-      console.error('Error flagging transaction:', error);
     }
   };
 
@@ -119,158 +54,156 @@ const TransactionMonitoring = () => {
     return colors[status] || 'default';
   };
 
-  const getTypeColor = (type) => {
-    const colors = {
-      milestone_payment: 'primary',
-      commission: 'secondary',
-      refund: 'warning',
-      withdrawal: 'info'
-    };
-    return colors[type] || 'default';
-  };
-
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
+      <div className="admin-loading-container">
+        <div className="admin-loading-spinner"></div>
+        <p>Loading transactions...</p>
+      </div>
     );
   }
 
   return (
-    <Box>
-      <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-        Transaction Monitoring
-      </Typography>
+    <div className="admin-transaction-monitoring">
+      <div className="admin-section-header">
+        <h2>Transaction Monitoring</h2>
+        <div className="admin-header-actions">
+          <button className="admin-btn admin-btn-primary" onClick={fetchTransactions}>
+            <MdRefresh /> Refresh
+          </button>
+        </div>
+      </div>
 
       {/* Filters */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              select
-              label="Status"
+      <div className="admin-filter-card">
+        <div className="admin-filter-row">
+          <div className="admin-filter-group">
+            <label>Status</label>
+            <select 
               value={filters.status}
               onChange={(e) => setFilters({ ...filters, status: e.target.value, page: 0 })}
             >
-              <MenuItem value="all">All Status</MenuItem>
-              <MenuItem value="pending">Pending</MenuItem>
-              <MenuItem value="completed">Completed</MenuItem>
-              <MenuItem value="failed">Failed</MenuItem>
-              <MenuItem value="under_review">Under Review</MenuItem>
-            </TextField>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              select
-              label="Type"
+              <option value="all">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="completed">Completed</option>
+              <option value="failed">Failed</option>
+              <option value="under_review">Under Review</option>
+            </select>
+          </div>
+          
+          <div className="admin-filter-group">
+            <label>Type</label>
+            <select 
               value={filters.type}
               onChange={(e) => setFilters({ ...filters, type: e.target.value, page: 0 })}
             >
-              <MenuItem value="all">All Types</MenuItem>
-              <MenuItem value="milestone_payment">Milestone Payment</MenuItem>
-              <MenuItem value="commission">Commission</MenuItem>
-              <MenuItem value="refund">Refund</MenuItem>
-              <MenuItem value="withdrawal">Withdrawal</MenuItem>
-            </TextField>
-          </Grid>
-        </Grid>
-      </Paper>
+              <option value="all">All Types</option>
+              <option value="milestone_payment">Milestone Payment</option>
+              <option value="commission">Commission</option>
+              <option value="refund">Refund</option>
+              <option value="withdrawal">Withdrawal</option>
+            </select>
+          </div>
+        </div>
+      </div>
 
       {/* Transactions Table */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Transaction ID</TableCell>
-              <TableCell>From User</TableCell>
-              <TableCell>To User</TableCell>
-              <TableCell>Amount</TableCell>
-              <TableCell>Type</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Date</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
+      <div className="admin-table-container">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Transaction ID</th>
+              <th>From User</th>
+              <th>To User</th>
+              <th>Amount</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
             {transactions.map((transaction) => (
-              <TableRow key={transaction._id}>
-                <TableCell>
-                  <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                    {transaction._id.slice(-8)}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  {transaction.fromUser?.name || 'N/A'}
-                </TableCell>
-                <TableCell>
-                  {transaction.toUser?.name || 'N/A'}
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body1" fontWeight="bold">
-                    ${transaction.amount}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Chip 
-                    label={transaction.type} 
-                    size="small" 
-                    color={getTypeColor(transaction.type)}
-                  />
-                </TableCell>
-                <TableCell>
-                  <Chip 
-                    label={transaction.status} 
-                    size="small" 
-                    color={getStatusColor(transaction.status)}
-                  />
+              <tr key={transaction._id}>
+                <td>
+                  <span className="admin-transaction-id">
+                    {transaction._id?.slice(-8) || 'N/A'}
+                  </span>
+                </td>
+                <td>{transaction.fromUser?.name || 'N/A'}</td>
+                <td>{transaction.toUser?.name || 'N/A'}</td>
+                <td>
+                  <span className="admin-amount">${transaction.amount}</span>
+                </td>
+                <td>
+                  <span className={`admin-badge admin-badge-${getStatusColor(transaction.type)}`}>
+                    {transaction.type}
+                  </span>
+                </td>
+                <td>
+                  <span className={`admin-badge admin-badge-${getStatusColor(transaction.status)}`}>
+                    {transaction.status}
+                  </span>
                   {transaction.isFlagged && (
-                    <WarningIcon color="warning" sx={{ ml: 1 }} />
+                    <FaExclamationTriangle className="admin-flagged-icon" />
                   )}
-                </TableCell>
-                <TableCell>
+                </td>
+                <td>
                   {new Date(transaction.createdAt).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                  <IconButton 
-                    size="small" 
-                    onClick={() => handleVerifyPayment(transaction._id)}
-                    disabled={transaction.status === 'verified'}
-                  >
-                    <VerifyIcon />
-                  </IconButton>
-                  <IconButton 
-                    size="small" 
-                    onClick={() => handleFlagTransaction(transaction._id)}
-                    disabled={transaction.isFlagged}
-                  >
-                    <FlagIcon />
-                  </IconButton>
-                  <IconButton size="small">
-                    <ViewIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
+                </td>
+                <td>
+                  <div className="admin-table-actions">
+                    <button 
+                      className="admin-icon-btn"
+                      onClick={() => handleVerifyPayment(transaction._id)}
+                      disabled={transaction.status === 'verified'}
+                      title="Verify Payment"
+                    >
+                      <FaCheckCircle />
+                    </button>
+                    <button 
+                      className="admin-icon-btn"
+                      onClick={() => handleFlagTransaction(transaction._id)}
+                      disabled={transaction.isFlagged}
+                      title="Flag Transaction"
+                    >
+                      <FaFlag />
+                    </button>
+                    <button className="admin-icon-btn" title="View Details">
+                      <FaEye />
+                    </button>
+                  </div>
+                </td>
+              </tr>
             ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+          </tbody>
+        </table>
+        
+        {transactions.length === 0 && (
+          <div className="admin-empty-state">
+            <p>No transactions found</p>
+          </div>
+        )}
+      </div>
 
-      <TablePagination
-        component="div"
-        count={totalTransactions}
-        page={filters.page}
-        onPageChange={(e, newPage) => setFilters({ ...filters, page: newPage })}
-        rowsPerPage={filters.limit}
-        onRowsPerPageChange={(e) => setFilters({ 
-          ...filters, 
-          limit: parseInt(e.target.value, 10), 
-          page: 0 
-        })}
-      />
-    </Box>
+      {/* Pagination */}
+      <div className="admin-pagination">
+        <button 
+          className="admin-pagination-btn"
+          disabled={filters.page === 0}
+          onClick={() => setFilters({ ...filters, page: filters.page - 1 })}
+        >
+          Previous
+        </button>
+        <span>Page {filters.page + 1}</span>
+        <button 
+          className="admin-pagination-btn"
+          onClick={() => setFilters({ ...filters, page: filters.page + 1 })}
+        >
+          Next
+        </button>
+      </div>
+    </div>
   );
 };
 

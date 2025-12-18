@@ -378,7 +378,8 @@ const AnalyticsCharts = () => {
       {/* Data Refresh */}
       <div className="analytics-refresh-section">
         <button onClick={fetchAllCharts} className="analytics-refresh-btn">
-          <FaRefresh /> Refresh Data
+          {/* <FaRefresh />  */}
+          Refresh Data
         </button>
         <div className="analytics-last-updated">
           Last updated: {new Date().toLocaleTimeString()}

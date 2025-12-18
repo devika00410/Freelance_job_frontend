@@ -244,6 +244,340 @@
 /* =============================
    RESULTS
    ============================= */
+   /* =============================
+   RESULTS CARD ENHANCEMENTS
+   ============================= */
+
+.pm-res-user {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.pm-res-avatar {
+  width: 55px;
+  height: 55px;
+  border-radius: 16px;
+  object-fit: cover;
+  border: 3px solid var(--dark-green);
+}
+
+.pm-name {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0f3a23;
+  margin: 0;
+}
+
+.pm-role {
+  color: var(--dark-green);
+  font-weight: 600;
+  margin: 4px 0 0 0;
+  font-size: 0.95rem;
+}
+
+.pm-location {
+  color: var(--gray);
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+
+/* METADATA SECTION */
+.pm-res-meta {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 16px 0;
+  padding: 16px;
+  background: var(--mint-soft);
+  border-radius: 14px;
+}
+
+.pm-res-meta p {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.9rem;
+  color: #5e756b;
+}
+
+.pm-res-meta strong {
+  color: #0f3a23;
+  font-weight: 800;
+}
+
+/* BADGES */
+.pm-badges {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+
+.pm-badge {
+  background: var(--dark-green);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* SKILLS */
+.pm-skills {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+  flex-wrap: wrap;
+}
+
+.pm-skill-tag {
+  background: var(--mint-soft);
+  color: var(--dark-green);
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: 1px solid #d7f3e5;
+}
+
+.pm-skill-tag.more {
+  background: var(--gray);
+  color: white;
+}
+
+/* CARD ACTIONS */
+.pm-card-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.btn-outline.small-btn {
+  flex: 1;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  background: white;
+  border: 2px solid var(--dark-green);
+  color: var(--dark-green);
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-solid.small-btn {
+  flex: 1;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  background: var(--dark-green);
+  color: white;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-outline.small-btn:hover {
+  background: var(--mint-soft);
+}
+
+.btn-solid.small-btn:hover {
+  background: #0f3a23;
+  transform: translateY(-1px);
+}
+
+/* =============================
+   NO MATCHES STYLING
+   ============================= */
+.pm-no-matches {
+  text-align: center;
+  padding: 40px;
+  background: var(--mint-soft);
+  border-radius: 20px;
+  margin: 20px 0;
+  border: 2px solid #d7f3e5;
+}
+
+.pm-no-match-text {
+  color: var(--gray);
+  max-width: 600px;
+  margin: 0 auto 30px;
+  line-height: 1.6;
+  font-size: 1.1rem;
+}
+
+.pm-suggestions h3 {
+  color: #0f3a23;
+  margin-bottom: 25px;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+/* =============================
+   LOADING ANIMATION
+   ============================= */
+.pm-loading {
+  text-align: center;
+  padding: 60px;
+  font-size: 1.3rem;
+  color: var(--dark-green);
+  font-weight: 700;
+  position: relative;
+}
+
+.pm-loading::after {
+  content: '';
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--mint-soft);
+  border-top-color: var(--dark-green);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  top: calc(50% - 20px);
+  left: calc(50% - 20px);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* =============================
+   RESPONSIVE ADJUSTMENTS
+   ============================= */
+@media (max-width: 1024px) {
+  .pm-res-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .pm-hero {
+    grid-template-columns: 1fr;
+  }
+  
+  .pm-res-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .pm-res-meta {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .pm-card-actions {
+    flex-direction: column;
+  }
+  
+  .pm-skill-tag {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pm-frame {
+    padding: 24px;
+  }
+  
+  .pm-title {
+    font-size: 2rem;
+  }
+  
+  .pm-res-meta {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+}
+
+/* =============================
+   SCROLLBAR STYLING FOR DROPDOWN
+   ============================= */
+.pm-dropdown::-webkit-scrollbar {
+  width: 8px;
+}
+
+.pm-dropdown::-webkit-scrollbar-track {
+  background: var(--mint-soft);
+  border-radius: 10px;
+}
+
+.pm-dropdown::-webkit-scrollbar-thumb {
+  background: var(--dark-green);
+  border-radius: 10px;
+}
+
+/* =============================
+   ICON STYLING
+   ============================= */
+.pm-icon {
+  color: var(--dark-green);
+  font-size: 1.2rem;
+}
+
+.pm-check {
+  margin-left: auto;
+  color: var(--dark-green);
+}
+
+/* =============================
+   HOVER EFFECTS
+   ============================= */
+.pm-res-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.pm-res-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+}
+
+.pm-opt {
+  transition: all 0.2s ease;
+}
+
+.pm-opt:hover {
+  transform: translateX(4px);
+}
+
+/* =============================
+   ANIMATIONS
+   ============================= */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pm-res-card {
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+.pm-res-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.pm-res-card:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.pm-res-card:nth-child(4) {
+  animation-delay: 0.3s;
+}
+
+.pm-res-card:nth-child(5) {
+  animation-delay: 0.4s;
+}
+
 .pm-results {
   max-width: 1200px;
   margin: 60px auto;

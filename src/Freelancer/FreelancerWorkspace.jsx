@@ -34,14 +34,54 @@ import {
   FaFileUpload,
   FaMusic,
   FaArchive,
-  FaHistory
+  FaHistory,
+  FaUserCircle,
+  FaCircle,
+  FaHashtag,
+  FaRocket,
+  FaFolder,
+  FaEnvelope,
+  FaStar,
+  FaTag,
+  FaChartLine,
+  FaSmile,
+  FaComment,
+  FaChevronRight,
+  FaQuestionCircle,
+  FaChevronDown,
+  FaHandPeace,
+  FaCalendar,
+  FaArrowUp,
+  FaMinus,
+  FaArrowDown,
+  FaBolt,
+  FaCalendarCheck,
+  FaPlus,
+  FaProjectDiagram,
+  FaPlay,
+  FaFlagCheckered,
+  FaFileContract,
+  FaTools,
+  FaCalculator,
+  FaFileInvoiceDollar,
+  FaFileExcel,
+  FaFilePdf,
+  FaTachometerAlt,
+  FaSync,
+  FaShareAlt,
+  FaEllipsisV, 
+  FaTrash, 
+  FaEdit 
 } from 'react-icons/fa';
 import './FreelancerWorkspace.css';
+import { workspaceSocket } from '../Service/workspaceSocket'; 
 
 // Import components
 import FreelancerWorkspaceOverview from './FreelancerWorkspaceOverview';
 import FreelancerNotes from './FreelancerNotes';
 import FreelancerEarnings from './FreelancerEarnings';
+import FreelancerSubmissions from './FreelancerSubmissions'; 
+import FreelancerFeatures from './FreelancerFeatures'; 
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -53,6 +93,8 @@ const FreelancerWorkspace = () => {
   const [workspace, setWorkspace] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentNote, setCurrentNote] = useState('');
+
   const [stats, setStats] = useState({
     progress: 0,
     earnings: { total: 0, pending: 0, upcoming: 0 },
@@ -60,6 +102,13 @@ const FreelancerWorkspace = () => {
     messages: { total: 0, unread: 0 },
     files: { total: 0, recent: [] }
   });
+
+  // WebSocket state
+  const [socketConnected, setSocketConnected] = useState(false);
+  const [typingIndicator, setTypingIndicator] = useState({ isTyping: false, user: null });
+  const [sharedMessages, setSharedMessages] = useState([]);
+  const [clientOnline, setClientOnline] = useState(false);
+
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [newMessage, setNewMessage] = useState('');
@@ -78,6 +127,7 @@ const FreelancerWorkspace = () => {
 
   // Add refs
   const fetchInProgressRef = useRef(false);
+  const typingTimeoutRef = useRef(null);
 
   // Fetch user profile on component mount
   useEffect(() => {
@@ -111,9 +161,6 @@ const FreelancerWorkspace = () => {
       });
     }
   };
-
-
-
 
   // Function to add notification
   const addNotification = (type, title, message, data = {}) => {
@@ -150,6 +197,208 @@ const FreelancerWorkspace = () => {
     setNotifications(savedNotifications);
   }, []);
 
+  // ===== Initialize WebSocket =====
+  useEffect(() => {
+    if (!workspaceId || !userProfile?._id) return;
+
+    const token = localStorage.getItem('token');
+    const userId = userProfile._id;
+    const userName = userProfile?.name || 'Freelancer';
+    
+    // Connect to workspace
+    workspaceSocket.connect(workspaceId, userId, token);
+
+    // ===== LISTENERS =====
+    workspaceSocket.on('connection', (connected) => {
+      setSocketConnected(connected);
+    });
+
+    workspaceSocket.on('message', (message) => {
+      if (message.type === 'read') {
+        // Handle read receipt
+        setWorkspace(prev => ({
+          ...prev,
+          sharedMessages: prev.sharedMessages?.map(msg => 
+            msg._id === message.messageId ? { ...msg, read: true } : msg
+          )
+        }));
+      } else {
+        // New message from client
+        const newMessage = {
+          ...message,
+          _id: message._id || Date.now().toString(),
+          senderRole: 'client'
+        };
+        
+        // Update shared messages
+        setSharedMessages(prev => [...prev, newMessage]);
+        
+        // Update workspace messages
+        setWorkspace(prev => ({
+          ...prev,
+          sharedMessages: [...(prev.sharedMessages || []), newMessage]
+        }));
+        
+        // Add notification
+        if (message.senderRole === 'client') {
+          addNotification(
+            'new_message',
+            'New Message',
+            `${message.senderName}: ${message.content.substring(0, 50)}${message.content.length > 50 ? '...' : ''}`,
+            { message, workspaceId }
+          );
+        }
+      }
+    });
+
+    workspaceSocket.on('typing', (data) => {
+      if (data.userId !== userId) {
+        setTypingIndicator({ isTyping: data.isTyping, user: data.userName });
+      }
+    });
+
+    workspaceSocket.on('file', (fileData) => {
+      if (fileData.type === 'deleted') {
+        // Remove file
+        setWorkspace(prev => ({
+          ...prev,
+          sharedFiles: prev.sharedFiles?.filter(f => f._id !== fileData.fileId)
+        }));
+      } else {
+        // New file from client
+        setWorkspace(prev => ({
+          ...prev,
+          sharedFiles: [...(prev.sharedFiles || []), fileData]
+        }));
+        
+        // Add notification
+        addNotification(
+          'file_upload',
+          'New File Shared',
+          `${fileData.uploaderName || 'Client'} shared a file: "${fileData.filename || fileData.name}"`,
+          { file: fileData, workspaceId }
+        );
+      }
+    });
+
+    workspaceSocket.on('milestone', (milestoneEvent) => {
+      console.log('Milestone event received:', milestoneEvent.type);
+      
+      switch (milestoneEvent.type) {
+        case 'approved':
+          // Update milestone status
+          setWorkspace(prev => ({
+            ...prev,
+            sharedMilestones: prev.sharedMilestones?.map(m => 
+              m._id === milestoneEvent.milestoneId || m.milestoneId === milestoneEvent.milestoneId
+                ? { ...m, status: 'completed', paymentStatus: 'pending_payment' }
+                : m
+            )
+          }));
+          
+          addNotification(
+            'milestone_approved',
+            'Milestone Approved!',
+            `Your milestone "${milestoneEvent.title}" has been approved`,
+            { milestoneEvent, workspaceId }
+          );
+          break;
+          
+        case 'changes_requested':
+          // Update milestone status
+          setWorkspace(prev => ({
+            ...prev,
+            sharedMilestones: prev.sharedMilestones?.map(m => 
+              m._id === milestoneEvent.milestoneId || m.milestoneId === milestoneEvent.milestoneId
+                ? { ...m, status: 'changes_requested' }
+                : m
+            )
+          }));
+          
+          addNotification(
+            'milestone_revision',
+            'Changes Requested',
+            `Changes requested for "${milestoneEvent.title}"`,
+            { milestoneEvent, workspaceId }
+          );
+          break;
+          
+        case 'paid':
+          // Update milestone payment status
+          setWorkspace(prev => ({
+            ...prev,
+            sharedMilestones: prev.sharedMilestones?.map(m => 
+              m._id === milestoneEvent.milestoneId || m.milestoneId === milestoneEvent.milestoneId
+                ? { ...m, paymentStatus: 'paid' }
+                : m
+            )
+          }));
+          
+          addNotification(
+            'payment_received',
+            'Payment Received!',
+            `Payment for "${milestoneEvent.title}" has been processed`,
+            { milestoneEvent, workspaceId }
+          );
+          break;
+      }
+    });
+
+    workspaceSocket.on('payment', (paymentData) => {
+      // Update earnings data
+      fetchWorkspaceData(); // Refresh data
+      
+      addNotification(
+        'payment_made',
+        'Payment Made',
+        `Client made a payment of $${paymentData.amount}`,
+        { paymentData, workspaceId }
+      );
+    });
+
+    workspaceSocket.on('meeting', (meetingEvent) => {
+      if (meetingEvent.type === 'scheduled') {
+        // Add to meetings list
+        setWorkspace(prev => ({
+          ...prev,
+          upcomingCalls: [...(prev.upcomingCalls || []), meetingEvent]
+        }));
+        
+        addNotification(
+          'meeting_scheduled',
+          'Meeting Scheduled',
+          `Meeting "${meetingEvent.title}" scheduled for ${new Date(meetingEvent.scheduledTime).toLocaleString()}`,
+          { meetingEvent, workspaceId }
+        );
+      } else if (meetingEvent.type === 'invitation') {
+        // Handle call invitation
+        if (window.confirm(`${meetingEvent.fromUserName} is inviting you to a video call. Join now?`)) {
+          window.open(meetingEvent.meetingLink, '_blank');
+        }
+      }
+    });
+
+    workspaceSocket.on('userStatus', ({ user, online }) => {
+      if (workspace?.clientId === user.userId) {
+        setClientOnline(online);
+      }
+    });
+
+    workspaceSocket.on('notification', (notification) => {
+      // Add to notifications
+      addNotification(
+        notification.type || 'info',
+        notification.title || 'Notification',
+        notification.message || '',
+        { ...notification.data, workspaceId }
+      );
+    });
+
+    // Cleanup
+    return () => {
+      workspaceSocket.disconnect();
+    };
+  }, [workspaceId, userProfile]);
 
   // ===== FIXED: fetchWorkspaceData with proper milestone handling =====
   const fetchWorkspaceData = useCallback(async () => {
@@ -311,6 +560,7 @@ const FreelancerWorkspace = () => {
       };
 
       setWorkspace(updatedWorkspace);
+      setSharedMessages(workspaceData.sharedMessages || []);
 
       // Update stats
       setStats({
@@ -413,7 +663,7 @@ const FreelancerWorkspace = () => {
 
     setWorkspace(mockWorkspace);
     setClientProfile({ name: 'John Smith' });
-
+    setSharedMessages([]);
 
     setStats({
       progress: 33,
@@ -445,6 +695,13 @@ const FreelancerWorkspace = () => {
     fetchWorkspaceData();
   }, [workspaceId]);
 
+  // ===== UPDATED HANDLER FUNCTIONS =====
+
+  const handleTyping = (isTyping) => {
+    const userName = userProfile?.name || 'Freelancer';
+    workspaceSocket.sendTyping(isTyping, userName);
+  };
+
   const handleFileUpload = async (file) => {
     if (!file) return false;
 
@@ -475,7 +732,10 @@ const FreelancerWorkspace = () => {
         sharedWith: ['client'] // Mark as shared with client
       };
 
-      // Update local state
+      // 1. Send WebSocket notification
+      workspaceSocket.uploadFile(newFile);
+
+      // 2. Update local state
       setStats(prev => ({
         ...prev,
         files: {
@@ -484,7 +744,7 @@ const FreelancerWorkspace = () => {
         }
       }));
 
-      // Also update workspace state
+      // 3. Also update workspace state
       setWorkspace(prev => {
         const existingFiles = prev.sharedFiles || [];
         return {
@@ -493,13 +753,13 @@ const FreelancerWorkspace = () => {
         };
       });
 
-      // Save to localStorage
+      // 4. Save to localStorage
       const localStorageKey = `workspace_${workspaceId}_files`;
       const existingFiles = JSON.parse(localStorage.getItem(localStorageKey) || '[]');
       existingFiles.push(newFile);
       localStorage.setItem(localStorageKey, JSON.stringify(existingFiles));
 
-      // Add notification for client
+      // 5. Add notification for client
       addNotification(
         'file_upload',
         'New File Shared',
@@ -513,13 +773,7 @@ const FreelancerWorkspace = () => {
 
       console.log('✅ File uploaded and shared with client');
 
-      // Simulate sending to client (in real app, this would be API call)
-      setTimeout(() => {
-        console.log(`📁 File "${file.name}" has been sent to the client`);
-        alert(`✅ File "${file.name}" has been shared with your client!`);
-      }, 1000);
-
-      // Try API in background
+      // 6. Try API in background
       try {
         await axios.post(
           `${API_URL}/api/workspaces/${workspaceId}/files/upload`,
@@ -536,6 +790,7 @@ const FreelancerWorkspace = () => {
         console.log('📁 File saved locally and client notified (API unavailable)');
       }
 
+      alert(`✅ File "${file.name}" has been shared with your client!`);
       return true;
 
     } catch (error) {
@@ -629,6 +884,7 @@ const FreelancerWorkspace = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  // ===== UPDATED: Send message with WebSocket =====
   const sendMessage = async () => {
     if (!newMessage.trim()) {
       alert('Please enter a message');
@@ -637,29 +893,39 @@ const FreelancerWorkspace = () => {
 
     try {
       const token = localStorage.getItem('token');
+      const userId = userProfile._id;
+      const userName = userProfile?.name || 'Freelancer';
+      
+      const messageData = {
+        content: newMessage.trim(),
+        senderId: userId,
+        senderRole: 'freelancer',
+        senderName: userName,
+        workspaceId: workspaceId,
+        timestamp: new Date().toISOString()
+      };
 
-      // Create new message object
+      // 1. Send via WebSocket for real-time
+      workspaceSocket.sendMessage(messageData);
+
+      // 2. Create local message for immediate UI update
       const newMsg = {
         _id: Date.now().toString(),
-        messageId: Date.now().toString(),
-        content: newMessage,
-        senderRole: 'freelancer',
-        senderId: userProfile?._id || 'freelancer',
-        senderName: userProfile?.name || 'Freelancer',
-        timestamp: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
+        ...messageData,
         readBy: ['freelancer'],
-        delivered: false,
+        delivered: true,
         read: false
       };
 
-      // Update workspace with new message
+      // 3. Update local state
       setWorkspace(prev => ({
         ...prev,
         sharedMessages: [...(prev.sharedMessages || []), newMsg]
       }));
 
-      // Update stats
+      setSharedMessages(prev => [...prev, newMsg]);
+
+      // 4. Update stats
       setStats(prev => ({
         ...prev,
         messages: {
@@ -668,7 +934,7 @@ const FreelancerWorkspace = () => {
         }
       }));
 
-      // Add notification for client
+      // 5. Add notification for client
       addNotification(
         'new_message',
         'New Message',
@@ -680,36 +946,10 @@ const FreelancerWorkspace = () => {
         }
       );
 
-      // Clear input
+      // 6. Clear input
       setNewMessage('');
 
-      // Simulate sending to client (like WhatsApp)
-      console.log('💬 Message sent to client:', newMessage);
-
-      // Simulate delivery status
-      setTimeout(() => {
-        // Update message as delivered
-        setWorkspace(prev => ({
-          ...prev,
-          sharedMessages: prev.sharedMessages.map(msg =>
-            msg._id === newMsg._id ? { ...msg, delivered: true } : msg
-          )
-        }));
-        console.log('✓ Message delivered to client');
-      }, 1000);
-
-      // Simulate read status (when client reads)
-      setTimeout(() => {
-        setWorkspace(prev => ({
-          ...prev,
-          sharedMessages: prev.sharedMessages.map(msg =>
-            msg._id === newMsg._id ? { ...msg, read: true } : msg
-          )
-        }));
-        console.log('👁️ Message read by client');
-      }, 3000);
-
-      // Try API in background
+      // 7. Save to API in background
       try {
         await axios.post(
           `${API_URL}/api/workspaces/${workspaceId}/messages/send`,
@@ -731,19 +971,31 @@ const FreelancerWorkspace = () => {
     }
   };
 
+  // ===== UPDATED: Submit milestone with WebSocket =====
   const handleMilestoneSubmit = async (milestoneId, submissionData) => {
     try {
       const token = localStorage.getItem('token');
-
-      // Find the milestone
       const milestone = workspace.sharedMilestones.find(m =>
         m._id === milestoneId || m.milestoneId === milestoneId
       );
 
-      // Update local state
+      if (!milestone) {
+        alert('Milestone not found');
+        return false;
+      }
+
+      // 1. Send WebSocket notification
+      workspaceSocket.submitMilestone({
+        milestoneId,
+        milestoneTitle: milestone.title,
+        submissionData,
+        freelancerName: userProfile?.name || 'Freelancer'
+      });
+
+      // 2. Update local state
       updateMilestoneStatus(milestoneId, 'awaiting_approval');
 
-      // Add notification for client
+      // 3. Add notification for client
       addNotification(
         'milestone_submission',
         'Milestone Submitted for Review',
@@ -757,7 +1009,7 @@ const FreelancerWorkspace = () => {
         }
       );
 
-      // Try API
+      // 4. Try API
       try {
         await axios.post(
           `${API_URL}/api/freelancer/workspaces/${workspaceId}/milestones/${milestoneId}/submit`,
@@ -781,7 +1033,6 @@ const FreelancerWorkspace = () => {
       return false;
     }
   };
-
 
   const updateMilestoneStatus = (milestoneId, newStatus) => {
     setWorkspace(prev => {
@@ -833,8 +1084,6 @@ const FreelancerWorkspace = () => {
   };
 
   // Add this to your component
-
-
   const NotificationsPanel = () => (
     <div className={`notifications-panel ${showNotifications ? 'show' : ''}`}>
       <div className="notifications-header">
@@ -865,6 +1114,7 @@ const FreelancerWorkspace = () => {
                 {notification.type === 'new_message' && <FaCommentDots />}
                 {notification.type === 'milestone_approved' && <FaCheck />}
                 {notification.type === 'milestone_revision' && <FaExclamationTriangle />}
+                {notification.type === 'payment_received' && <FaDollarSign />}
               </div>
               <div className="notification-content">
                 <h4>{notification.title}</h4>
@@ -1052,7 +1302,6 @@ const FreelancerWorkspace = () => {
     <div className={`freelancer-workspace ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       {/* 🔵 TOP NAVBAR — REPLACES SIDEBAR COMPLETELY */}
       <div className="workspace-topnav-wrapper">
-
         {/* Project Title + Client */}
         <div className="workspace-topnav-header">
           <div className="topnav-left">
@@ -1078,14 +1327,11 @@ const FreelancerWorkspace = () => {
             </button>
           ))}
         </div>
-
       </div>
-
 
       {/* Main Content */}
       <div className="workspace-main">
         {/* Header */}
-
         <header className="workspace-header">
           <div className="header-left">
             <div className="breadcrumb">
@@ -1137,6 +1383,7 @@ const FreelancerWorkspace = () => {
             </div>
           </div>
         </header>
+
         {/* Content Area */}
         <main className="workspace-content">
           {/* Overview Tab */}
@@ -1155,297 +1402,46 @@ const FreelancerWorkspace = () => {
 
           {/* Milestones Tab */}
           {activeTab === 'milestones' && (
-            <div className="milestones-tab">
-              <div className="section-header">
-                <h2>Milestones & Submissions</h2>
-                <div className="milestone-summary">
-                  <span>{stats.milestones?.completed || 0}/{stats.milestones?.total || 0} Completed</span>
-                  <span className="progress-text">{stats.progress || 0}% Overall Progress</span>
-                </div>
-              </div>
-
-              {workspace?.sharedMilestones?.length > 0 ? (
-                <div className="milestones-container">
-                  {workspace.sharedMilestones.map((milestone, index) => {
-                    const isPending = milestone?.status === 'pending' || milestone?.status === 'not_started';
-                    const isInProgress = milestone?.status === 'in_progress';
-                    const isAwaitingApproval = milestone?.status === 'awaiting_approval' || milestone?.status === 'submitted';
-                    const isCompleted = milestone?.status === 'completed' || milestone?.status === 'approved' || milestone?.status === 'paid';
-                    const isRevision = milestone?.status === 'revision_requested';
-                    const isRejected = milestone?.status === 'rejected';
-
-                    // Check if previous milestone is completed
-                    const previousMilestone = index > 0 ? workspace.sharedMilestones[index - 1] : null;
-                    const isPreviousCompleted = previousMilestone ?
-                      ['completed', 'approved', 'paid'].includes(previousMilestone.status) :
-                      true; // First milestone is always accessible
-
-                    const isLocked = !isPreviousCompleted && isPending;
-                    const canStart = isPreviousCompleted && isPending;
-
-                    return (
-                      <div
-                        key={milestone?._id || milestone?.milestoneId || index}
-                        className={`milestone-card ${isLocked ? 'locked' : ''}`}
-                      >
-                        <div className="milestone-header">
-                          <div className="milestone-info">
-                            <h3>{milestone?.title || `Milestone ${milestone?.phaseNumber || index + 1}`}</h3>
-                            <p className="phase">Phase {milestone?.phaseNumber || index + 1}</p>
-                          </div>
-                          <div className="milestone-status">
-                            <span
-                              className="status-badge"
-                              style={{ backgroundColor: getStatusColor(milestone?.status) }}
-                            >
-                              {isLocked ? 'Locked' : (milestone?.status?.replace('_', ' ') || 'Pending')}
-                            </span>
-                            <span className="amount">{formatCurrency(milestone?.amount || 0)}</span>
-                          </div>
-                        </div>
-
-                        <div className="milestone-details">
-                          <p>{milestone?.description || 'No description provided'}</p>
-                          <div className="detail-row">
-                            <div className="detail-item">
-                              <FaCalendarAlt />
-                              <span>Due: {formatDate(milestone?.dueDate)}</span>
-                            </div>
-                            <div className="detail-item">
-                              <FaClock />
-                              <span>Duration: {milestone?.duration || 'N/A'}</span>
-                            </div>
-                          </div>
-
-                          {/* Deliverables if available */}
-                          {milestone?.deliverables && milestone.deliverables.length > 0 && (
-                            <div className="deliverables">
-                              <h4>Deliverables:</h4>
-                              <ul>
-                                {milestone.deliverables.map((deliverable, idx) => (
-                                  <li key={idx}>{deliverable}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Status-specific actions */}
-                        <div className="milestone-actions">
-                          {isLocked && (
-                            <div className="locked-status">
-                              <div className="status-message">
-                                <FaClock />
-                                <div>
-                                  <h4>Locked</h4>
-                                  <p>Complete Phase {milestone?.phaseNumber - 1 || index} to unlock this milestone</p>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {canStart && (
-                            <button
-                              className="btn-primary"
-                              onClick={() => updateMilestoneStatus(milestone?._id || milestone?.milestoneId, 'in_progress')}
-                            >
-                              <FaCheckCircle /> Start Work
-                            </button>
-                          )}
-
-                          {isInProgress && (
-                            <div className="submission-section">
-                              <h4>Submit Work for Review</h4>
-                              <div className="submission-form">
-                                <textarea
-                                  placeholder="Add notes about your submission..."
-                                  rows="3"
-                                  className="submission-notes"
-                                  id={`notes-${milestone?._id || index}`}
-                                />
-                                <div className="file-upload-section">
-                                  <input
-                                    type="file"
-                                    id={`file-${milestone?._id || index}`}
-                                    style={{ display: 'none' }}
-                                    onChange={async (e) => {
-                                      const file = e.target.files[0];
-                                      if (file) {
-                                        await handleFileUpload(file);
-                                      }
-                                    }}
-                                  />
-                                  <button
-                                    className="btn-outline"
-                                    onClick={() => document.getElementById(`file-${milestone?._id || index}`).click()}
-                                  >
-                                    <FaUpload /> Attach File
-                                  </button>
-                                </div>
-                                <button
-                                  className="btn-primary"
-                                  onClick={() => {
-                                    const notes = document.getElementById(`notes-${milestone?._id || index}`)?.value || '';
-                                    handleMilestoneSubmit(milestone?._id || milestone?.milestoneId, {
-                                      notes: notes || 'Submitted for review',
-                                      submissionDate: new Date().toISOString()
-                                    });
-                                  }}
-                                >
-                                  <FaPaperPlane /> Submit for Review
-                                </button>
-                              </div>
-                            </div>
-                          )}
-
-                          {isAwaitingApproval && (
-                            <div className="awaiting-approval">
-                              <div className="status-message">
-                                <FaClock />
-                                <div>
-                                  <h4>Awaiting Client Approval</h4>
-                                  <p>Your submission is under review by the client.</p>
-                                </div>
-                              </div>
-                              <button
-                                className="btn-outline"
-                                onClick={() => {
-                                  // Show submission details
-                                  alert(`Submission Details:\n\nMilestone: ${milestone?.title}\nStatus: Awaiting Approval\nSubmitted: ${formatDate(milestone?.submissionDate)}\nAmount: ${formatCurrency(milestone?.amount)}`);
-                                }}
-                              >
-                                <FaEye /> View Submission Details
-                              </button>
-                            </div>
-                          )}
-
-                          {isRevision && (
-                            <div className="revision-requested">
-                              <div className="status-message warning">
-                                <FaExclamationTriangle />
-                                <div>
-                                  <h4>Revision Requested</h4>
-                                  <p>The client has requested changes to your submission.</p>
-                                </div>
-                              </div>
-                              <button
-                                className="btn-primary"
-                                onClick={() => updateMilestoneStatus(milestone?._id || milestone?.milestoneId, 'in_progress')}
-                              >
-                                <FaUpload /> Make Revisions
-                              </button>
-                            </div>
-                          )}
-
-                          {isRejected && (
-                            <div className="revision-requested">
-                              <div className="status-message warning">
-                                <FaExclamationTriangle />
-                                <div>
-                                  <h4>Submission Rejected</h4>
-                                  <p>The client has rejected your submission.</p>
-                                </div>
-                              </div>
-                              <button
-                                className="btn-primary"
-                                onClick={() => updateMilestoneStatus(milestone?._id || milestone?.milestoneId, 'in_progress')}
-                              >
-                                <FaUpload /> Resubmit Work
-                              </button>
-                            </div>
-                          )}
-
-                          {isCompleted && (
-                            <div className="completed-status">
-                              <div className="status-message success">
-                                <FaCheck />
-                                <div>
-                                  <h4>Approved & Completed</h4>
-                                  <p>Payment: {milestone?.paymentStatus === 'paid' ? 'Paid' : 'Pending Payment'}</p>
-                                </div>
-                              </div>
-                              <button
-                                className="btn-outline"
-                                onClick={() => {
-                                  // Show approval details
-                                  alert(`Milestone Completion Details:\n\nMilestone: ${milestone?.title}\nStatus: Completed\nApproved: ${formatDate(milestone?.approvedDate || milestone?.completionDate)}\nAmount: ${formatCurrency(milestone?.amount)}\nPayment Status: ${milestone?.paymentStatus || 'Pending'}`);
-                                }}
-                              >
-                                <FaFileAlt /> View Approval Details
-                              </button>
-                            </div>
-                          )}
-
-                          <button
-                            className="btn-outline"
-                            onClick={() => {
-                              // Show detailed milestone information
-                              const details = `
-Milestone Details:
---------------------
-Title: ${milestone?.title || 'N/A'}
-Phase: ${milestone?.phaseNumber || index + 1}
-Status: ${milestone?.status?.replace('_', ' ') || 'Pending'}
-Amount: ${formatCurrency(milestone?.amount || 0)}
-Due Date: ${formatDate(milestone?.dueDate)}
-Duration: ${milestone?.duration || 'N/A'}
-Description: ${milestone?.description || 'No description provided'}
-Payment Status: ${milestone?.paymentStatus || 'Pending'}
-${milestone?.deliverables?.length > 0 ? `\nDeliverables:\n${milestone.deliverables.map(d => `• ${d}`).join('\n')}` : ''}
-                    `;
-                              alert(details.trim());
-                            }}
-                          >
-                            <FaEye /> View Details
-                          </button>
-                        </div>
-
-                        {/* Timeline/Progress indicator */}
-                        <div className="milestone-timeline">
-                          <div className={`timeline-step ${isPending ? 'active' : ''}`}>
-                            <span>Pending</span>
-                          </div>
-                          <div className={`timeline-step ${isInProgress ? 'active' : ''}`}>
-                            <span>In Progress</span>
-                          </div>
-                          <div className={`timeline-step ${isAwaitingApproval ? 'active' : ''}`}>
-                            <span>Under Review</span>
-                          </div>
-                          <div className={`timeline-step ${isCompleted ? 'active' : ''}`}>
-                            <span>Completed</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="empty-state">
-                  <FaCheckCircle />
-                  <h3>No milestones yet</h3>
-                  <p>Milestones will appear here once they're added to the project</p>
-                </div>
-              )}
-            </div>
+            <FreelancerSubmissions
+              workspaceId={workspaceId}
+              workspace={workspace}
+              milestones={workspace?.sharedMilestones}
+              onSubmissionSuccess={handleMilestoneSubmit}
+            />
           )}
 
-
-          {/* Messages Tab - Updated with WhatsApp-like features */}
+          {/* Messages Tab - Updated with WebSocket integration */}
           {activeTab === 'messages' && (
             <div className="messages-tab">
               <div className="section-header">
                 <h2>Messages</h2>
                 <div className="message-summary">
                   <span>{stats.messages?.total || 0} total messages</span>
-                  {stats.messages?.unread > 0 && (
-                    <span className="unread-count">{stats.messages.unread} unread</span>
-                  )}
+                  <span style={{ color: clientOnline ? '#10b981' : '#ef4444' }}>
+                    <FaUser /> {clientProfile?.name || 'Client'} is {clientOnline ? 'Online' : 'Offline'}
+                  </span>
                 </div>
               </div>
 
+              {/* Typing Indicator */}
+              {typingIndicator.isTyping && (
+                <div className="typing-indicator">
+                  <div className="typing-dots">
+                    <span></span><span></span><span></span>
+                  </div>
+                  <span>{typingIndicator.user || 'Client'} is typing...</span>
+                </div>
+              )}
+
+              {/* Connection Status */}
+              <div className="connection-status">
+                <span className={`status-dot ${socketConnected ? 'connected' : 'disconnected'}`}></span>
+                <span>Connection: {socketConnected ? 'Connected' : 'Disconnected'}</span>
+              </div>
+
               <div className="messages-container">
-                {(workspace?.sharedMessages || []).length > 0 ? (
-                  [...(workspace.sharedMessages || [])]
+                {sharedMessages.length > 0 ? (
+                  [...sharedMessages]
                     .sort((a, b) => new Date(a.timestamp || a.createdAt) - new Date(b.timestamp || b.createdAt))
                     .map((message, index) => (
                       <div
@@ -1497,10 +1493,21 @@ ${milestone?.deliverables?.length > 0 ? `\nDeliverables:\n${milestone.deliverabl
                     placeholder="Type your message here..."
                     rows="3"
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
+                    onChange={(e) => {
+                      setNewMessage(e.target.value);
+                      // Send typing start
+                      handleTyping(true);
+                      // Clear timeout if exists
+                      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+                      // Set timeout to stop typing indicator after 1 second
+                      typingTimeoutRef.current = setTimeout(() => {
+                        handleTyping(false);
+                      }, 1000);
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
+                        handleTyping(false); // Stop typing when sending
                         sendMessage();
                       }
                     }}
@@ -1518,9 +1525,7 @@ ${milestone?.deliverables?.length > 0 ? `\nDeliverables:\n${milestone.deliverabl
             </div>
           )}
 
-
-
-          {/* Files Tab - Enhanced with proper upload functionality */}
+          {/* Files Tab - Enhanced with WebSocket */}
           {activeTab === 'files' && (
             <div className="files-tab">
               <div className="section-header">
@@ -1596,7 +1601,7 @@ ${milestone?.deliverables?.length > 0 ? `\nDeliverables:\n${milestone.deliverabl
                 </div>
               </div>
 
-              {/* Files Grid with enhanced functionality */}
+              {/* Files Grid */}
               {stats.files?.recent?.length > 0 ? (
                 <>
                   <div className="files-grid">
@@ -1673,6 +1678,7 @@ ${milestone?.deliverables?.length > 0 ? `\nDeliverables:\n${milestone.deliverabl
                                     onClick={async () => {
                                       // Reshare with client functionality
                                       if (confirm(`Reshare "${fileName}" with client?`)) {
+                                        workspaceSocket.uploadFile(file);
                                         addNotification(
                                           'file_reshare',
                                           'File Reshared',
@@ -1730,6 +1736,15 @@ ${milestone?.deliverables?.length > 0 ? `\nDeliverables:\n${milestone.deliverabl
                 </div>
               )}
             </div>
+          )}
+
+          {/* Earnings Tab */}
+          {activeTab === 'earnings' && (
+            <FreelancerEarnings
+              workspace={workspace}
+              milestones={workspace?.sharedMilestones}
+              stats={stats}
+            />
           )}
 
           {/* Calls Tab */}

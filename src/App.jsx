@@ -3,10 +3,8 @@ import './App.css'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './Context/AuthContext'
 import RoleSelection from './AuthPages/RoleSelection'
-import UserRegister from './AuthPages/UserRegister'
-import Login from './AuthPages/Login'
-import AdminRegister from './AuthPages/AdminRegister'
-import AdminLogin from './AuthPages/AdminLogin'
+import UnifiedRegister from './AuthPages/UnifiedRegister' // NEW: Unified registration
+import UnifiedLogin from './AuthPages/UnifiedLogin'       // NEW: Unified login
 import ClientDashboard from './Client/DashboardPage'
 import FreelancerDashboard from './Freelancer/FreelancerDashboard'
 import HomePage from './Pages/HomePage'
@@ -50,8 +48,9 @@ import JoinCommunityForm from "./Community/JoinCommunityForm";
 import BlogListPage from "./Community/BlogListPage";
 import BlogPage from "./Community/BlogPage";
 import PricingPage from "./Pages/PricingPage";
+import NotificationPage from './Freelancer/NotificationPage'
+import AnalyticsPage from './Freelancer/AnalyticsPage'
 // import ContactPage from "./Pages/ContactPage";
-
 
 // Protected route component
 const ProtectedRoute = ({ children, requiredRole = null }) => {
@@ -117,11 +116,13 @@ function App() {
           <Navbar />
           <NotificationBanner />
           <Routes>
+            {/* PUBLIC PAGES */}
             <Route path='/' element={<HomePage />} />
             <Route path="/services" element={<ServicePage />} />
-            <Route path="/services/:serviceId/freelancers" element={<ServiceDetailPage />} />
+            <Route path="/service/:serviceId" element={<ServiceDetailPage />} />
             <Route path="/freelancers/:id" element={<FreelancerDetailPage />} />
             <Route path="/search" element={<SearchResultsPage />} />
+            
             {/* PUBLIC WEBSITE PAGES */}
             <Route path="/how-it-works" element={<HowItWorksPage />} />
             <Route path="/pricing" element={<PricingPage />} />
@@ -134,21 +135,38 @@ function App() {
             <Route path="/community/blogs" element={<BlogListPage />} />
             <Route path="/community/blogs/:id" element={<BlogPage />} />
 
-
-            {/* Public routes */}
+            {/* AUTHENTICATION PAGES - UPDATED */}
             <Route path='/role-selection' element={
               <PublicRoute>
                 <RoleSelection />
               </PublicRoute>
             } />
+            
+            {/* UNIFIED REGISTRATION - Replaces UserRegister and AdminRegister */}
             <Route path='/register' element={
               <PublicRoute>
-                <UserRegister />
+                <UnifiedRegister />
               </PublicRoute>
             } />
+            
+            {/* UNIFIED LOGIN - Replaces Login and AdminLogin */}
             <Route path='/login' element={
               <PublicRoute>
-                <Login />
+                <UnifiedLogin />
+              </PublicRoute>
+            } />
+
+            {/* Optional: Direct admin registration link */}
+            <Route path='/admin/register' element={
+              <PublicRoute>
+                <UnifiedRegister />
+              </PublicRoute>
+            } />
+            
+            {/* Optional: Direct admin login link */}
+            <Route path='/admin/login' element={
+              <PublicRoute>
+                <UnifiedLogin />
               </PublicRoute>
             } />
 
@@ -159,89 +177,141 @@ function App() {
               </ProtectedRoute>
             } />
 
-            {/* CLIENT routes */}
+            {/* CLIENT ROUTES */}
             <Route path='/client/dashboard' element={
               <ProtectedRoute requiredRole="client">
                 <ClientDashboard />
               </ProtectedRoute>} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/project" element={<ClientProject />} />
-            <Route path="/hire-previous" element={<HirePreviousFreelancers />} />
-            <Route path="/download" element={<DownloadReports />} />
-            <Route path="/projects/new" element={<PostProject />} />
-            <Route path="/proposals" element={<ProposalsPage />} />
-            <Route path="/contracts" element={<ContractsPage />} />
-            <Route path="/payments" element={<PaymentPage />} />
-            <Route path="/analytics" element={<ClientAnalyticsPage />} />
+            <Route path="/client/profile" element={
+              <ProtectedRoute requiredRole="client">
+                <ProfilePage />
+              </ProtectedRoute>} />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>} />
+            <Route path="/project" element={
+              <ProtectedRoute requiredRole="client">
+                <ClientProject />
+              </ProtectedRoute>} />
+            <Route path="/hire-previous" element={
+              <ProtectedRoute requiredRole="client">
+                <HirePreviousFreelancers />
+              </ProtectedRoute>} />
+            <Route path="/download" element={
+              <ProtectedRoute requiredRole="client">
+                <DownloadReports />
+              </ProtectedRoute>} />
+            <Route path="/projects/new" element={
+              <ProtectedRoute requiredRole="client">
+                <PostProject />
+              </ProtectedRoute>} />
+            <Route path="/proposals" element={
+              <ProtectedRoute requiredRole="client">
+                <ProposalsPage />
+              </ProtectedRoute>} />
+            <Route path="/contracts" element={
+              <ProtectedRoute requiredRole="client">
+                <ContractsPage />
+              </ProtectedRoute>} />
+            <Route path="/payments" element={
+              <ProtectedRoute requiredRole="client">
+                <PaymentPage />
+              </ProtectedRoute>} />
+            <Route path="/analytics" element={
+              <ProtectedRoute requiredRole="client">
+                <ClientAnalyticsPage />
+              </ProtectedRoute>} />
             <Route path="/client/workspace" element={
               <ProtectedRoute requiredRole="client">
                 <ClientWorkspaceList />
               </ProtectedRoute>
             } />
 
-            {/* NEW: CLIENT ROLE-BASED WORKSPACE */}
+            {/* CLIENT WORKSPACE */}
             <Route path="/client/workspace/:workspaceId" element={
               <ProtectedRoute requiredRole="client">
                 <ClientWorkspace />
               </ProtectedRoute>
             } />
 
-            <Route path="/contracts/create" element={<CreateContractPage />} />
+            <Route path="/contracts/create" element={
+              <ProtectedRoute requiredRole="client">
+                <CreateContractPage />
+              </ProtectedRoute>} />
 
-            {/* FREELANCER routes */}
+            {/* FREELANCER ROUTES */}
             <Route path='/freelancer/dashboard' element={
               <ProtectedRoute requiredRole="freelancer">
                 <FreelancerDashboard />
               </ProtectedRoute>} />
-            <Route path='/freelancer/profile/create' element={<MainProfile />} />
-            <Route path="/freelancer/profile/edit" element={<EditProfile />} />
-            <Route path="/freelancer/jobs" element={<FindWork />} />
-            <Route path="/freelancer/earnings" element={<FreelancerEarnings />} />
-            <Route path="/freelancer/portfolio" element={<FreelancerPortfolio />} />
-            <Route path="/freelancer/proposals" element={<ApplicationsDashboard />} />
-            <Route path="/freelancer/contracts" element={<ContractsManagement />} />
+            <Route path='/freelancer/profile/create' element={
+              <ProtectedRoute requiredRole="freelancer">
+                <MainProfile />
+              </ProtectedRoute>} />
+            <Route path="/freelancer/profile/edit" element={
+              <ProtectedRoute requiredRole="freelancer">
+                <EditProfile />
+              </ProtectedRoute>} />
+            <Route path="/freelancer/jobs" element={
+              <ProtectedRoute requiredRole="freelancer">
+                <FindWork />
+              </ProtectedRoute>} />
+            <Route path="/freelancer/earnings" element={
+              <ProtectedRoute requiredRole="freelancer">
+                <FreelancerEarnings />
+              </ProtectedRoute>} />
+            {/* <Route path="/freelancer/portfolio" element={
+              <ProtectedRoute requiredRole="freelancer">
+                <FreelancerPortfolio />
+              </ProtectedRoute>} /> */}
+            <Route path="/freelancer/proposals" element={
+              <ProtectedRoute requiredRole="freelancer">
+                <ApplicationsDashboard />
+              </ProtectedRoute>} />
+            <Route path="/freelancer/contracts" element={
+              <ProtectedRoute requiredRole="freelancer">
+                <ContractsManagement />
+              </ProtectedRoute>} />
             <Route path="/freelancer/workspace" element={
               <ProtectedRoute requiredRole="freelancer">
                 <FreelancerWorkspaceList />
               </ProtectedRoute>
             } />
 
-            {/* NEW: FREELANCER ROLE-BASED WORKSPACE */}
+            {/* FREELANCER WORKSPACE */}
             <Route path="/freelancer/workspace/:workspaceId" element={
               <ProtectedRoute requiredRole="freelancer">
                 <FreelancerWorkspace />
               </ProtectedRoute>
             } />
 
-            <Route path="/freelancer/profile/:id" element={
+            <Route path="/profile/:id?" element={
               <ProtectedRoute>
                 <PublicProfile />
-              </ProtectedRoute>
-            } />
+              </ProtectedRoute>} />
 
-            {/* UNIFIED WORKSPACE ROUTE - SINGLE ENTRY POINT (Keep for backward compatibility) */}
+            <Route path="/freelancer/notifications" element={
+              <ProtectedRoute requiredRole="freelancer">
+                <NotificationPage />
+              </ProtectedRoute>} />
+            <Route path="/freelancer/analytics" element={
+              <ProtectedRoute requiredRole="freelancer">
+                <AnalyticsPage />
+              </ProtectedRoute>} />
+
+            {/* UNIFIED WORKSPACE ROUTE - Keep for backward compatibility */}
             <Route path="/workspace/:workspaceId" element={
               <ProtectedRoute>
                 <WorkspaceRouter />
               </ProtectedRoute>
             } />
 
-            {/* ADMIN routes */}
-            <Route path='/admin/register' element={
-              <PublicRoute>
-                <AdminRegister />
-              </PublicRoute>
-            } />
-            <Route path='/admin/login' element={
-              <PublicRoute>
-                <AdminLogin />
-              </PublicRoute>
-            } />
+            {/* ADMIN ROUTES */}
             <Route path='/admin/dashboard' element={
-              <AdminRoute>
+              <ProtectedRoute requiredRole="admin">
                 <AdminDashboard />
-              </AdminRoute>
+              </ProtectedRoute>
             } />
 
             {/* Catch all route */}

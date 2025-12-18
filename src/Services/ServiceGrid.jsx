@@ -5,6 +5,7 @@ import "./ServiceGrid.css";
 export default function ServiceGrid({ 
   services = [], 
   onBrowseTalent,
+  onServiceDetails,
   loading = false,
   error = null,
   emptyMessage = "No services found"
@@ -47,6 +48,7 @@ export default function ServiceGrid({
           key={service.id} 
           service={service}
           onBrowseTalent={onBrowseTalent}
+          onServiceDetails={onServiceDetails} 
         />
       ))}
     </div>

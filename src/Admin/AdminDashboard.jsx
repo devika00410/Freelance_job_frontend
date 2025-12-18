@@ -4,22 +4,22 @@ import { useNavigate } from 'react-router-dom';
 import './AdminDashboard.css';
 
 // React Icons (keeping same)
-import { 
-  FaUsers, FaBriefcase, FaMoneyBillWave, FaChartBar, 
+import {
+  FaUsers, FaBriefcase, FaMoneyBillWave, FaChartBar,
   FaExclamationTriangle, FaCheckCircle, FaUserCheck,
-  FaSignOutAlt, FaHome, FaExchangeAlt, FaFileAlt, 
+  FaSignOutAlt, FaHome, FaExchangeAlt, FaFileAlt,
   FaBell, FaArrowUp, FaSyncAlt, FaCog, FaSearch,
   FaFilter, FaDownload, FaEye, FaEdit, FaTrash,
   FaPlus, FaCalendarAlt, FaCreditCard, FaShieldAlt,
   FaDatabase, FaServer, FaNetworkWired, FaLock
 } from 'react-icons/fa';
-import { 
+import {
   MdDashboard, MdVerifiedUser, MdPayment, MdAnalytics,
   MdPerson, MdReceipt, MdReport, MdSettings,
   MdNotifications, MdHelp, MdMenu, MdClose,
   MdArrowDropDown, MdArrowRight, MdRefresh
 } from 'react-icons/md';
-import { 
+import {
   HiOutlineUserGroup, HiOutlineCash, HiOutlineChartBar,
   HiOutlineDocumentReport, HiOutlineCog, HiOutlineBell
 } from 'react-icons/hi';
@@ -171,9 +171,9 @@ const DashboardOverviewComponent = ({ data }) => {
 
 // Helper functions
 const getAdminToken = () => {
-  return localStorage.getItem('admin_token') || 
-         localStorage.getItem('adminToken') || 
-         localStorage.getItem('token');
+  return localStorage.getItem('admin_token') ||
+    localStorage.getItem('adminToken') ||
+    localStorage.getItem('token');
 };
 
 // Main AdminDashboard Component
@@ -198,12 +198,12 @@ const AdminDashboard = () => {
   const fetchDashboardData = async () => {
     try {
       const token = getAdminToken();
-      
+
       if (!token) {
         window.location.href = '/admin/login';
         return;
       }
-      
+
       const response = await fetch('http://localhost:3000/api/admin/dashboard/stats', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -215,7 +215,7 @@ const AdminDashboard = () => {
         window.location.href = '/admin/login';
         return;
       }
-      
+
       if (!response.ok) throw new Error(`Failed to fetch dashboard data: ${response.status}`);
 
       const data = await response.json();
@@ -289,13 +289,13 @@ const AdminDashboard = () => {
         <nav className="admin-sidebar-nav">
           <div className="admin-nav-section">
             <span className="admin-nav-label">MAIN</span>
-            <button 
+            <button
               className={`admin-nav-item ${activeTab === 'overview' ? 'active' : ''}`}
               onClick={() => { setActiveTab('overview'); setSidebarOpen(false); }}
             >
               <MdDashboard /> Dashboard
             </button>
-            <button 
+            <button
               className={`admin-nav-item ${activeTab === 'analytics' ? 'active' : ''}`}
               onClick={() => { setActiveTab('analytics'); setSidebarOpen(false); }}
             >
@@ -305,31 +305,37 @@ const AdminDashboard = () => {
 
           <div className="admin-nav-section">
             <span className="admin-nav-label">MANAGEMENT</span>
-            <button 
+            <button
               className={`admin-nav-item ${activeTab === 'verification' ? 'active' : ''}`}
               onClick={() => { setActiveTab('verification'); setSidebarOpen(false); }}
             >
               <MdVerifiedUser /> Verification
             </button>
-            <button 
+            <button
               className={`admin-nav-item ${activeTab === 'payments' ? 'active' : ''}`}
               onClick={() => { setActiveTab('payments'); setSidebarOpen(false); }}
             >
               <MdPayment /> Payments
             </button>
-            <button 
+            <button
+              className={`admin-nav-item ${activeTab === 'subscriptions' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('subscriptions'); setSidebarOpen(false); }}
+            >
+              <FaMoneyBillWave /> Subscriptions
+            </button>
+            <button
               className={`admin-nav-item ${activeTab === 'users' ? 'active' : ''}`}
               onClick={() => { setActiveTab('users'); setSidebarOpen(false); }}
             >
               <MdPerson /> Users
             </button>
-            <button 
+            <button
               className={`admin-nav-item ${activeTab === 'transactions' ? 'active' : ''}`}
               onClick={() => { setActiveTab('transactions'); setSidebarOpen(false); }}
             >
               <MdReceipt /> Transactions
             </button>
-            <button 
+            <button
               className={`admin-nav-item ${activeTab === 'reports' ? 'active' : ''}`}
               onClick={() => { setActiveTab('reports'); setSidebarOpen(false); }}
             >
@@ -370,13 +376,13 @@ const AdminDashboard = () => {
               <span>Admin Panel</span>
               <MdArrowRight />
               <span className="admin-current-page">
-                {activeTab === 'overview' ? 'Dashboard' : 
-                 activeTab === 'verification' ? 'Verification Center' :
-                 activeTab === 'payments' ? 'Payment Management' :
-                 activeTab === 'analytics' ? 'Analytics' :
-                 activeTab === 'users' ? 'User Management' :
-                 activeTab === 'transactions' ? 'Transactions' :
-                 activeTab === 'reports' ? 'Reports' : 'Dashboard'}
+                {activeTab === 'overview' ? 'Dashboard' :
+                  activeTab === 'verification' ? 'Verification Center' :
+                    activeTab === 'payments' ? 'Payment Management' :
+                      activeTab === 'analytics' ? 'Analytics' :
+                        activeTab === 'users' ? 'User Management' :
+                          activeTab === 'transactions' ? 'Transactions' :
+                            activeTab === 'reports' ? 'Reports' : 'Dashboard'}
               </span>
             </div>
           </div>
@@ -431,7 +437,7 @@ const AdminDashboard = () => {
               <span><MdRefresh /> Updated: {new Date().toLocaleTimeString()}</span>
             </div>
             <div className="admin-footer-links">
-              <span>© 2024 AdminPanel v2.0</span>
+              <span>© 2025 AdminPanel v2.0</span>
               <button onClick={() => window.location.reload()}>
                 <FaSyncAlt /> Refresh
               </button>

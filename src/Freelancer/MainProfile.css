@@ -268,6 +268,318 @@
   border-top: 1px solid #e2e8f0;
 }
 
+/* Add these styles to your existing MainProfile.css */
+
+/* Edit/Save Controls */
+.section-with-edit-controls {
+  position: relative;
+  margin-bottom: 30px;
+}
+
+.section-header-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #eaeaea;
+}
+
+.section-title {
+  margin: 0;
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.section-action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-edit-section {
+  background-color: #f8f9fa;
+  color: #0066cc;
+  border: 1px solid #0066cc;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-edit-section:hover {
+  background-color: #0066cc;
+  color: white;
+}
+
+.btn-save-section {
+  background-color: #0066cc;
+  color: white;
+  border: 1px solid #0066cc;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-save-section:hover {
+  background-color: #0052a3;
+}
+
+.btn-save-section:disabled {
+  background-color: #cccccc;
+  border-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.btn-cancel-edit {
+  background-color: #f8f9fa;
+  color: #666;
+  border: 1px solid #ddd;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-cancel-edit:hover {
+  background-color: #e9ecef;
+}
+
+/* Success Messages */
+.save-success-message {
+  position: absolute;
+  top: -50px;
+  right: 0;
+  background-color: #d4edda;
+  color: #155724;
+  padding: 10px 15px;
+  border-radius: 6px;
+  border: 1px solid #c3e6cb;
+  font-size: 14px;
+  font-weight: 500;
+  animation: slideIn 0.3s ease;
+  z-index: 100;
+}
+
+.global-success-message {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #c3e6cb;
+  margin-top: 20px;
+  text-align: center;
+  font-weight: 500;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Wizard Navigation */
+.wizard-navigation {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #eaeaea;
+}
+
+.nav-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-prev-step {
+  background-color: #f8f9fa;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-prev-step:hover {
+  background-color: #e9ecef;
+}
+
+.btn-next-step {
+  background-color: #0066cc;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-next-step:hover {
+  background-color: #0052a3;
+}
+
+.nav-right {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.btn-submit-profile {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-submit-profile:hover {
+  background-color: #218838;
+}
+
+.btn-submit-profile.disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Edit Mode Styles */
+.form-field-editing {
+  border-left: 3px solid #0066cc;
+  padding-left: 10px;
+  background-color: #f8faff;
+}
+
+/* Header adjustments for edit mode */
+.wizard-header {
+  position: relative;
+}
+
+.wizard-header h1 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.header-subtitle {
+  color: #666;
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+/* Completion badge adjustments */
+.completion-badge {
+  background: linear-gradient(135deg, #0066cc, #0052a3);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.completion-label {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.completion-percentage {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* Visibility indicator */
+.visibility-indicator {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #eaeaea;
+}
+
+.visibility-label {
+  font-weight: 500;
+  color: #666;
+}
+
+.visibility-level {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.visibility-hidden {
+  background-color: #ffcccc;
+  color: #cc0000;
+}
+
+.visibility-basic {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.visibility-good {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.visibility-strong {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.visibility-excellent {
+  background-color: #c3e6cb;
+  color: #155724;
+}
+
+.visibility-help {
+  margin-left: auto;
+  font-size: 14px;
+  color: #666;
+  font-style: italic;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .profile-creation-wizard {

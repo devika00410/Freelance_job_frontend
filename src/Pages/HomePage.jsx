@@ -1,4 +1,3 @@
-// Pages/HomePage.jsx
 import HeroSection from '../HomeComponents/HeroSection'
 import HowWorks from '../HomeComponents/HowWorks'
 import IndustryInnovation from '../HomeComponents/IndustryInnovation'
@@ -6,27 +5,31 @@ import ProjectMatchmaker from '../HomeComponents/ProjectMatchMaker'
 import Stats from '../HomeComponents/Stats'
 import SuccessStories from '../HomeComponents/SuccessStories'
 import Testimonials from '../HomeComponents/Testimonials'
+import AboutSnippet from '../HomeComponents/AboutSnippet'
+import HomeCommunitySection from '../HomeComponents/HomeCommunitySection'
+import HomeFaqSnippet from '../HomeComponents/HomeFaqSnippet'
+import HomepageQuote from '../HomeComponents/HomePageQuote'
 
 const HomePage = () => {
-  console.log('HomePage is rendering') // Check if this logs in browser console
+  console.log('HomePage is rendering') 
   
   return (
     <div className="homepage" style={{ minHeight: '100vh', background: '#f5f5f5' }}>
-      {/* Simple test to see if HomePage works */}
-      {/* <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <h1>HomePage is working!</h1>
-        <p>If you can see this, then HomePage is rendering correctly.</p>
-      </div>
-       */}
-      {/* Comment out HeroSection for now */}
+
       <HeroSection />
       <HowWorks/>
        <Stats/>
        <br></br>
       <Testimonials/>
+      
+      <AboutSnippet/>
       <ProjectMatchmaker/>
-      <IndustryInnovation/>
-      <SuccessStories/>
+      <HomeCommunitySection/>
+      <HomepageQuote/>
+      <br></br>
+      <HomeFaqSnippet/>
+      
+
     </div>
   )
 }

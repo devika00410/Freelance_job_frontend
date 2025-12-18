@@ -1,172 +1,184 @@
+/* =============================
+   Workspace Card – Professional Horizontal Design
+   Color Palette: Navy Blue, Light Blue, White
+   ============================= */
+
+:root {
+  --navy: #0b1c2d;
+  --navy-soft: #142c44;
+  --light-blue: #e8f1fb;
+  --accent-blue: #4da3ff;
+  --text-dark: #1f2a37;
+  --text-muted: #6b7280;
+  --white: #ffffff;
+  --border-light: #dbe4f0;
+}
+
+/* ---------- Page Background ---------- */
+.workspace-page,
+.workspace-list-container {
+  background: linear-gradient(180deg, var(--navy) 0%, var(--navy-soft) 40%, var(--light-blue) 100%);
+  min-height: 100vh;
+  padding: 24px 32px;
+  box-sizing: border-box;
+}
+
+/* ---------- Workspace List (Horizontal Alignment) ---------- */
+.workspace-list {
+  display: flex;
+  flex-wrap: nowrap; /* horizontal scroll */
+  gap: 20px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+}
+
+.workspace-list::-webkit-scrollbar {
+  height: 8px;
+}
+
+.workspace-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+/* ---------- Workspace Card ---------- */
 .workspace-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  padding: 20px;
-  margin-bottom: 16px;
-  transition: all 0.3s ease;
-  border: 1px solid #e9ecef;
+  background: var(--white);
+  min-width: 320px;
+  max-width: 360px;
+  border-radius: 14px;
+  border: 1px solid var(--border-light);
+  padding: 18px 20px;
+  box-shadow: 0 8px 20px rgba(11, 28, 45, 0.12);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .workspace-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-  border-color: #007bff;
+  transform: translateY(-4px);
+  box-shadow: 0 14px 28px rgba(11, 28, 45, 0.18);
 }
 
+/* ---------- Header ---------- */
 .workspace-card-header {
   display: flex;
+  justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16px;
-}
-
-.workspace-icon {
-  background: #f8f9fa;
-  width: 48px;
-  height: 48px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 12px;
-  color: #007bff;
-  font-size: 20px;
-}
-
-.workspace-title-section {
-  flex: 1;
+  margin-bottom: 12px;
 }
 
 .workspace-title {
-  margin: 0 0 6px 0;
-  font-size: 16px;
+  font-size: 15px; /* reduced font size */
   font-weight: 600;
-  color: #212529;
-}
-
-.workspace-meta {
-  display: flex;
-  gap: 12px;
-  align-items: center;
+  color: var(--text-dark);
+  margin: 0;
+  line-height: 1.4;
 }
 
 .workspace-status {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--light-blue);
+  color: var(--navy);
+  font-weight: 500;
+  white-space: nowrap;
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #6c757d;
 }
 
 .status-dot {
+  display: inline-block;
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  display: inline-block;
+  margin-right: 6px;
+  vertical-align: middle;
 }
 
-.workspace-phase {
-  font-size: 12px;
-  color: #6c757d;
-  background: #f8f9fa;
-  padding: 2px 8px;
-  border-radius: 12px;
-}
-
-.workspace-actions {
-  color: #adb5bd;
-}
-
+/* ---------- Body ---------- */
 .workspace-card-body {
+  font-size: 13px; /* reduced */
+  color: var(--text-muted);
+  line-height: 1.6;
   margin-bottom: 16px;
 }
 
-.workspace-info {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.workspace-client, .workspace-budget {
+.workspace-info-row {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  margin-bottom: 6px;
 }
 
-.info-icon {
-  color: #6c757d;
-  font-size: 14px;
+.workspace-info-label {
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
-.info-label {
-  display: block;
-  font-size: 11px;
-  color: #adb5bd;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 2px;
+.workspace-info-value {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-dark);
 }
 
-.info-value {
-  display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: #212529;
-}
-
-.progress-section {
-  background: #f8f9fa;
-  padding: 12px;
-  border-radius: 8px;
-}
-
-.progress-header {
+/* ---------- Footer / Actions ---------- */
+.workspace-card-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-top: auto;
 }
 
-.progress-label {
-  font-size: 12px;
-  color: #6c757d;
-}
-
-.progress-percentage {
-  font-size: 14px;
-  font-weight: 600;
-  color: #007bff;
+.workspace-progress {
+  flex: 1;
+  margin-right: 12px;
 }
 
 .progress-bar {
   height: 6px;
-  background: #e9ecef;
-  border-radius: 3px;
+  background: var(--light-blue);
+  border-radius: 6px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #007bff, #0056b3);
-  border-radius: 3px;
-  transition: width 0.5s ease;
+  background: linear-gradient(90deg, var(--accent-blue), #2b7de9);
+  border-radius: 6px;
 }
 
-.workspace-card-footer {
-  border-top: 1px solid #e9ecef;
-  padding-top: 12px;
-}
-
-.last-updated {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.progress-text {
   font-size: 11px;
-  color: #adb5bd;
+  margin-top: 4px;
+  color: var(--text-muted);
 }
 
-.clock-icon {
-  font-size: 10px;
+.workspace-action-btn {
+  background: var(--navy);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.workspace-action-btn:hover {
+  background: #102a44;
+  transform: translateY(-1px);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .workspace-list-container {
+    padding: 16px;
+  }
+
+  .workspace-card {
+    min-width: 280px;
+  }
 }

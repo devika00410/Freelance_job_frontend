@@ -18,6 +18,8 @@ import './DashboardPage.css'
 
 
 const DashboardPage = () => {
+
+
   const navigate = useNavigate();
   const { user: authUser, token } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -42,6 +44,26 @@ const DashboardPage = () => {
 
   // Add state for proposals loading
   const [proposalsLoading, setProposalsLoading] = useState(true);
+
+  const isProfileComplete = () => {
+  const profile = JSON.parse(localStorage.getItem('clientProfile'));
+  return profile?.profileCompleted === true;
+};
+
+const guardedNavigate = (path) => {
+
+  if (path.includes('profile')) {
+    navigate('/client/profile');
+    return;
+  }
+  
+  if (!isProfileComplete()) {
+    alert('Please complete your profile before accessing dashboard features.');
+    navigate('/client/profile');
+    return;
+  }
+  navigate(path);
+};
 
   useEffect(() => {
     setRecentActivity([
@@ -145,28 +167,28 @@ const DashboardPage = () => {
       icon: FaPlus,
       label: 'Create New Project',
       description: 'Post a new job and hire freelancers',
-      action: () => navigate('/projects/new'),
+      action: () => guardedNavigate('/projects/new'),
       path: '/projects/new'
     },
     {
       icon: FaSearch,
       label: 'Browse Freelancers',
       description: 'Find skilled professionals',
-      action: () => navigate('/find-work'), // Changed from '/freelancers' to existing route
-      path: '/find-work' // Changed to existing route
+      action: () => guardedNavigate('/find-work'), 
+      path: '/find-work' 
     },
     {
       icon: FaRobot,
       label: 'View Proposals',
       description: proposalsLoading ? 'Loading proposals...' : `You have ${proposalCount} new proposals`,
-      action: () => navigate('/proposals'),
+      action: () => guardedNavigate('/proposals'),
       path: '/proposals'
     },
     {
       icon: FaFileContract,
       label: 'Review Contracts',
       description: 'Manage your active contracts',
-      action: () => navigate('/contracts'),
+      action: () =>guardedNavigate('/contracts'),
       path: '/contracts'
     }
   ];
@@ -186,101 +208,118 @@ const DashboardPage = () => {
         </button>
       </div>
 
-      <nav className="sidebar-nav">
-        <div className="nav-section">
-          <h3>MAIN</h3>
-          <Link to="/dashboard" className="nav-item active">
-            <FaHome />
-            <span>Dashboard</span>
-          </Link>
-          <Link to="/project" className="nav-item">
-            <FaBriefcase />
-            <span>Projects</span>
-          </Link>
-          <Link to="/client/workspace" className="nav-item">
-            <FaProjectDiagram />
-            <span>Workspaces</span>
-          </Link>
+<nav className="sidebar-nav">
 
-          <Link to="/contracts" className="nav-item">
-            <FaFileContract />
-            <span>Contracts</span>
-          </Link>
-        </div>
+  <div className="nav-section">
+    <h3>MAIN</h3>
 
-        <div className="nav-section">
-          <h3>FINANCIAL</h3>
-          <Link to="/payments" className="nav-item">
-            <FaCreditCard />
-            <span>Payments</span>
-          </Link>
-          <Link to="/billing" className="nav-item">
-            <FaMoneyBillWave />
-            <span>Billing & Invoices</span>
-          </Link>
-        </div>
+    <button className="nav-item active" onClick={() => guardedNavigate("/dashboard")}>
+      <FaHome />
+      <span>Dashboard</span>
+    </button>
 
-        <div className="nav-section">
-          <h3>ANALYTICS</h3>
-          <Link to="/analytics" className="nav-item">
-            <FaChartBar />
-            <span>Analytics</span>
-          </Link>
-        </div>
+    <button className="nav-item" onClick={() => guardedNavigate("/project")}>
+      <FaBriefcase />
+      <span>Projects</span>
+    </button>
 
-        <div className="nav-section">
-          <h3>COMMUNICATION</h3>
-          <Link to="/messages" className="nav-item">
-            <FaComments />
-            <span>Messages</span>
-            <span className="badge">3</span>
-          </Link>
-          <Link to="/notifications" className="nav-item">
-            <FaBell />
-            <span>Notifications</span>
-            <span className="badge">5</span>
-          </Link>
-        </div>
+    <button className="nav-item" onClick={() => guardedNavigate("/client/workspace")}>
+      <FaProjectDiagram />
+      <span>Workspaces</span>
+    </button>
 
-        <div className="nav-section">
-          <h3>TOOLS</h3>
-          <Link to="/ai-assistant" className="nav-item">
-            <FaRobot />
-            <span>AI Assistant</span>
-          </Link>
-          <Link to="/support" className="nav-item">
-            <FaLifeRing />
-            <span>Support</span>
-          </Link>
-        </div>
+    <button className="nav-item" onClick={() => guardedNavigate("/contracts")}>
+      <FaFileContract />
+      <span>Contracts</span>
+    </button>
+  </div>
 
-        <div className="nav-section">
-          <h3>ACCOUNT</h3>
-          <Link to="/profile" className="nav-item">
-            <FaUser />
-            <span>Profile</span>
-          </Link>
-          <Link to="/settings" className="nav-item">
-            <FaCog />
-            <span>Settings</span>
-          </Link>
-          <button
-            className="nav-item logout"
-            onClick={() => {
-              localStorage.removeItem("token");
-              localStorage.removeItem("client");
-              localStorage.removeItem("freelancer");
-              localStorage.removeItem("role");
+  <div className="nav-section">
+    <h3>FINANCIAL</h3>
 
-              window.location.href = "/"; // redirect to homepage
-            }}
-          >
-            <FaSignOutAlt />
-            <span>Logout</span>
-          </button>
+    <button className="nav-item" onClick={() => guardedNavigate("/payments")}>
+      <FaCreditCard />
+      <span>Payments</span>
+    </button>
 
-        </div>
-      </nav>
+    <button className="nav-item" onClick={() => guardedNavigate("/billing")}>
+      <FaMoneyBillWave />
+      <span>Billing & Invoices</span>
+    </button>
+  </div>
+
+  <div className="nav-section">
+    <h3>ANALYTICS</h3>
+
+    <button className="nav-item" onClick={() => guardedNavigate("/analytics")}>
+      <FaChartBar />
+      <span>Analytics</span>
+    </button>
+  </div>
+
+  <div className="nav-section">
+    <h3>COMMUNICATION</h3>
+
+    <button className="nav-item" onClick={() => guardedNavigate("/messages")}>
+      <FaComments />
+      <span>Messages</span>
+      <span className="badge">3</span>
+    </button>
+
+    <button className="nav-item" onClick={() => guardedNavigate("/notifications")}>
+      <FaBell />
+      <span>Notifications</span>
+      <span className="badge">5</span>
+    </button>
+  </div>
+
+  <div className="nav-section">
+    <h3>TOOLS</h3>
+
+    <button className="nav-item" onClick={() => guardedNavigate("/ai-assistant")}>
+      <FaRobot />
+      <span>AI Assistant</span>
+    </button>
+
+    <button className="nav-item" onClick={() => guardedNavigate("/support")}>
+      <FaLifeRing />
+      <span>Support</span>
+    </button>
+  </div>
+
+  <div className="nav-section">
+    <h3>ACCOUNT</h3>
+
+    {/* ALWAYS ALLOWED */}
+    {/* Change from navigate("/profile") to guardedNavigate("/client/profile") */}
+<button className="nav-item" onClick={() => guardedNavigate("/client/profile")}>
+  <FaUser />
+  <span>Profile</span>
+</button>
+
+    <button className="nav-item" onClick={() => navigate("/settings")}>
+      <FaCog />
+      <span>Settings</span>
+    </button>
+
+    {/* LOGOUT */}
+    <button
+      className="nav-item logout"
+      onClick={() => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("client");
+        localStorage.removeItem("freelancer");
+        localStorage.removeItem("role");
+        window.location.href = "/";
+      }}
+    >
+      <FaSignOutAlt />
+      <span>Logout</span>
+    </button>
+  </div>
+
+</nav>
+
     </div>
   );
 

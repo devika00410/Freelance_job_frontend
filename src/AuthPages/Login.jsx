@@ -1,27 +1,27 @@
 import { useState } from "react";
 import { useAuth } from "../Context/AuthContext";
-import { useNavigate,Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import './Login.css'
 
-const Login=()=>{
-    const[formData,setFormData]=useState({
-        email:'',
-        password:''
-    })
-    const[message,setMessage]=useState('')
-    const { loginUser, loading } = useAuth('')
-    const navigate = useNavigate()
+const Login = () => {
+    const [formData, setFormData] = useState({
+        email: '',
+        password: ''
+    });
+    const [message, setMessage] = useState('');
+    const { loginUser, loading } = useAuth('');
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         setFormData({
             ...formData,
             [e.target.name]: e.target.value
-        })
-    }
+        });
+    };
 
     const handleSubmit = async (e) => {
-        e.preventDefault()
-        setMessage('')
+        e.preventDefault();
+        setMessage('');
         
         // Clear any existing role data before login
         const roleKeys = ['client', 'freelancer', 'admin'];
@@ -30,17 +30,17 @@ const Login=()=>{
             localStorage.removeItem(`${role}_user`);
         });
         
-        const result = await loginUser(formData)
+        const result = await loginUser(formData);
 
         if (result.success) {
-            setMessage(`✅ Login successful! Welcome ${result.user.profile.name}`)
-            localStorage.removeItem('selectedRole')
+            setMessage(`✅ Login successful! Welcome ${result.user.profile?.name || result.user.name}`);
+            localStorage.removeItem('selectedRole');
             
-            setTimeout(() => navigate('/dashboard'), 2000)
+            setTimeout(() => navigate('/dashboard'), 2000);
         } else {
-            setMessage(`❌ ${result.error}`)
+            setMessage(`❌ ${result.error}`);
         }
-    }
+    };
 
     return (
         <div className="login-wrapper">
@@ -55,17 +55,34 @@ const Login=()=>{
                 <form className="login-form" onSubmit={handleSubmit}>
                     <div className="input-field">
                         <label className="field-label">Email</label>
-                        <input type="email" name="email" value={formData.email}
-                            onChange={handleChange} placeholder="your.email@example.com" required />
+                        <input 
+                            type="email" 
+                            name="email" 
+                            value={formData.email}
+                            onChange={handleChange} 
+                            placeholder="your.email@example.com" 
+                            required 
+                        />
                     </div>
                     <div className="input-field">
                         <label className="field-label">Password</label>
-                        <input type="password"
+                        <input 
+                            type="password"
                             name="password"
                             value={formData.password}
                             onChange={handleChange}
-                            placeholder="Enter your password" required minLength='6' />
-                            <small className="input-hint">Must be at least 6 characters</small>
+                            placeholder="Enter your password" 
+                            required 
+                            minLength='6' 
+                        />
+                        <small className="input-hint">Must be at least 6 characters</small>
+                        
+                        {/* ADD THIS FORGOT PASSWORD LINK */}
+                        <div className="forgot-password-link">
+                            <Link to="/forgot-password" className="redirect-link">
+                                Forgot Password?
+                            </Link>
+                        </div>
                     </div>
                     <button type="submit" className="submit-btn" disabled={loading}>
                         {loading ? 'Signing In...' : 'Sign in'}
@@ -89,7 +106,7 @@ const Login=()=>{
                 </div>
             </div>
         </div>
-    )
-}
+    );
+};
 
 export default Login;

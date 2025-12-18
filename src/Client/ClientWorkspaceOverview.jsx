@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   FaTasks,
   FaChartLine,
@@ -17,34 +17,35 @@ import {
   FaShare,
   FaBell,
   FaCalendarCheck,
-  FaStar
+  FaStar,
+  FaPercentage,
+  FaRocket,
+  FaChartBar
 } from 'react-icons/fa';
-import './ClientWorkspaceOverview.css'
+import './ClientWorkspaceOverview.css';
 
 const ClientWorkspaceOverview = ({ workspace, milestones = [], otherParty, otherPartyOnline, setActiveSection }) => {
-  const [quickActions, setQuickActions] = useState([
-    { id: 1, label: 'Approve Work', icon: FaCheckCircle, section: 'milestones', color: 'success' },
-    { id: 2, label: 'Make Payment', icon: FaMoneyBillWave, section: 'budget', color: 'warning' },
-    { id: 3, label: 'Schedule Meeting', icon: FaVideo, section: 'meetings', color: 'primary' },
-    { id: 4, label: 'View Files', icon: FaFolderOpen, section: 'files', color: 'info' },
-    { id: 5, label: 'Send Message', icon: FaCommentDots, section: 'chat', color: 'secondary' },
-    { id: 6, label: 'Generate Report', icon: FaChartLine, section: 'reports', color: 'danger' }
-  ]);
-
+  
   // Calculate statistics
   const calculateStats = () => {
-    const totalMilestones = milestones.length;
+    const totalMilestones = milestones.length || 0;
     const completedMilestones = milestones.filter(m => m.status === 'completed').length;
     const pendingApproval = milestones.filter(m => 
-      m.status === 'awaiting_approval' || m.status === 'awaiting-approval'
+      m.status === 'awaiting_approval' || m.status === 'submitted'
     ).length;
-    const totalBudget = workspace?.totalBudget || 0;
+    
+    const totalBudget = workspace?.totalBudget || 5000;
     const spentAmount = milestones
-      .filter(m => m.status === 'completed')
+      .filter(m => m.status === 'completed' || m.paymentStatus === 'paid')
       .reduce((sum, m) => sum + (m.amount || 0), 0);
+    
     const pendingPayment = milestones
       .filter(m => m.status === 'completed' && (!m.paymentStatus || m.paymentStatus !== 'paid'))
       .reduce((sum, m) => sum + (m.amount || 0), 0);
+
+    const progressPercentage = milestones.length > 0 
+      ? Math.round((completedMilestones / totalMilestones) * 100)
+      : 0;
 
     return {
       totalMilestones,
@@ -53,7 +54,7 @@ const ClientWorkspaceOverview = ({ workspace, milestones = [], otherParty, other
       totalBudget,
       spentAmount,
       pendingPayment,
-      progressPercentage: workspace?.overallProgress || 0,
+      progressPercentage,
       remainingBudget: totalBudget - spentAmount,
       completionRate: totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0
     };
@@ -76,19 +77,21 @@ const ClientWorkspaceOverview = ({ workspace, milestones = [], otherParty, other
 
   const getUpcomingMilestones = () => {
     const now = new Date();
-    const upcoming = milestones.filter(milestone => {
-      if (!milestone.dueDate) return false;
-      const dueDate = new Date(milestone.dueDate);
-      return dueDate > now && milestone.status !== 'completed';
-    }).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
-    
-    return upcoming.slice(0, 3); // Return only 3 upcoming milestones
+    return milestones
+      .filter(milestone => {
+        if (!milestone.dueDate) return false;
+        const dueDate = new Date(milestone.dueDate);
+        return dueDate > now && milestone.status !== 'completed';
+      })
+      .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+      .slice(0, 3);
   };
 
   const getStatusColor = (status) => {
     switch (status) {
       case 'completed': return 'success';
       case 'awaiting_approval': return 'warning';
+      case 'submitted': return 'warning';
       case 'in_progress': return 'primary';
       case 'pending': return 'secondary';
       default: return 'light';
@@ -96,153 +99,178 @@ const ClientWorkspaceOverview = ({ workspace, milestones = [], otherParty, other
   };
 
   const upcomingMilestones = getUpcomingMilestones();
-  const recentActivity = milestones
-    .filter(m => m.submissionDate || m.approvalDate)
-    .sort((a, b) => {
-      const dateA = new Date(a.submissionDate || a.approvalDate);
-      const dateB = new Date(b.submissionDate || b.approvalDate);
-      return dateB - dateA;
-    })
-    .slice(0, 5);
+  const pendingMilestones = milestones.filter(m => 
+    m.status === 'awaiting_approval' || m.status === 'submitted'
+  );
+
+  const quickActions = [
+    { id: 1, label: 'Review Work', icon: FaCheckCircle, section: 'milestones', color: 'success' },
+    { id: 2, label: 'Make Payment', icon: FaMoneyBillWave, section: 'budget', color: 'warning' },
+    { id: 3, label: 'Schedule Call', icon: FaVideo, section: 'meetings', color: 'primary' },
+    { id: 4, label: 'Share Files', icon: FaFolderOpen, section: 'files', color: 'info' },
+    { id: 5, label: 'Send Message', icon: FaCommentDots, section: 'chat', color: 'secondary' },
+    { id: 6, label: 'View Reports', icon: FaChartBar, section: 'reports', color: 'danger' }
+  ];
 
   return (
     <div className="client-workspace-overview">
-      {/* Welcome Section */}
-      <div className="welcome-section">
-        <div className="welcome-content">
+      {/* Hero Section */}
+      <div className="overview-hero">
+        <div className="hero-content">
           <h1>Welcome to {workspace.title}</h1>
           <p className="project-description">{workspace.description || 'Manage your project and collaborate with your freelancer'}</p>
           
-          <div className="project-meta">
-            <div className="meta-item">
-              <FaUser />
+          <div className="project-meta-grid">
+            <div className="meta-card">
+              <div className="meta-icon">
+                <FaUser />
+              </div>
               <div>
                 <span className="meta-label">Freelancer</span>
                 <span className="meta-value">{otherParty?.name || 'Not assigned'}</span>
               </div>
+              <span className={`online-badge ${otherPartyOnline ? 'online' : 'offline'}`}>
+                {otherPartyOnline ? 'Online' : 'Offline'}
+              </span>
             </div>
-            <div className="meta-item">
-              <FaCalendarAlt />
+            
+            <div className="meta-card">
+              <div className="meta-icon">
+                <FaCalendarAlt />
+              </div>
               <div>
                 <span className="meta-label">Start Date</span>
                 <span className="meta-value">{formatDate(workspace.startDate)}</span>
               </div>
             </div>
-            <div className="meta-item">
-              <FaCalendarCheck />
+            
+            <div className="meta-card">
+              <div className="meta-icon">
+                <FaCalendarCheck />
+              </div>
               <div>
                 <span className="meta-label">Est. Completion</span>
                 <span className="meta-value">{formatDate(workspace.estimatedEndDate)}</span>
               </div>
             </div>
-            <div className="meta-item">
-              <span className={`online-status ${otherPartyOnline ? 'online' : 'offline'}`}>
-                {otherPartyOnline ? '● Online' : '○ Offline'}
-              </span>
+            
+            <div className="meta-card">
+              <div className="meta-icon">
+                <FaPercentage />
+              </div>
+              <div>
+                <span className="meta-label">Progress</span>
+                <span className="meta-value">{stats.progressPercentage}%</span>
+              </div>
             </div>
-          </div>
-        </div>
-
-        <div className="quick-actions-section">
-          <h3>Quick Actions</h3>
-          <div className="quick-actions-grid">
-            {quickActions.map(action => (
-              <button
-                key={action.id}
-                className={`quick-action-btn ${action.color}`}
-                onClick={() => setActiveSection(action.section)}
-              >
-                <action.icon />
-                <span>{action.label}</span>
-              </button>
-            ))}
           </div>
         </div>
       </div>
 
-      {/* Stats Overview */}
-      <div className="stats-overview">
-        <div className="stat-card primary">
-          <div className="stat-icon">
-            <FaChartLine />
-          </div>
-          <div className="stat-content">
-            <h3>{stats.progressPercentage}%</h3>
-            <p>Project Progress</p>
-            <div className="progress-bar">
-              <div 
-                className="progress-fill" 
-                style={{ width: `${stats.progressPercentage}%` }}
-              ></div>
+      {/* Quick Stats */}
+      <div className="quick-stats-grid">
+        <div className="stat-card progress">
+          <div className="stat-header">
+            <div className="stat-icon">
+              <FaChartLine />
             </div>
+            <div className="stat-title">Project Progress</div>
+          </div>
+          <div className="stat-value">{stats.progressPercentage}%</div>
+          <div className="progress-bar">
+            <div 
+              className="progress-fill" 
+              style={{ width: `${stats.progressPercentage}%` }}
+            />
           </div>
         </div>
 
-        <div className="stat-card success">
-          <div className="stat-icon">
-            <FaCheckCircle />
+        <div className="stat-card milestones">
+          <div className="stat-header">
+            <div className="stat-icon">
+              <FaCheckCircle />
+            </div>
+            <div className="stat-title">Milestones</div>
           </div>
-          <div className="stat-content">
-            <h3>{stats.completedMilestones}/{stats.totalMilestones}</h3>
-            <p>Milestones Completed</p>
-            <small>{stats.completionRate}% completion rate</small>
-          </div>
+          <div className="stat-value">{stats.completedMilestones}/{stats.totalMilestones}</div>
+          <div className="stat-subtitle">{stats.completionRate}% completed</div>
         </div>
 
-        <div className="stat-card warning">
-          <div className="stat-icon">
-            <FaClock />
+        <div className="stat-card budget">
+          <div className="stat-header">
+            <div className="stat-icon">
+              <FaMoneyBillWave />
+            </div>
+            <div className="stat-title">Budget</div>
           </div>
-          <div className="stat-content">
-            <h3>{stats.pendingApproval}</h3>
-            <p>Pending Approvals</p>
-            <small>Awaiting your review</small>
-          </div>
+          <div className="stat-value">${stats.spentAmount.toLocaleString()}</div>
+          <div className="stat-subtitle">of ${stats.totalBudget.toLocaleString()}</div>
         </div>
 
-        <div className="stat-card info">
-          <div className="stat-icon">
-            <FaMoneyBillWave />
+        <div className="stat-card actions">
+          <div className="stat-header">
+            <div className="stat-icon">
+              <FaBell />
+            </div>
+            <div className="stat-title">Pending Actions</div>
           </div>
-          <div className="stat-content">
-            <h3>${stats.spentAmount.toLocaleString()}</h3>
-            <p>Budget Spent</p>
-            <small>${stats.remainingBudget.toLocaleString()} remaining</small>
-          </div>
+          <div className="stat-value">{stats.pendingApproval}</div>
+          <div className="stat-subtitle">awaiting review</div>
         </div>
       </div>
 
-      {/* Two Column Layout */}
-      <div className="overview-columns">
+      {/* Main Content Grid */}
+      <div className="overview-grid">
         {/* Left Column */}
-        <div className="column">
+        <div className="overview-column">
+          {/* Quick Actions */}
+          <div className="section-card">
+            <div className="section-header">
+              <h3><FaRocket /> Quick Actions</h3>
+            </div>
+            <div className="quick-actions-grid">
+              {quickActions.map(action => (
+                <button
+                  key={action.id}
+                  className={`quick-action-btn ${action.color}`}
+                  onClick={() => setActiveSection(action.section)}
+                >
+                  <action.icon className="action-icon" />
+                  <span className="action-label">{action.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Upcoming Milestones */}
           <div className="section-card">
             <div className="section-header">
-              <h3>
-                <FaCalendarAlt /> Upcoming Milestones
-              </h3>
-              <button 
-                className="view-all-btn"
-                onClick={() => setActiveSection('milestones')}
-              >
-                View All <FaArrowRight />
-              </button>
+              <h3><FaCalendarAlt /> Upcoming Milestones</h3>
+              {upcomingMilestones.length > 0 && (
+                <button 
+                  className="view-all-btn"
+                  onClick={() => setActiveSection('milestones')}
+                >
+                  View All <FaArrowRight />
+                </button>
+              )}
             </div>
             
             {upcomingMilestones.length > 0 ? (
               <div className="upcoming-list">
                 {upcomingMilestones.map(milestone => (
                   <div key={milestone._id} className="upcoming-item">
-                    <div className="upcoming-info">
-                      <h4>{milestone.title}</h4>
-                      <p className="milestone-description">{milestone.description}</p>
-                      <div className="milestone-meta">
-                        <span className="amount">${milestone.amount}</span>
-                        <span className="due-date">Due: {formatDate(milestone.dueDate)}</span>
+                    <div className="upcoming-content">
+                      <div className="upcoming-header">
+                        <h4>{milestone.title}</h4>
                         <span className={`status-badge ${getStatusColor(milestone.status)}`}>
-                          {milestone.status.replace('_', ' ')}
+                          {milestone.status?.replace('_', ' ') || 'Pending'}
                         </span>
+                      </div>
+                      <p className="milestone-description">{milestone.description}</p>
+                      <div className="milestone-footer">
+                        <span className="amount">${milestone.amount || 0}</span>
+                        <span className="due-date">Due: {formatDate(milestone.dueDate)}</span>
                       </div>
                     </div>
                     {milestone.status === 'awaiting_approval' && (
@@ -262,54 +290,57 @@ const ClientWorkspaceOverview = ({ workspace, milestones = [], otherParty, other
               </div>
             )}
           </div>
+        </div>
 
-          {/* Recent Activity */}
+        {/* Right Column */}
+        <div className="overview-column">
+          {/* Pending Approvals */}
           <div className="section-card">
             <div className="section-header">
-              <h3>
-                <FaBell /> Recent Activity
-              </h3>
+              <h3><FaCheckCircle /> Pending Approvals</h3>
+              {pendingMilestones.length > 0 && (
+                <button 
+                  className="view-all-btn"
+                  onClick={() => setActiveSection('milestones')}
+                >
+                  Review All <FaArrowRight />
+                </button>
+              )}
             </div>
             
-            {recentActivity.length > 0 ? (
-              <div className="activity-list">
-                {recentActivity.map((activity, index) => (
-                  <div key={index} className="activity-item">
-                    <div className="activity-icon">
-                      {activity.approvalDate ? (
-                        <FaCheckCircle className="approved" />
-                      ) : (
-                        <FaClock className="submitted" />
-                      )}
+            {pendingMilestones.length > 0 ? (
+              <div className="pending-list">
+                {pendingMilestones.slice(0, 3).map(milestone => (
+                  <div key={milestone._id} className="pending-item">
+                    <div className="pending-info">
+                      <h4>{milestone.title}</h4>
+                      <p>Phase {milestone.phase}</p>
+                      <div className="pending-meta">
+                        <span>${milestone.amount || 0}</span>
+                        <span>Submitted: {formatDate(milestone.submittedDate)}</span>
+                      </div>
                     </div>
-                    <div className="activity-content">
-                      <p>
-                        <strong>{activity.title}</strong> was{' '}
-                        {activity.approvalDate ? 'approved' : 'submitted for review'}
-                      </p>
-                      <small>
-                        {formatDate(activity.approvalDate || activity.submissionDate)}
-                      </small>
-                    </div>
+                    <button 
+                      className="action-btn primary"
+                      onClick={() => setActiveSection('milestones')}
+                    >
+                      Review
+                    </button>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="empty-state">
-                <p>No recent activity</p>
+              <div className="empty-state success">
+                <FaCheckCircle />
+                <p>All caught up! No pending approvals</p>
               </div>
             )}
           </div>
-        </div>
 
-        {/* Right Column */}
-        <div className="column">
           {/* Project Health */}
           <div className="section-card">
             <div className="section-header">
-              <h3>
-                <FaStar /> Project Health
-              </h3>
+              <h3><FaStar /> Project Health</h3>
             </div>
             
             <div className="health-metrics">
@@ -322,7 +353,7 @@ const ClientWorkspaceOverview = ({ workspace, milestones = [], otherParty, other
               </div>
               
               <div className="health-metric">
-                <div className="metric-label">Communication Score</div>
+                <div className="metric-label">Communication</div>
                 <div className="metric-value">4.5/5</div>
                 <div className="metric-bar">
                   <div className="bar-fill" style={{ width: '90%' }}></div>
@@ -336,40 +367,25 @@ const ClientWorkspaceOverview = ({ workspace, milestones = [], otherParty, other
                   <div className="bar-fill" style={{ width: '96%' }}></div>
                 </div>
               </div>
-              
-              <div className="health-metric">
-                <div className="metric-label">Budget Utilization</div>
-                <div className="metric-value">
-                  {((stats.spentAmount / stats.totalBudget) * 100).toFixed(1)}%
-                </div>
-                <div className="metric-bar">
-                  <div 
-                    className="bar-fill" 
-                    style={{ width: `${(stats.spentAmount / stats.totalBudget) * 100}%` }}
-                  ></div>
-                </div>
-              </div>
             </div>
           </div>
 
           {/* Important Links */}
           <div className="section-card">
             <div className="section-header">
-              <h3>
-                <FaFileContract /> Important Links
-              </h3>
+              <h3><FaFileContract /> Important Links</h3>
             </div>
             
             <div className="links-list">
-              <button className="link-item">
+              <button className="link-item" onClick={() => setActiveSection('contract')}>
                 <FaFileContract />
                 <span>View Contract</span>
                 <FaArrowRight />
               </button>
               
-              <button className="link-item">
+              <button className="link-item" onClick={() => setActiveSection('files')}>
                 <FaDownload />
-                <span>Download Project Brief</span>
+                <span>Download Project Files</span>
                 <FaArrowRight />
               </button>
               
@@ -378,100 +394,29 @@ const ClientWorkspaceOverview = ({ workspace, milestones = [], otherParty, other
                 <span>Share Workspace</span>
                 <FaArrowRight />
               </button>
-              
-              <button className="link-item">
-                <FaExclamationTriangle />
-                <span>Report Issue</span>
-                <FaArrowRight />
-              </button>
-            </div>
-          </div>
-
-          {/* Quick Tips */}
-          <div className="section-card tips-card">
-            <div className="section-header">
-              <h3>
-                <FaStar /> Quick Tips
-              </h3>
-            </div>
-            
-            <div className="tips-list">
-              <div className="tip-item">
-                <div className="tip-icon">💡</div>
-                <div className="tip-content">
-                  <strong>Review work promptly</strong>
-                  <p>Timely approvals keep the project moving smoothly</p>
-                </div>
-              </div>
-              
-              <div className="tip-item">
-                <div className="tip-icon">💰</div>
-                <div className="tip-content">
-                  <strong>Release payments on time</strong>
-                  <p>This helps maintain a good relationship with your freelancer</p>
-                </div>
-              </div>
-              
-              <div className="tip-item">
-                <div className="tip-icon">🗣️</div>
-                <div className="tip-content">
-                  <strong>Communicate clearly</strong>
-                  <p>Provide specific feedback for requested changes</p>
-                </div>
-              </div>
-              
-              <div className="tip-item">
-                <div className="tip-icon">📁</div>
-                <div className="tip-content">
-                  <strong>Keep files organized</strong>
-                  <p>Download and backup important project files</p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom Section */}
-      <div className="bottom-section">
-        <div className="reminder-card">
-          <FaExclamationTriangle />
-          <div>
-            <h4>Action Required</h4>
-            <p>
-              {stats.pendingApproval > 0 
-                ? `You have ${stats.pendingApproval} milestone${stats.pendingApproval > 1 ? 's' : ''} awaiting your approval`
-                : 'All caught up! No pending actions'}
-            </p>
-          </div>
-          {stats.pendingApproval > 0 && (
-            <button 
-              className="action-btn"
-              onClick={() => setActiveSection('milestones')}
-            >
-              Review Now
-            </button>
-          )}
-        </div>
-
-        <div className="next-steps">
-          <h4>Next Steps</h4>
-          <div className="steps-list">
-            <div className="step-item">
-              <span className="step-number">1</span>
-              <span>Review submitted work in Milestones tab</span>
-            </div>
-            <div className="step-item">
-              <span className="step-number">2</span>
-              <span>Release payments for approved work</span>
-            </div>
-            <div className="step-item">
-              <span className="step-number">3</span>
-              <span>Schedule regular check-ins with your freelancer</span>
+      {/* Action Required Banner */}
+      {stats.pendingApproval > 0 && (
+        <div className="action-banner">
+          <div className="banner-content">
+            <FaExclamationTriangle />
+            <div>
+              <h4>Action Required</h4>
+              <p>You have {stats.pendingApproval} milestone{stats.pendingApproval > 1 ? 's' : ''} awaiting your approval</p>
             </div>
           </div>
+          <button 
+            className="banner-btn"
+            onClick={() => setActiveSection('milestones')}
+          >
+            Review Now
+          </button>
         </div>
-      </div>
+      )}
     </div>
   );
 };

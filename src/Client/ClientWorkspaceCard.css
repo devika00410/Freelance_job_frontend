@@ -1,174 +1,351 @@
-/* WorkspaceCard.css */
-.workspace-card {
+/* Client Workspace Card - Matching Freelancer Card Design */
+.client-workspace-card {
   background: white;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   padding: 20px;
-  margin-bottom: 16px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 0;
   transition: all 0.3s ease;
-  border: 1px solid #e9ecef;
-  cursor: pointer;
-}
-
-.workspace-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-  border-color: #007bff;
-}
-
-.workspace-card-header {
+  width: 100%;
+  box-sizing: border-box;
   display: flex;
-  align-items: flex-start;
-  margin-bottom: 16px;
+  flex-direction: column;
+  gap: 16px;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-.workspace-icon {
-  background: #f8f9fa;
-  width: 48px;
-  height: 48px;
-  border-radius: 10px;
+.client-workspace-card:hover {
+  border-color: #4299e1;
+  box-shadow: 0 8px 25px rgba(66, 153, 225, 0.15);
+  transform: translateY(-3px);
+}
+
+/* Header Section */
+.client-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.client-header-left {
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin-right: 12px;
-  color: #007bff;
-  font-size: 20px;
-}
-
-.workspace-title-section {
+  gap: 12px;
   flex: 1;
 }
 
-.workspace-title {
-  margin: 0 0 6px 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #212529;
-}
-
-.workspace-meta {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.workspace-status {
+.client-workspace-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #6c757d;
+  justify-content: center;
+  color: white;
+  font-size: 1.2rem;
+  flex-shrink: 0;
 }
 
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  display: inline-block;
+.client-title-section {
+  flex: 1;
+  min-width: 0;
 }
 
-.workspace-phase {
-  font-size: 12px;
-  color: #6c757d;
-  background: #f8f9fa;
-  padding: 2px 8px;
-  border-radius: 12px;
+.client-workspace-title {
+  margin: 0 0 4px 0;
+  color: #1a202c;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.workspace-actions {
-  color: #adb5bd;
-}
-
-.workspace-card-body {
-  margin-bottom: 16px;
-}
-
-.workspace-info {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.workspace-client, .workspace-budget {
+.client-workspace-meta {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
-.info-icon {
-  color: #6c757d;
-  font-size: 14px;
-}
-
-.info-label {
-  display: block;
-  font-size: 11px;
-  color: #adb5bd;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 2px;
-}
-
-.info-value {
-  display: block;
-  font-size: 14px;
+.client-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: #212529;
+  color: inherit;
+  white-space: nowrap;
 }
 
-.progress-section {
-  background: #f8f9fa;
+.client-workspace-id {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: #718096;
+  background: #f7fafc;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.client-chevron-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #f7fafc;
+  color: #4299e1;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.client-workspace-card:hover .client-chevron-icon {
+  background: #4299e1;
+  color: white;
+}
+
+/* Progress Section */
+.client-progress-section {
+  background: #f8fafc;
   padding: 12px;
   border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 
-.progress-header {
+.client-progress-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
 }
 
-.progress-label {
-  font-size: 12px;
-  color: #6c757d;
-}
-
-.progress-percentage {
-  font-size: 14px;
+.client-progress-label {
+  font-size: 0.85rem;
   font-weight: 600;
-  color: #007bff;
+  color: #2d3748;
 }
 
-.progress-bar {
-  height: 6px;
-  background: #e9ecef;
-  border-radius: 3px;
+.client-progress-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #2c5282;
+}
+
+.client-progress-bar {
+  height: 8px;
+  background: #edf2f7;
+  border-radius: 4px;
   overflow: hidden;
+  margin-bottom: 4px;
 }
 
-.progress-fill {
+.client-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #007bff, #0056b3);
-  border-radius: 3px;
+  background: linear-gradient(90deg, #4299e1 0%, #3182ce 100%);
+  border-radius: 4px;
   transition: width 0.5s ease;
 }
 
-.workspace-card-footer {
-  border-top: 1px solid #e9ecef;
-  padding-top: 12px;
+.client-timeline-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #718096;
 }
 
-.last-updated {
+/* Stats Section */
+.client-stats-section {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding: 12px;
+  background: #f7fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.client-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.client-stat-content {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
-  color: #adb5bd;
 }
 
-.clock-icon {
-  font-size: 10px;
+.client-stat-icon {
+  font-size: 14px;
+}
+
+.client-stat-icon.budget {
+  color: #4299e1;
+}
+
+.client-stat-icon.milestones {
+  color: #10b981;
+}
+
+.client-stat-icon.timeline {
+  color: #d69e2e;
+}
+
+.client-stat-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1a202c;
+}
+
+.client-stat-label {
+  font-size: 0.75rem;
+  color: #718096;
+  text-align: center;
+}
+
+/* Footer Section */
+.client-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #f0f4f8;
+}
+
+.client-freelancer-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.client-freelancer-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.client-freelancer-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.client-freelancer-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.client-freelancer-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: #d69e2e;
+}
+
+.client-open-workspace-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(90deg, #4299e1 0%, #3182ce 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.client-open-workspace-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
+  background: linear-gradient(90deg, #3182ce 0%, #2c5282 100%);
+}
+
+/* Progress Indicator */
+.client-progress-indicator {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px;
+  opacity: 0.9;
+}
+
+.client-progress-indicator[style*="#10b981"] {
+  box-shadow: 0 0 0 3px #d1fae5;
+}
+
+.client-progress-indicator[style*="#4299e1"] {
+  box-shadow: 0 0 0 3px #ebf8ff;
+}
+
+.client-progress-indicator[style*="#d69e2e"] {
+  box-shadow: 0 0 0 3px #fef3c7;
+}
+
+.client-progress-indicator[style*="#e53e3c"] {
+  box-shadow: 0 0 0 3px #fed7d7;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .client-workspace-card {
+    padding: 16px;
+  }
+  
+  .client-workspace-title {
+    font-size: 1rem;
+  }
+  
+  .client-workspace-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  
+  .client-stats-section {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 10px;
+  }
+  
+  .client-stat-value {
+    font-size: 0.85rem;
+  }
+  
+  .client-stat-label {
+    font-size: 0.7rem;
+  }
+  
+  .client-open-workspace-btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
 }

@@ -21,122 +21,258 @@ import {
   Download,
   Eye,
   User,
-  Target
+  Target,
+  Loader2,
+  AlertTriangle,
+  FileUp,
+  Plus,
+  Phone,
+  Share2,
+  Zap,
+  FileCheck,
+  CalendarCheck
 } from 'lucide-react';
 import './FreelancerWorkspaceOverview.css';
+import axios from 'axios';
 
-const FreelancerWorkspaceOverview = ({ workspaceData, loading, onRefresh }) => {
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+const FreelancerWorkspaceOverview = ({ workspaceData, loading, onRefresh, workspaceId }) => {
   const { workspace, userProfile, clientProfile, stats } = workspaceData || {};
   
-  // ============ STATE MANAGEMENT ============
   const [localStats, setLocalStats] = useState({
     progress: 0,
-    earnings: { total: 0, pending: 0, upcoming: 0 },
-    milestones: { total: 0, completed: 0, pending: 0 },
+    earnings: { total: 0, paid: 0, pending: 0, upcoming: 0 },
+    milestones: { total: 0, completed: 0, inProgress: 0, pending: 0 },
     messages: { total: 0, unread: 0 },
     files: { total: 0, recent: [] },
-    recentActivity: []
+    recentActivity: [],
+    timeTracking: { totalHours: 0, avgHours: 0 }
   });
 
-  // ============ DATA PROCESSING ============
+  const [refreshing, setRefreshing] = useState(false);
+  const [milestones, setMilestones] = useState([]);
+  const [showWorkspaceId, setShowWorkspaceId] = useState(false);
+
   useEffect(() => {
-    if (stats) {
-      setLocalStats({
-        ...localStats,
-        ...stats,
-        milestones: stats.milestones || { total: 0, completed: 0, pending: 0 },
-        earnings: stats.earnings || { total: 0, pending: 0, upcoming: 0 },
-        messages: stats.messages || { total: 0, unread: 0 },
-        files: stats.files || { total: 0, recent: [] }
-      });
-    } else if (workspace) {
-      calculateStatsFromWorkspace();
+    if (workspaceId) {
+      fetchRealTimeData();
     }
-  }, [workspace, stats]);
+  }, [workspaceId]);
 
-  const calculateStatsFromWorkspace = () => {
-    if (!workspace) return;
+  useEffect(() => {
+    if (stats && workspace) {
+      updateStatsFromProps();
+    }
+  }, [stats, workspace]);
 
-    const milestones = Array.isArray(workspace.sharedMilestones) ? workspace.sharedMilestones : [];
-    const messages = Array.isArray(workspace.sharedMessages) ? workspace.sharedMessages : [];
-    const files = Array.isArray(workspace.sharedFiles) ? workspace.sharedFiles : [];
+  const updateStatsFromProps = () => {
+    if (!stats || !workspace) return;
+
+    const allMilestones = workspace.sharedMilestones || [];
+    const completedMilestones = allMilestones.filter(m => 
+      ['completed', 'approved', 'paid'].includes(m?.status)
+    ).length;
     
-    const validMilestones = milestones.filter(m => m && m.status);
+    const inProgressMilestones = allMilestones.filter(m => 
+      ['in_progress', 'in-progress', 'started'].includes(m?.status)
+    ).length;
     
-    const completedMilestones = validMilestones.filter(m =>
-      ['completed', 'approved', 'paid'].includes(m.status)
+    const pendingMilestones = allMilestones.filter(m => 
+      ['pending', 'not_started'].includes(m?.status)
     ).length;
 
-    const pendingMilestones = validMilestones.filter(m =>
-      ['in_progress', 'pending', 'awaiting_approval'].includes(m.status)
-    ).length;
+    const totalEarnings = allMilestones
+      .filter(m => ['completed', 'approved', 'paid'].includes(m?.status))
+      .reduce((sum, m) => sum + (Number(m?.amount) || 0), 0);
 
-    const totalEarnings = validMilestones
-      .filter(m => ['completed', 'approved', 'paid'].includes(m.status))
-      .reduce((sum, m) => sum + (Number(m.amount) || 0), 0);
+    const pendingEarnings = allMilestones
+      .filter(m => ['awaiting_approval', 'submitted', 'review'].includes(m?.status))
+      .reduce((sum, m) => sum + (Number(m?.amount) || 0), 0);
 
-    const pendingEarnings = validMilestones
-      .filter(m => ['awaiting_approval', 'submitted'].includes(m.status))
-      .reduce((sum, m) => sum + (Number(m.amount) || 0), 0);
+    const upcomingEarnings = allMilestones
+      .filter(m => ['pending', 'in_progress'].includes(m?.status))
+      .reduce((sum, m) => sum + (Number(m?.amount) || 0), 0);
 
-    const upcomingEarnings = validMilestones
-      .filter(m => ['pending', 'in_progress'].includes(m.status))
-      .reduce((sum, m) => sum + (Number(m.amount) || 0), 0);
-
-    const progress = validMilestones.length > 0
-      ? Math.round((completedMilestones / validMilestones.length) * 100)
+    const progress = allMilestones.length > 0
+      ? Math.round((completedMilestones / allMilestones.length) * 100)
       : 0;
 
-    const unreadMessages = messages.filter(m => 
-      m && m.readBy && !m.readBy.includes('freelancer')
-    ).length;
-
-    setLocalStats({
-      progress,
+    setLocalStats(prev => ({
+      ...prev,
+      progress: stats.progress || progress,
       earnings: {
-        total: totalEarnings,
-        pending: pendingEarnings,
-        upcoming: upcomingEarnings
+        total: stats.earnings?.total || totalEarnings,
+        paid: stats.earnings?.total || totalEarnings,
+        pending: stats.earnings?.pending || pendingEarnings,
+        upcoming: stats.earnings?.upcoming || upcomingEarnings
       },
       milestones: {
-        total: validMilestones.length,
-        completed: completedMilestones,
-        pending: pendingMilestones
+        total: stats.milestones?.total || allMilestones.length,
+        completed: stats.milestones?.completed || completedMilestones,
+        inProgress: stats.milestones?.inProgress || inProgressMilestones,
+        pending: stats.milestones?.pending || pendingMilestones
       },
       messages: {
-        total: messages.length,
-        unread: unreadMessages
+        total: stats.messages?.total || workspace.sharedMessages?.length || 0,
+        unread: stats.messages?.unread || 0
       },
       files: {
-        total: files.length,
-        recent: files.filter(f => f).slice(0, 3)
-      },
-      recentActivity: generateRecentActivity(workspace)
-    });
+        total: stats.files?.total || workspace.sharedFiles?.length || 0,
+        recent: stats.files?.recent || (workspace.sharedFiles || []).slice(0, 3)
+      }
+    }));
+
+    setMilestones(allMilestones);
   };
 
-  const generateRecentActivity = (workspace) => {
-    const activities = [];
+  const fetchRealTimeData = async () => {
+    try {
+      setRefreshing(true);
+      const token = localStorage.getItem('token');
+      
+      const response = await axios.get(
+        `${API_URL}/api/freelancer/workspaces/${workspaceId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
-    (workspace.sharedMilestones || []).forEach(milestone => {
-      if (milestone && milestone.status && (milestone.status === 'completed' || milestone.status === 'approved')) {
-        activities.push({
-          type: 'milestone',
-          description: `Milestone "${milestone.title || 'Untitled'}" was ${milestone.status}`,
-          timestamp: milestone.approvedDate || milestone.submissionDate || new Date(),
-          icon: <CheckCircle size={14} />
+      if (response.data.workspace || response.data) {
+        const workspaceData = response.data.workspace || response.data;
+        
+        const allMilestones = workspaceData.sharedMilestones || [];
+        const messages = workspaceData.sharedMessages || [];
+        const files = workspaceData.sharedFiles || [];
+        
+        const completedMilestones = allMilestones.filter(m => 
+          ['completed', 'approved', 'paid'].includes(m?.status)
+        ).length;
+        
+        const totalEarnings = allMilestones
+          .filter(m => ['completed', 'approved', 'paid'].includes(m?.status))
+          .reduce((sum, m) => sum + (Number(m?.amount) || 0), 0);
+
+        const pendingEarnings = allMilestones
+          .filter(m => ['awaiting_approval', 'submitted', 'review'].includes(m?.status))
+          .reduce((sum, m) => sum + (Number(m?.amount) || 0), 0);
+
+        const upcomingEarnings = allMilestones
+          .filter(m => ['pending', 'in_progress'].includes(m?.status))
+          .reduce((sum, m) => sum + (Number(m?.amount) || 0), 0);
+
+        const progress = allMilestones.length > 0
+          ? Math.round((completedMilestones / allMilestones.length) * 100)
+          : 0;
+
+        const unreadMessages = messages.filter(msg => 
+          msg && msg.senderRole === 'client' && 
+          (!msg.readBy || !msg.readBy.includes('freelancer'))
+        ).length;
+
+        const recentActivity = generateRecentActivity(workspaceData);
+
+        setLocalStats({
+          progress,
+          earnings: {
+            total: totalEarnings,
+            paid: totalEarnings,
+            pending: pendingEarnings,
+            upcoming: upcomingEarnings
+          },
+          milestones: {
+            total: allMilestones.length,
+            completed: completedMilestones,
+            inProgress: allMilestones.filter(m => 
+              ['in_progress', 'in-progress', 'started'].includes(m?.status)
+            ).length,
+            pending: allMilestones.filter(m => 
+              ['pending', 'not_started'].includes(m?.status)
+            ).length
+          },
+          messages: {
+            total: messages.length,
+            unread: unreadMessages
+          },
+          files: {
+            total: files.length,
+            recent: files.slice(0, 3)
+          },
+          recentActivity,
+          timeTracking: {
+            totalHours: calculateTotalHours(workspaceData),
+            avgHours: calculateAvgHours(workspaceData)
+          }
         });
+
+        setMilestones(allMilestones);
+      }
+    } catch (error) {
+      console.error('Error fetching real-time data:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const calculateTotalHours = (workspaceData) => {
+    const allMilestones = workspaceData.sharedMilestones || [];
+    return allMilestones.length * 8;
+  };
+
+  const calculateAvgHours = (workspaceData) => {
+    const totalHours = calculateTotalHours(workspaceData);
+    const startDate = new Date(workspaceData.startDate || new Date());
+    const today = new Date();
+    const daysDiff = Math.max(1, Math.ceil((today - startDate) / (1000 * 60 * 60 * 24)));
+    return Math.round(totalHours / daysDiff) || 0;
+  };
+
+  const generateRecentActivity = (workspaceData) => {
+    const activities = [];
+    const now = new Date();
+
+    (workspaceData.sharedMilestones || []).forEach(milestone => {
+      if (milestone && milestone.status === 'completed' && milestone.completedDate) {
+        const completedDate = new Date(milestone.completedDate);
+        if ((now - completedDate) <= (7 * 24 * 60 * 60 * 1000)) {
+          activities.push({
+            type: 'milestone',
+            description: `Milestone "${milestone.title || 'Untitled'}" was completed`,
+            timestamp: milestone.completedDate,
+            icon: <CheckCircle size={14} />
+          });
+        }
       }
     });
 
-    (workspace.sharedFiles || []).slice(0, 2).forEach(file => {
-      if (file && (file.originalName || file.name)) {
-        activities.push({
-          type: 'file',
-          description: `Uploaded "${file.originalName || file.name || 'File'}"`,
-          timestamp: file.uploadDate || file.createdAt || new Date(),
-          icon: <FileText size={14} />
-        });
+    (workspaceData.sharedFiles || []).forEach(file => {
+      if (file && file.uploadDate) {
+        const uploadDate = new Date(file.uploadDate);
+        if ((now - uploadDate) <= (7 * 24 * 60 * 60 * 1000)) {
+          activities.push({
+            type: 'file',
+            description: `${file.uploadedBy?.name || 'Someone'} uploaded "${file.originalName || file.name || 'File'}"`,
+            timestamp: file.uploadDate,
+            icon: <FileText size={14} />
+          });
+        }
+      }
+    });
+
+    (workspaceData.sharedMessages || []).forEach(message => {
+      if (message && message.timestamp) {
+        const messageDate = new Date(message.timestamp);
+        if ((now - messageDate) <= (24 * 60 * 60 * 1000)) {
+          activities.push({
+            type: 'message',
+            description: `${message.senderName || 'Someone'} sent a message`,
+            timestamp: message.timestamp,
+            icon: <MessageSquare size={14} />
+          });
+        }
       }
     });
 
@@ -148,64 +284,62 @@ const FreelancerWorkspaceOverview = ({ workspaceData, loading, onRefresh }) => {
 
   const getQuickActions = () => {
     const actions = [];
-    const workspaceId = workspace?._id || workspace?.workspaceId;
-
     if (!workspaceId) return actions;
 
-    const pendingMilestone = (workspace.sharedMilestones || []).find(m => 
-      m && (['in_progress', 'pending'].includes(m.status))
+    const pendingMilestone = milestones.find(m => 
+      m && (m.status === 'in_progress' || m.status === 'pending')
     );
-
-    if (pendingMilestone) {
-      actions.push({
-        id: 'submit-work',
-        label: 'Submit Work',
-        icon: <Upload size={16} />,
-        path: `/freelancer/workspace/${workspaceId}/submissions`,
-        color: 'primary',
-        description: pendingMilestone.title || 'Submit your work'
-      });
-    }
 
     actions.push(
       {
         id: 'upload-file',
         label: 'Upload File',
-        icon: <FileText size={16} />,
-        path: `/freelancer/workspace/${workspaceId}#files`,
-        color: 'success',
-        description: 'Share documents'
+        icon: <Upload size={18} />,
+        path: `/freelancer/workspace/${workspaceId}?tab=files`,
+        color: 'blue',
+        description: 'Share documents with client'
       },
       {
         id: 'message-client',
         label: 'Message Client',
-        icon: <MessageSquare size={16} />,
-        path: `/freelancer/workspace/${workspaceId}#messages`,
-        color: 'info',
-        description: 'Quick chat'
-      },
-      {
-        id: 'track-progress',
-        label: 'Track Progress',
-        icon: <BarChart3 size={16} />,
-        path: `/freelancer/workspace/${workspaceId}#progress`,
-        color: 'warning',
-        description: 'Update status'
+        icon: <MessageSquare size={18} />,
+        path: `/freelancer/workspace/${workspaceId}?tab=messages`,
+        color: 'green',
+        description: 'Send quick message'
       },
       {
         id: 'schedule-call',
         label: 'Schedule Call',
-        icon: <Video size={16} />,
-        path: `/freelancer/workspace/${workspaceId}#calls`,
-        color: 'secondary',
-        description: 'Video meeting'
+        icon: <Video size={18} />,
+        path: `/freelancer/workspace/${workspaceId}?tab=calls`,
+        color: 'purple',
+        description: 'Plan video meeting'
       }
     );
+
+    if (pendingMilestone) {
+      actions.unshift({
+        id: 'submit-work',
+        label: 'Submit Work',
+        icon: <FileCheck size={18} />,
+        path: `/freelancer/workspace/${workspaceId}?tab=milestones`,
+        color: 'orange',
+        description: pendingMilestone.title || 'Submit milestone work'
+      });
+    }
+
+    actions.push({
+      id: 'create-milestone',
+      label: 'Add Milestone',
+      icon: <Plus size={18} />,
+      path: `/freelancer/workspace/${workspaceId}?tab=milestones`,
+      color: 'indigo',
+      description: 'Add new milestone'
+    });
 
     return actions;
   };
 
-  // ============ HELPER FUNCTIONS ============
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -241,11 +375,22 @@ const FreelancerWorkspaceOverview = ({ workspaceData, loading, onRefresh }) => {
     return (bytesNum / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
-  // ============ LOADING AND ERROR STATES ============
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await fetchRealTimeData();
+      if (onRefresh) {
+        await onRefresh();
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   if (loading && !workspace) {
     return (
       <div className="overview-loading">
-        <RefreshCw size={24} className="spinning" />
+        <Loader2 size={32} className="spinning" />
         <p>Loading workspace overview...</p>
       </div>
     );
@@ -254,477 +399,598 @@ const FreelancerWorkspaceOverview = ({ workspaceData, loading, onRefresh }) => {
   if (!workspace) {
     return (
       <div className="overview-error">
-        <AlertCircle size={48} />
+        <AlertTriangle size={48} />
         <h3>Unable to load workspace data</h3>
         <p>Please try refreshing the page</p>
         <button
-          onClick={onRefresh}
+          onClick={handleRefresh}
           className="btn-primary"
+          disabled={refreshing}
         >
-          <RefreshCw size={16} />
-          Retry
+          <RefreshCw size={16} className={refreshing ? 'spinning' : ''} />
+          {refreshing ? 'Refreshing...' : 'Retry'}
         </button>
       </div>
     );
   }
 
-  const workspaceId = workspace._id || workspace.workspaceId;
   const quickActions = getQuickActions();
 
-  // ============ MAIN RENDER ============
   return (
-    <div className="workspace-overview">
-      {/* Header Section */}
-      <div className="overview-header">
-        <div className="welcome-section">
-          <div className="user-greeting">
-            <div className="avatar-large">
-              {userProfile?.name?.charAt(0) || workspace.freelancerName?.charAt(0) || 'F'}
-            </div>
-            <div>
-              <h1>Welcome back, {userProfile?.name || workspace.freelancerName || 'Freelancer'}</h1>
-              <p className="project-title">
-                <Target size={16} />
-                {workspace.title || 'Untitled Project'}
-              </p>
-            </div>
-          </div>
-          <div className="project-meta">
-            <span className="client-info">
-              <User size={14} />
-              Client: {clientProfile?.name || workspace.clientName || 'Client'}
-            </span>
-            <span className={`status-badge status-${workspace.status || 'active'}`}>
-              {workspace.status?.toUpperCase() || 'ACTIVE'}
-            </span>
-          </div>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="header-stats">
-          <div className="stat-item">
-            <div className="stat-icon">
-              <TrendingUp size={20} />
-            </div>
-            <div className="stat-content">
-              <span className="stat-value">{localStats.progress}%</span>
-              <span className="stat-label">Overall Progress</span>
-            </div>
-          </div>
-          <div className="stat-item">
-            <div className="stat-icon">
-              <DollarSign size={20} />
-            </div>
-            <div className="stat-content">
-              <span className="stat-value">{formatCurrency(localStats.earnings.total)}</span>
-              <span className="stat-label">Total Earned</span>
-            </div>
-          </div>
-          <div className="stat-item">
-            <div className="stat-icon">
-              <CheckCircle size={20} />
-            </div>
-            <div className="stat-content">
-              <span className="stat-value">
-                {localStats.milestones.completed}/{localStats.milestones.total}
-              </span>
-              <span className="stat-label">Milestones Done</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Dashboard Grid */}
-      <div className="dashboard-grid">
-        {/* Left Column - Main Content */}
-        <div className="dashboard-left">
-          {/* Progress Card */}
-          <div className="card progress-card">
-            <div className="card-header">
-              <h3>
-                <BarChart3 size={18} />
-                Project Progress
-              </h3>
-              <span className="current-phase">Phase {(workspace.currentPhase || 1)}</span>
-            </div>
-            <div className="progress-section">
-              <div className="progress-bar-large">
-                <div
-                  className="progress-fill"
-                  style={{ width: `${localStats.progress}%` }}
-                >
-                  <span className="progress-text">{localStats.progress}% Complete</span>
-                </div>
+    <div className="overview-wrapper"> {/* ADDED WRAPPER DIV */}
+      <div className="workspace-overview">
+        {/* Header - Compact */}
+        <div className="overview-header">
+          <div className="header-content">
+            <div className="header-left">
+              <div className="user-avatar-compact">
+                {userProfile?.name?.charAt(0) || 
+                 workspace?.freelancerName?.charAt(0) || 
+                 workspaceData?.freelancer?.name?.charAt(0) || 'F'}
               </div>
-              <div className="timeline-info">
-                <div className="timeline-item">
-                  <Calendar size={16} />
-                  <div>
-                    <span className="label">Start Date</span>
-                    <span className="value">
-                      {workspace.startDate ? new Date(workspace.startDate).toLocaleDateString() : 'Not set'}
+              <div className="welcome-content">
+                <h1>
+                  Welcome back, <span>
+                    {userProfile?.name || 
+                     workspace?.freelancerName || 
+                     workspaceData?.freelancer?.name || 'Freelancer'}
+                  </span>
+                </h1>
+                <div className="project-info-mini">
+                  <div className="client-tag">
+                    <User size={12} />
+                    <span>
+                      Client: {clientProfile?.name || 
+                              workspace?.clientName || 
+                              workspaceData?.client?.name || 
+                              workspace?.client?.name || 'Client'}
                     </span>
                   </div>
-                </div>
-                <div className="timeline-item">
-                  <Calendar size={16} />
-                  <div>
-                    <span className="label">Estimated Completion</span>
-                    <span className="value">
-                      {workspace.estimatedEndDate
-                        ? new Date(workspace.estimatedEndDate).toLocaleDateString()
-                        : 'Not set'
-                      }
-                    </span>
-                  </div>
+                  <span className={`status-badge ${workspace?.status || workspaceData?.status || 'active'}`}>
+                    {(workspace?.status || workspaceData?.status || 'active').toUpperCase()}
+                  </span>
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Earnings Card */}
-          <div className="card earnings-card">
-            <div className="card-header">
-              <h3>
-                <DollarSign size={18} />
-                Earnings Summary
-              </h3>
-              <Link
-                to={`/freelancer/workspace/${workspaceId}#earnings`}
-                className="view-all"
+            <div className="header-right">
+              <button 
+                className="id-toggle"
+                onClick={() => setShowWorkspaceId(!showWorkspaceId)}
+                title="Click to show/hide workspace ID"
               >
-                View Details
-                <ArrowRight size={14} />
-              </Link>
-            </div>
-            <div className="earnings-summary">
-              <div className="earnings-item total">
-                <div className="earnings-icon">
-                  <DollarSign size={20} />
-                </div>
-                <div className="earnings-content">
-                  <span className="label">Total Earned</span>
-                  <span className="amount">{formatCurrency(localStats.earnings.total)}</span>
-                </div>
-              </div>
-              <div className="earnings-item pending">
-                <div className="earnings-icon">
-                  <Clock size={20} />
-                </div>
-                <div className="earnings-content">
-                  <span className="label">Pending Approval</span>
-                  <span className="amount">{formatCurrency(localStats.earnings.pending)}</span>
-                </div>
-              </div>
-              <div className="earnings-item upcoming">
-                <div className="earnings-icon">
-                  <TrendingUp size={20} />
-                </div>
-                <div className="earnings-content">
-                  <span className="label">Upcoming</span>
-                  <span className="amount">{formatCurrency(localStats.earnings.upcoming)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Actions Card */}
-          <div className="card actions-card">
-            <div className="card-header">
-              <h3>
-                <Activity size={18} />
-                Quick Actions
-              </h3>
-            </div>
-            <div className="actions-grid">
-              {quickActions.map(action => (
-                <Link
-                  key={action.id}
-                  to={action.path}
-                  className={`action-button ${action.color}`}
-                >
-                  <div className="action-icon">
-                    {action.icon}
-                  </div>
-                  <div className="action-content">
-                    <span className="action-label">{action.label}</span>
-                    <span className="action-description">{action.description}</span>
-                  </div>
-                  <ArrowRight size={16} className="action-arrow" />
-                </Link>
-              ))}
+                <Share2 size={12} />
+                <span>
+                  ID: {showWorkspaceId ? 
+                      (workspace?.workspaceId || workspaceId || workspaceData?.id || 'N/A') : 
+                      '••••••••'}
+                </span>
+              </button>
+              <button 
+                className="header-action-btn"
+                onClick={() => window.location.href = `/freelancer/workspace/${workspaceId}?tab=messages`}
+              >
+                <MessageSquare size={14} />
+                Message
+              </button>
+              <button 
+                className="header-action-btn primary"
+                onClick={() => window.location.href = `/freelancer/workspace/${workspaceId}?tab=calls`}
+              >
+                <Phone size={14} />
+                Schedule Call
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Right Column - Sidebar Content */}
-        <div className="dashboard-right">
-          {/* Recent Activity Card */}
-          <div className="card activity-card">
-            <div className="card-header">
-              <h3>
-                <Bell size={18} />
-                Recent Activity
-              </h3>
-              <Link
-                to={`/freelancer/workspace/${workspaceId}#activity`}
-                className="view-all"
-              >
-                View All
-                <ArrowRight size={14} />
-              </Link>
-            </div>
-            <div className="activity-list">
-              {localStats.recentActivity.length === 0 ? (
-                <div className="empty-activity">
-                  <AlertCircle size={24} />
-                  <p>No recent activity</p>
-                </div>
-              ) : (
-                localStats.recentActivity.map((activity, index) => (
-                  <div key={index} className="activity-item">
-                    <div className="activity-icon">
-                      {activity.icon}
-                    </div>
-                    <div className="activity-content">
-                      <p className="activity-text">{activity.description}</p>
-                      <span className="activity-time">
-                        {formatDate(activity.timestamp)}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Recent Files Card */}
-          <div className="card files-card">
-            <div className="card-header">
-              <h3>
-                <FolderOpen size={18} />
-                Recent Files
-              </h3>
-              <Link
-                to={`/freelancer/workspace/${workspaceId}#files`}
-                className="view-all"
-              >
-                View All
-                <ArrowRight size={14} />
-              </Link>
-            </div>
-            <div className="files-list">
-              {localStats.files.recent.length === 0 ? (
-                <div className="empty-files">
-                  <FileText size={24} />
-                  <p>No files uploaded yet</p>
-                </div>
-              ) : (
-                localStats.files.recent.map((file, index) => {
-                  if (!file) return null;
-                  
-                  const fileName = file.originalName || file.name || 'Unnamed File';
-                  const displayName = fileName.length > 25
-                    ? fileName.substring(0, 25) + '...'
-                    : fileName;
-                    
-                  return (
-                    <div key={index} className="file-item">
-                      <div className="file-icon">
-                        <FileText size={16} />
-                      </div>
-                      <div className="file-info">
-                        <span className="file-name" title={fileName}>
-                          {displayName}
-                        </span>
-                        <span className="file-meta">
-                          {formatFileSize(file.fileSize)} • {formatDate(file.uploadDate)}
-                        </span>
-                      </div>
-                      <div className="file-actions">
-                        <button
-                          className="file-action-btn"
-                          onClick={() => {
-                            const fileUrl = file.fileUrl || file.url;
-                            if (fileUrl) {
-                              window.open(fileUrl, '_blank');
-                            } else {
-                              alert('File URL not available');
-                            }
-                          }}
-                          title="View file"
-                        >
-                          <Eye size={14} />
-                        </button>
-                        <button
-                          className="file-action-btn"
-                          onClick={() => {
-                            const fileUrl = file.fileUrl || file.url;
-                            if (fileUrl) {
-                              const a = document.createElement('a');
-                              a.href = fileUrl;
-                              a.download = fileName;
-                              a.click();
-                            } else {
-                              alert('File download not available');
-                            }
-                          }}
-                          title="Download file"
-                        >
-                          <Download size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-
-          {/* Milestone Status Card */}
-          <div className="card milestones-card">
-            <div className="card-header">
-              <h3>
-                <CheckCircle size={18} />
-                Milestone Status
-              </h3>
-              <Link
-                to={`/freelancer/workspace/${workspaceId}#milestones`}
-                className="view-all"
-              >
-                View All
-                <ArrowRight size={14} />
-              </Link>
-            </div>
-            <div className="milestones-summary">
-              <div className="milestone-stats">
-                <div className="stat completed">
-                  <span className="count">{localStats.milestones.completed}</span>
-                  <span className="label">Completed</span>
-                </div>
-                <div className="stat in-progress">
-                  <span className="count">{localStats.milestones.pending}</span>
-                  <span className="label">In Progress</span>
-                </div>
-                <div className="stat total">
-                  <span className="count">{localStats.milestones.total}</span>
-                  <span className="label">Total</span>
-                </div>
+        {/* Quick Stats Grid */}
+        <div className="quick-stats-section">
+          <div className="quick-stats-grid">
+            <div className="quick-stat-card">
+              <div className="stat-icon-circle progress">
+                <TrendingUp size={20} />
               </div>
+              <div className="stat-content-compact">
+                <span className="stat-figure">{localStats.progress}%</span>
+                <span className="stat-label">Project Progress</span>
+                <span className="stat-subtext">
+                  {localStats.milestones.completed} of {localStats.milestones.total} milestones
+                </span>
+              </div>
+            </div>
+            
+            <div className="quick-stat-card">
+              <div className="stat-icon-circle earnings">
+                <DollarSign size={20} />
+              </div>
+              <div className="stat-content-compact">
+                <span className="stat-figure">{formatCurrency(localStats.earnings.total)}</span>
+                <span className="stat-label">Total Earned</span>
+                <span className="stat-subtext">
+                  {formatCurrency(localStats.earnings.pending)} pending
+                </span>
+              </div>
+            </div>
+            
+            <div className="quick-stat-card">
+              <div className="stat-icon-circle milestones">
+                <CheckCircle size={20} />
+              </div>
+              <div className="stat-content-compact">
+                <span className="stat-figure">{localStats.milestones.completed}</span>
+                <span className="stat-label">Completed</span>
+                <span className="stat-subtext">
+                  {localStats.milestones.inProgress} in progress
+                </span>
+              </div>
+            </div>
+            
+            <div className="quick-stat-card">
+              <div className="stat-icon-circle messages">
+                <MessageSquare size={20} />
+              </div>
+              <div className="stat-content-compact">
+                <span className="stat-figure">{localStats.messages.total}</span>
+                <span className="stat-label">Messages</span>
+                <span className="stat-subtext">
+                  {localStats.messages.unread} unread
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-              {(workspace.sharedMilestones || []).slice(0, 2).map((milestone, index) => {
-                if (!milestone) return null;
-                
+        {/* Main Dashboard Layout */}
+        <div className="dashboard-layout">
+          {/* Left Column */}
+          <div className="left-column">
+{/* Project Progress – Single Structured Card */}
+<div className="card project-progress-card">
+
+  {/* HEADER */}
+  <div className="card-header">
+    <h3>
+      <BarChart3 size={18} />
+      Project Progress – {workspace?.title || workspaceData?.title || 'Untitled Project'}
+    </h3>
+
+    <div className="card-header-actions">
+      <span className="current-phase">
+        Phase {workspace?.currentPhase || workspaceData?.currentPhase || 1}
+      </span>
+      <span className="progress-percent">
+        {localStats.progress}% complete
+      </span>
+    </div>
+  </div>
+
+  {/* BODY */}
+  <div className="card-body project-progress-body">
+
+    {/* PROGRESS SECTION */}
+    <section className="progress-main">
+      <div className="progress-bar-container">
+        <div className="progress-bar">
+          <div
+            className="progress-fill"
+            style={{ width: `${localStats.progress}%` }}
+          >
+            <div className="progress-markers">
+              {milestones.map((milestone, index) => {
+                const milestoneProgress =
+                  (index + 1) * (100 / Math.max(milestones.length, 1));
+
                 return (
-                  <div key={milestone._id || `milestone-${index}`} className="milestone-preview">
-                    <div className="milestone-header">
-                      <h4>{milestone.title || `Milestone ${milestone.phaseNumber || index + 1}`}</h4>
-                      <span className={`status-tag ${milestone.status || 'pending'}`}>
-                        {(milestone.status || 'pending').replace('_', ' ')}
-                      </span>
-                    </div>
-                    <div className="milestone-details">
-                      <span className="amount">{formatCurrency(milestone.amount || 0)}</span>
-                      <span className="due-date">
-                        Due: {milestone.dueDate ? new Date(milestone.dueDate).toLocaleDateString() : 'Not set'}
-                      </span>
-                    </div>
-                    {(milestone.status === 'in_progress' || milestone.status === 'pending') && (
-                      <Link
-                        to={`/freelancer/workspace/${workspaceId}/submissions`}
-                        className="submit-btn"
-                      >
-                        <Upload size={14} /> Submit Work
-                      </Link>
-                    )}
+                  <div
+                    key={milestone?._id || index}
+                    className="progress-marker"
+                    style={{ left: `${Math.min(milestoneProgress, 100)}%` }}
+                    title={`Phase ${milestone?.phaseNumber || index + 1}`}
+                  >
+                    <div className={`marker-dot ${milestone?.status || 'pending'}`} />
                   </div>
                 );
               })}
-
-              {(!workspace.sharedMilestones || workspace.sharedMilestones.length === 0) && (
-                <div className="empty-milestones">
-                  <CheckCircle size={24} />
-                  <p>No milestones yet</p>
-                </div>
-              )}
             </div>
           </div>
+        </div>
+
+        <div className="progress-stats">
+          <span className="progress-percentage">
+            {localStats.progress}%
+          </span>
+          <span className="progress-text">
+            {localStats.milestones.completed} of {localStats.milestones.total} milestones completed
+          </span>
         </div>
       </div>
+    </section>
 
-      {/* Communication Card */}
-      <div className="communication-card card">
-        <div className="card-header">
-          <h3>
-            <MessageSquare size={18} />
-            Client Communication
-          </h3>
-        </div>
-        <div className="communication-stats">
-          <div className="comm-stat">
-            <div className="stat-icon">
-              <MessageSquare size={20} />
-            </div>
-            <div className="stat-content">
-              <span className="stat-value">{localStats.messages.total}</span>
-              <span className="stat-label">Total Messages</span>
-            </div>
-          </div>
-          <div className="comm-stat">
-            <div className="stat-icon unread">
-              <Bell size={20} />
-            </div>
-            <div className="stat-content">
-              <span className="stat-value">{localStats.messages.unread}</span>
-              <span className="stat-label">Unread Messages</span>
-            </div>
-          </div>
-          <div className="comm-stat">
-            <div className="stat-icon">
-              <Video size={20} />
-            </div>
-            <div className="stat-content">
-              <span className="stat-value">
-                {workspace.upcomingCalls?.length || 0}
-              </span>
-              <span className="stat-label">Upcoming Calls</span>
-            </div>
-          </div>
-        </div>
-        <div className="communication-actions">
-          <Link
-            to={`/freelancer/workspace/${workspaceId}#messages`}
-            className="btn-primary"
-          >
-            <MessageSquare size={16} />
-            Go to Messages
-          </Link>
-          <Link
-            to={`/freelancer/workspace/${workspaceId}#calendar`}
-            className="btn-outline"
-          >
-            <Video size={16} />
-            Schedule Call
-          </Link>
-        </div>
-      </div>
-
-      {/* Refresh Section */}
-      <div className="refresh-section">
-        <button
-          onClick={onRefresh}
-          disabled={loading}
-          className="refresh-btn"
-        >
-          <RefreshCw size={16} className={loading ? 'spinning' : ''} />
-          {loading ? 'Refreshing...' : 'Refresh Data'}
-        </button>
-        <span className="last-updated">
-          Last updated: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+    {/* TIMELINE STRIP */}
+    <section className="timeline-strip">
+      <div className="timeline-item">
+        <span className="timeline-label">Start</span>
+        <span className="timeline-value">
+          {workspace?.startDate
+            ? new Date(workspace.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+            : 'Not set'}
         </span>
+      </div>
+
+      <div className="timeline-item">
+        <span className="timeline-label">Due</span>
+        <span className="timeline-value">
+          {workspace?.estimatedEndDate
+            ? new Date(workspace.estimatedEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+            : 'Not set'}
+        </span>
+      </div>
+
+      <div className="timeline-item">
+        <span className="timeline-label">Budget</span>
+        <span className="timeline-value">
+          {formatCurrency(workspace?.totalBudget || 0)}
+        </span>
+      </div>
+
+      <div className="timeline-item">
+        <span className="timeline-label">Elapsed</span>
+        <span className="timeline-value">
+          {workspace?.startDate
+            ? calculateTimeElapsed(workspace.startDate, workspace?.estimatedEndDate)
+            : '—'}
+        </span>
+      </div>
+    </section>
+
+    {/* MILESTONE STATUS */}
+    <section className="milestone-status">
+      <h4>Milestone Status</h4>
+
+      <div className="status-bars">
+        {[
+          { label: 'Completed', value: localStats.milestones.completed, type: 'completed' },
+          { label: 'In Progress', value: localStats.milestones.inProgress, type: 'in-progress' },
+          { label: 'Pending', value: localStats.milestones.pending, type: 'pending' }
+        ].map((item) => (
+          <div key={item.label} className={`status-bar ${item.type}`}>
+            <div className="status-label">
+              <span>{item.label}</span>
+              <span>{item.value}</span>
+            </div>
+            <div className="status-fill">
+              <div
+                className="status-fill-inner"
+                style={{
+                  width: `${(item.value / Math.max(localStats.milestones.total, 1)) * 100}%`
+                }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+  </div>
+</div>
+
+
+            {/* Upcoming Milestones Card */}
+            <div className="card">
+              <div className="card-header">
+                <h3>
+                  <CheckCircle size={18} />
+                  Upcoming Milestones
+                </h3>
+                <Link
+                  to={`/freelancer/workspace/${workspaceId}?tab=milestones`}
+                  className="view-all-link"
+                >
+                  View All
+                  <ArrowRight size={14} />
+                </Link>
+              </div>
+              <div className="card-body">
+                <div className="upcoming-milestones">
+                  {milestones
+                    .filter(m => m && (m.status === 'pending' || m.status === 'in_progress' || m.status === 'in-progress'))
+                    .slice(0, 3)
+                    .map((milestone, index) => (
+                      <div key={milestone._id || index} className="upcoming-milestone">
+                        <div className="milestone-header">
+                          <h4>{milestone.title || `Milestone ${milestone.phaseNumber || index + 1}`}</h4>
+                          <span className="milestone-amount">{formatCurrency(milestone.amount || 0)}</span>
+                        </div>
+                        <div className="milestone-details">
+                          <span className="due-date">
+                            <Calendar size={12} />
+                            {milestone.dueDate ? new Date(milestone.dueDate).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric'
+                            }) : 'No due date'}
+                          </span>
+                          <span className={`status-tag ${(milestone.status || 'pending').replace('_', '-')}`}>
+                            {(milestone.status || 'pending').replace('_', ' ')}
+                          </span>
+                        </div>
+                        {(milestone.status === 'pending' || milestone.status === 'in_progress' || milestone.status === 'in-progress') && (
+                          <Link
+                            to={`/freelancer/workspace/${workspaceId}?tab=milestones`}
+                            className="submit-work-btn"
+                          >
+                            <FileUp size={14} />
+                            Work on this
+                          </Link>
+                        )}
+                      </div>
+                    ))}
+                  
+                  {milestones.filter(m => m && (m.status === 'pending' || m.status === 'in_progress' || m.status === 'in-progress')).length === 0 && (
+                    <div className="empty-state">
+                      <CheckCircle size={24} className="empty-state-icon" />
+                      <p className="empty-state-text">No upcoming milestones</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Earnings Summary Card */}
+            <div className="card">
+              <div className="card-header">
+                <h3>
+                  <DollarSign size={18} />
+                  Earnings Summary
+                </h3>
+                <Link
+                  to={`/freelancer/workspace/${workspaceId}?tab=earnings`}
+                  className="view-all-link"
+                >
+                  View Details
+                  <ArrowRight size={14} />
+                </Link>
+              </div>
+              <div className="card-body">
+                <div className="earnings-summary">
+                  <div className="earning-item">
+                    <span className="earning-amount">{formatCurrency(localStats.earnings.total)}</span>
+                    <span className="earning-label">Total Earned</span>
+                  </div>
+                  <div className="earning-item">
+                    <span className="earning-amount">{formatCurrency(localStats.earnings.pending)}</span>
+                    <span className="earning-label">Pending</span>
+                  </div>
+                  <div className="earning-item">
+                    <span className="earning-amount">{formatCurrency(localStats.earnings.upcoming)}</span>
+                    <span className="earning-label">Upcoming</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+
+          {/* Right Column */}
+          <div className="right-column">
+            {/* Recent Activity Card */}
+            <div className="card">
+              <div className="card-header">
+                <h3>
+                  <Activity size={18} />
+                  Recent Activity
+                </h3>
+                <Link
+                  to={`/freelancer/workspace/${workspaceId}?tab=activity`}
+                  className="view-all-link"
+                >
+                  View All
+                  <ArrowRight size={14} />
+                </Link>
+              </div>
+              <div className="card-body">
+                <div className="activity-list">
+                  {localStats.recentActivity.length === 0 ? (
+                    <div className="empty-state">
+                      <Activity size={24} className="empty-state-icon" />
+                      <p className="empty-state-text">No recent activity</p>
+                    </div>
+                  ) : (
+                    localStats.recentActivity.map((activity, index) => (
+                      <div key={index} className="activity-item">
+                        <div className="activity-icon">
+                          {activity.icon}
+                        </div>
+                        <div className="activity-content">
+                          <p className="activity-text">{activity.description}</p>
+                          <span className="activity-time">
+                            {formatDate(activity.timestamp)}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Files Card */}
+            <div className="card">
+              <div className="card-header">
+                <h3>
+                  <FolderOpen size={18} />
+                  Recent Files
+                </h3>
+                <Link
+                  to={`/freelancer/workspace/${workspaceId}?tab=files`}
+                  className="view-all-link"
+                >
+                  View All
+                  <ArrowRight size={14} />
+                </Link>
+              </div>
+              <div className="card-body">
+                <div className="files-list">
+                  {localStats.files.recent.length === 0 ? (
+                    <div className="empty-state">
+                      <FileText size={24} className="empty-state-icon" />
+                      <p className="empty-state-text">No files uploaded yet</p>
+                    </div>
+                  ) : (
+                    localStats.files.recent.map((file, index) => {
+                      if (!file) return null;
+                      
+                      const fileName = file.originalName || file.name || 'Unnamed File';
+                      const displayName = fileName.length > 25
+                        ? fileName.substring(0, 25) + '...'
+                        : fileName;
+                        
+                      return (
+                        <div key={index} className="file-item">
+                          <div className="file-icon">
+                            <FileText size={16} />
+                          </div>
+                          <div className="file-info">
+                            <span className="file-name" title={fileName}>
+                              {displayName}
+                            </span>
+                            <span className="file-meta">
+                              {formatFileSize(file.fileSize)} • {formatDate(file.uploadDate)}
+                            </span>
+                          </div>
+                          <div className="file-actions">
+                            <button
+                              className="file-action-btn"
+                              onClick={() => {
+                                const fileUrl = file.fileUrl || file.url;
+                                if (fileUrl) {
+                                  window.open(fileUrl, '_blank');
+                                } else {
+                                  alert('File URL not available');
+                                }
+                              }}
+                              title="View file"
+                            >
+                              <Eye size={14} />
+                            </button>
+                            <button
+                              className="file-action-btn"
+                              onClick={() => {
+                                const fileUrl = file.fileUrl || file.url;
+                                if (fileUrl) {
+                                  const a = document.createElement('a');
+                                  a.href = fileUrl;
+                                  a.download = fileName;
+                                  a.click();
+                                } else {
+                                  alert('File download not available');
+                                }
+                              }}
+                              title="Download file"
+                            >
+                              <Download size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            </div>
+
+           </div>
+           </div>
+        {/* Communication Card */}
+        <div className="card">
+          <div className="card-header">
+            <h3>
+              <MessageSquare size={18} />
+              Client Communication
+            </h3>
+            <span className="client-name">
+              {clientProfile?.name || workspace?.clientName || workspaceData?.client?.name || 'Client'}
+            </span>
+          </div>
+          <div className="card-body">
+            <div className="communication-grid">
+              <div className="comm-item">
+                <span className="comm-count">{localStats.messages.total}</span>
+                <span className="comm-label">Total Messages</span>
+              </div>
+              <div className="comm-item">
+                <span className="comm-count">{localStats.messages.unread}</span>
+                <span className="comm-label">Unread</span>
+              </div>
+              <div className="comm-item">
+                <span className="comm-count">{workspace?.upcomingCalls?.length || workspaceData?.upcomingCalls?.length || 0}</span>
+                <span className="comm-label">Calls Scheduled</span>
+              </div>
+            </div>
+            <div className="communication-actions">
+              <Link
+                to={`/freelancer/workspace/${workspaceId}?tab=messages`}
+                className="btn-primary"
+              >
+                <MessageSquare size={16} />
+                Go to Messages
+              </Link>
+              <Link
+                to={`/freelancer/workspace/${workspaceId}?tab=calls`}
+                className="btn-outline"
+              >
+                <Video size={16} />
+                Schedule Call
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="workspace-footer">
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="refresh-btn"
+          >
+            <RefreshCw size={14} className={refreshing ? 'spinning' : ''} />
+            {refreshing ? 'Refreshing...' : 'Refresh Data'}
+          </button>
+          <div className="workspace-info">
+            <span className="last-updated">
+              Last updated: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+            <span className="workspace-id">
+              Workspace ID: {workspace?.workspaceId || workspaceId || workspaceData?.id || 'N/A'}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );
+};
+
+const calculateTimeElapsed = (startDate, endDate) => {
+  if (!startDate) return 'Not started';
+  
+  const start = new Date(startDate);
+  const now = new Date();
+  const end = endDate ? new Date(endDate) : null;
+  
+  const diffTime = Math.abs(now - start);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (end && now > end) {
+    const overdueDays = Math.ceil((now - end) / (1000 * 60 * 60 * 24));
+    return `${diffDays} days (${overdueDays} days overdue)`;
+  }
+  
+  if (end) {
+    const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    const remainingDays = Math.max(0, Math.ceil((end - now) / (1000 * 60 * 60 * 24)));
+    return `${diffDays} of ${totalDays} days (${remainingDays} days left)`;
+  }
+  
+  return `${diffDays} days`;
 };
 
 export default FreelancerWorkspaceOverview;

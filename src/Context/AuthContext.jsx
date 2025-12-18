@@ -3,17 +3,20 @@ import axios from "axios";
 const AuthContext = createContext();
 
 export const useAuth = () => {
-    return useContext(AuthContext)
-}
+    return useContext(AuthContext);
+};
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null)
-    const [token, setToken] = useState(null)
-    const [loading, setLoading] = useState(true)
+    const [user, setUser] = useState(null);
+    const [token, setToken] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    const API_BASE = 'http://localhost:3000/api';
+    // Dynamic API base URL for deployment
+    const API_BASE = window.location.hostname === 'localhost' 
+        ? 'http://localhost:3000/api' 
+        : '/api'; // Use relative path in production
 
-    // Helper function to save user data with role-specific keys
+    // Helper function to save user data
     const saveUserData = (user, token) => {
         const role = user.role;
         // Save role-specific data
@@ -24,7 +27,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(user));
     };
 
-    // Helper function to clear ALL user data - COMPREHENSIVE CLEANUP
+    // Clear ALL user data
     const clearAllUserData = () => {
         console.log('🧹 Clearing ALL user data from localStorage');
         
@@ -42,14 +45,14 @@ export const AuthProvider = ({ children }) => {
             // Role-specific user data
             'admin_user', 'client_user', 'freelancer_user',
             
-            // Individual user fields (CRITICAL - these were missing!)
+            // Individual user fields
             'userId', 'userName', 'userRole', 'userEmail',
             'user_id', 'user_name', 'user_role', 'user_email',
             
             // Other session data
             'selectedRole', 'lastLogin', 'session',
             
-            // Proposal/Contract data that might have wrong names
+            // Proposal/Contract data
             'lastAcceptedProposal', 'contractData',
             
             // Any other user-related data
@@ -60,18 +63,10 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem(item);
         });
         
-        // Also clear any items containing "Elsa" or "Diya" to be safe
-        Object.keys(localStorage).forEach(key => {
-            const value = localStorage.getItem(key);
-            if (value && (value.includes('Elsa') || value.includes('Diya'))) {
-                console.log(`🧹 Removing item with name reference: ${key}`);
-                localStorage.removeItem(key);
-            }
-        });
-        
         console.log('✅ All user data cleared from localStorage');
     };
- const logout = () => {
+
+    const logout = () => {
         console.log('🚪 Logging out user:', user);
         
         // Clear all user data
@@ -83,15 +78,14 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
         
         console.log('✅ User logged out successfully');
-        
-        // Return success flag - let the component handle navigation
         return true;
     };
 
+    // Initialize auth state on mount
     useEffect(() => {
         console.log('🔄 AuthContext initialization started');
         
-        // Check localStorage consistency on mount
+        // Check localStorage for existing session
         const checkLocalStorageConsistency = () => {
             try {
                 const storedUser = localStorage.getItem('user');
@@ -103,26 +97,16 @@ export const AuthProvider = ({ children }) => {
                     
                     if (userActualName && userActualName !== storedUserName) {
                         console.warn('⚠️ localStorage inconsistency detected!');
-                        console.warn(`- user.name in storedUser: ${userActualName}`);
-                        console.warn(`- localStorage userName: ${storedUserName}`);
                         console.warn('Fixing userName in localStorage...');
                         localStorage.setItem('userName', userActualName);
                     }
                 }
-                
-                // Check for any "Elsa" references (freelancer name contamination)
-                Object.keys(localStorage).forEach(key => {
-                    const value = localStorage.getItem(key);
-                    if (value && value.includes('Elsa') && key.includes('user')) {
-                        console.warn(`⚠️ Found freelancer name "Elsa" in ${key}! This is wrong for client.`);
-                    }
-                });
             } catch (e) {
                 console.error('Error checking localStorage consistency:', e);
             }
         };
         
-        // Check for role-specific tokens first (NEW LOGIC)
+        // Check for role-specific tokens first
         const clientToken = localStorage.getItem('client_token');
         const clientUser = localStorage.getItem('client_user');
         const freelancerToken = localStorage.getItem('freelancer_token');
@@ -231,66 +215,56 @@ export const AuthProvider = ({ children }) => {
         checkLocalStorageConsistency();
         
         setLoading(false);
-    }, [])
+    }, []);
 
-    // In registerUser function, similar fix:
-const registerUser = async (userData) => {
-    setLoading(true);
-    try {
-        // Clear any existing sessions before new registration
-        console.log('🧹 Clearing old sessions before registration');
-        clearAllUserData();
-        
-        const response = await axios.post(`${API_BASE}/auth/register`, userData);
-        
-        if (response.data.success) {
-            const { user, token } = response.data;
+    // Unified registration for all roles
+    const registerUser = async (userData) => {
+        setLoading(true);
+        try {
+            // Clear any existing sessions before new registration
+            console.log('🧹 Clearing old sessions before registration');
+            clearAllUserData();
             
-            // ⭐️ CRITICAL: Extract user ID
-            const userId = user._id || user.id || user.userId;
+            const response = await axios.post(`${API_BASE}/auth/register`, userData);
             
-            // DEBUG LOGGING
-            console.log('🔐 Registration successful - Storing user data:', {
-                userId: userId,
-                userName: user.name || user.username,
-                userRole: user.role,
-                userEmail: user.email
-            });
-            
-            // Save with role-specific keys
-            saveUserData(user, token);
-            
-            // ⭐️ CRITICAL: Also save individual user fields
-            localStorage.setItem('userId', userId || '');
-            localStorage.setItem('userName', user.name || user.username || '');
-            localStorage.setItem('userRole', user.role || '');
-            localStorage.setItem('userEmail', user.email || '');
-            
-            // Update state
-            setUser(user);
-            setToken(token);
-            
-            console.log(`✅ ${user.role} registration successful:`, user.name || user.username);
-            return { success: true, user };
-        } else {
-            return {
-                success: false,
-                error: response.data.error || "Registration failed"
+            if (response.data.success) {
+                const { user, token } = response.data;
+                
+                // Save user data
+                saveUserData(user, token);
+                
+                // Save individual fields
+                localStorage.setItem('userId', user._id || '');
+                localStorage.setItem('userName', user.name || user.username || '');
+                localStorage.setItem('userRole', user.role || '');
+                localStorage.setItem('userEmail', user.email || '');
+                
+                // Update state
+                setUser(user);
+                setToken(token);
+                
+                console.log(`✅ ${user.role} registration successful:`, user.name || user.username);
+                return { success: true, user };
+            } else {
+                return {
+                    success: false,
+                    error: response.data.error || "Registration failed"
+                };
+            }
+        } catch (error) {
+            console.error('Registration error:', error);
+            return { 
+                success: false, 
+                error: error.response?.data?.error || error.response?.data?.message || "Registration failed" 
             };
+        } finally {
+            setLoading(false);
         }
-    } catch (error) {
-        console.error('Registration error:', error);
-        return { 
-            success: false, 
-            error: error.response?.data?.error || error.response?.data?.message || "Registration failed" 
-        };
-    } finally {
-        setLoading(false);
-    }
-};
-    // Admin Registration (hidden route)
+    };
+
+    // Admin registration (requires secret key)
     const registerAdmin = async (adminData) => {
-        setLoading(true)
+        setLoading(true);
         try {
             // Clear any existing sessions
             console.log('🧹 Clearing old sessions before admin registration');
@@ -304,22 +278,14 @@ const registerUser = async (userData) => {
             if (response.data.success) {
                 const { user, token } = response.data;
                 
-                // DEBUG LOGGING
-                console.log('🔐 Admin registration successful - Storing user data:', {
-                    userId: user._id,
-                    userName: user.name || user.username,
-                    userRole: user.role,
-                    userEmail: user.email
-                });
-                
                 // Save admin-specific items
                 saveUserData(user, token);
                 
-                // ⭐️ CRITICAL: Also save individual user fields
-                localStorage.setItem('userId', user._id);
-                localStorage.setItem('userName', user.name || user.username);
-                localStorage.setItem('userRole', user.role);
-                localStorage.setItem('userEmail', user.email);
+                // Save individual fields
+                localStorage.setItem('userId', user._id || '');
+                localStorage.setItem('userName', user.name || user.username || '');
+                localStorage.setItem('userRole', user.role || '');
+                localStorage.setItem('userEmail', user.email || '');
                 
                 // Update state
                 setUser(user);
@@ -344,154 +310,78 @@ const registerUser = async (userData) => {
         } finally {
             setLoading(false);
         }
-    }
+    };
 
+    // UNIFIED LOGIN FUNCTION - Handles all roles
     const loginUser = async (credentials) => {
-    setLoading(true);
-    try {
-        // Clear any existing sessions before new login
-        console.log('🧹 Clearing old sessions before login');
-        clearAllUserData();
-        
-        // ⭐️⭐️⭐️ CRITICAL FIX: DETECT ADMIN LOGIN BY EMAIL ⭐️⭐️⭐️
-        const isAdminEmail = credentials.email === 'admin@gmail.com' || 
-                            credentials.email.includes('@admin.');
-        
-        // Choose the correct endpoint
-        let endpoint = '/auth/login';
-        if (isAdminEmail) {
-            console.log('🔐 Admin email detected - switching to admin login endpoint');
-            endpoint = '/auth/admin/login';
-        }
-        
-        console.log('🔐 Calling endpoint:', endpoint);
-        console.log('🔐 Email:', credentials.email);
-        
-        const response = await axios.post(`${API_BASE}${endpoint}`, credentials);
-        
-        if (response.data.success) {
-            const { user, token } = response.data;
+        setLoading(true);
+        try {
+            // Clear any existing sessions before new login
+            console.log('🧹 Clearing old sessions before login');
+            clearAllUserData();
             
-            // ⭐️ CRITICAL FIX: Check user object structure
-            console.log('🔐 Login successful - Full response:', response.data);
-            console.log('🔐 User object structure:', user);
+            console.log('🔐 Attempting unified login for:', credentials.email);
             
-            // Extract user ID properly - try different possible fields
-            const userId = user._id || user.id || user.userId;
-            
-            if (!userId) {
-                console.error('❌ NO USER ID FOUND in response!');
-                console.error('User object:', user);
+            // Try regular login first (for clients/freelancers)
+            let response;
+            try {
+                response = await axios.post(`${API_BASE}/auth/login`, credentials);
+            } catch (userError) {
+                console.log('🔐 Regular login failed, trying admin login...');
+                // Try admin login
+                response = await axios.post(`${API_BASE}/auth/admin/login`, credentials);
             }
             
-            // DEBUG LOGGING - CRITICAL FOR DIAGNOSIS
-            console.log('🔐 Login successful - Storing user data:', {
-                userId: userId,
-                userName: user.name || user.username,
-                userRole: user.role,
-                userEmail: user.email,
-                profileName: user.profile?.name,
-                rawUserData: user
-            });
-            
-            // Save with role-specific keys
-            saveUserData(user, token);
-            
-            // ⭐️ CRITICAL: Also save individual user fields for CreateContractPage
-            localStorage.setItem('userId', userId || '');
-            localStorage.setItem('userName', user.name || user.username || '');
-            localStorage.setItem('userRole', user.role || '');
-            localStorage.setItem('userEmail', user.email || '');
-            
-            // Log what was actually stored
-            console.log('✅ Stored in localStorage:', {
-                userId: localStorage.getItem('userId'),
-                userName: localStorage.getItem('userName'),
-                userRole: localStorage.getItem('userRole')
-            });
-            
-            // Update state
-            setUser(user);
-            setToken(token);
-            
-            console.log(`✅ ${user.role} login successful:`, user.name || user.username);
-            return { success: true, user };
-        } else {
-            return {
-                success: false,
-                error: response.data.error || "Login failed"
+            if (response.data.success) {
+                const { user, token } = response.data;
+                
+                console.log('🔐 Login successful - Role:', user.role);
+                
+                // Save user data
+                saveUserData(user, token);
+                
+                // Save individual fields
+                localStorage.setItem('userId', user._id || '');
+                localStorage.setItem('userName', user.name || user.username || '');
+                localStorage.setItem('userRole', user.role || '');
+                localStorage.setItem('userEmail', user.email || '');
+                
+                // Log what was stored
+                console.log('✅ Stored in localStorage:', {
+                    userId: localStorage.getItem('userId'),
+                    userName: localStorage.getItem('userName'),
+                    userRole: localStorage.getItem('userRole')
+                });
+                
+                // Update state
+                setUser(user);
+                setToken(token);
+                
+                console.log(`✅ ${user.role} login successful:`, user.name || user.username);
+                return { success: true, user };
+            } else {
+                return {
+                    success: false,
+                    error: response.data.error || "Login failed"
+                };
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            return { 
+                success: false, 
+                error: error.response?.data?.error || 
+                       error.response?.data?.message || 
+                       "Login failed. Please check your credentials." 
             };
+        } finally {
+            setLoading(false);
         }
-    } catch (error) {
-        console.error('Login error:', error);
-        return { 
-            success: false, 
-            error: error.response?.data?.error || error.response?.data?.message || "Login failed" 
-        };
-    } finally {
-        setLoading(false);
-    }
-};
-    const loginAdmin = async (loginData) => {
-    setLoading(true)
-    try {
-        // Clear any existing sessions
-        console.log('🧹 Clearing old sessions before admin login');
-        clearAllUserData();
-        
-        const response = await axios.post(`${API_BASE}/auth/admin/login`, loginData)
-        
-        if (response.data.success) {
-            const { user, token } = response.data;
+    };
 
-            // DEBUG LOGGING
-            console.log('🔐 Admin login response:', response.data);
-            
-            // ⭐️ FIX: Check different possible ID fields
-            const userId = user._id || user.id || user.userId || response.data.userId;
-            
-            console.log('🔐 Admin login successful - Storing user data:', {
-                userId: userId,
-                userName: user.name || user.username,
-                userRole: user.role,
-                userEmail: user.email,
-                rawUser: user // Log full user object for debugging
-            });
-
-            // Save admin-specific items
-            saveUserData(user, token);
-            
-            // ⭐️ CRITICAL: Also save individual user fields
-            localStorage.setItem('userId', userId || '');
-            localStorage.setItem('userName', user.name || user.username || '');
-            localStorage.setItem('userRole', user.role || '');
-            localStorage.setItem('userEmail', user.email || '');
-            
-            // ⭐️ ADD: Also save admin-specific token separately
-            localStorage.setItem('adminToken', token);
-
-            // Update state
-            setUser(user);
-            setToken(token);
-
-            console.log('✅ Admin login successful - Token saved');
-            return { success: true, user };
-        } else {
-            return {
-                success: false,
-                error: response.data.error || "Admin login failed"
-            };
-        }
-    } catch (error) {
-        console.error('Admin login error:', error);
-        return {
-            success: false,
-            error: error.response?.data?.error || error.response?.data?.message || "Admin login failed"
-        }
-    } finally {
-        setLoading(false)
-    }
-};
+    // Keep admin login for backward compatibility
+    const loginAdmin = async (credentials) => {
+        return loginUser(credentials); // Uses the same unified function
+    };
 
     // Function to manually check localStorage (for debugging)
     const checkLocalStorage = () => {
@@ -516,8 +406,8 @@ const registerUser = async (userData) => {
         loginAdmin,
         logout,
         isAuthenticated: !!user && !!token,
-        checkLocalStorage // Add for debugging
-    }
+        checkLocalStorage
+    };
 
     return (
         <AuthContext.Provider value={value}>
