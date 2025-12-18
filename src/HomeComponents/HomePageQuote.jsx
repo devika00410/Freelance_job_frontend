@@ -1,5 +1,5 @@
 import React from 'react';
-import './HomepageQuote.css';
+import './HomePageQuote.css';
 
 export default function HomepageQuote() {
   return (
