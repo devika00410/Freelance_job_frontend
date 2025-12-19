@@ -1,4 +1,3 @@
-// Navbar.jsx
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
@@ -22,7 +21,7 @@ const Navbar = () => {
 
         {/* Brand */}
         <div className="brand">
-          <Link to="/" className="brand-text">Freelumo</Link>
+          <Link to="/" className="brand-text">Freelance</Link>
         </div>
 
         {/* Mobile Toggle */}

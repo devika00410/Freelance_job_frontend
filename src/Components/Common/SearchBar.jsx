@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSearch } from 'react-icons/fa';
-import { SERVICE_NAMES } from '../../utils/constants';
 
 const SearchBar = ({ className = '', placeholder = "Search services (e.g., Web Development, UI/UX)" }) => {
     const [query, setQuery] = useState('');
@@ -9,53 +8,107 @@ const SearchBar = ({ className = '', placeholder = "Search services (e.g., Web D
     const [showSuggestions, setShowSuggestions] = useState(false);
     const navigate = useNavigate();
 
+    // Local service mappings (same as SearchResultsPage)
+    const LOCAL_SERVICE_NAMES = {
+        'fsd-001': 'Full Stack Development',
+        'mad-002': 'Mobile App Development',
+        'uxd-003': 'UI/UX Design',
+        'seo-004': 'SEO Services',
+        'dma-005': 'Digital Marketing',
+        'ved-006': 'Video Editing',
+        'grd-007': 'Graphic Design',
+        'cwr-008': 'Content Writing',
+        'wpd-009': 'WordPress Development',
+        'dat-010': 'Data Analytics'
+    };
+
+    // Map service names to IDs for easier lookup
+    const SERVICE_NAME_TO_ID = Object.entries(LOCAL_SERVICE_NAMES).reduce((acc, [id, name]) => {
+        acc[name.toLowerCase()] = id;
+        return acc;
+    }, {});
+
     const handleSearch = (e) => {
         e.preventDefault();
         if (query.trim()) {
-            const matchedService = Object.entries(SERVICE_NAMES).find(
-                ([id, name]) => name.toLowerCase().includes(query.toLowerCase())
-            );
+            const queryLower = query.toLowerCase();
             
-            if (matchedService) {
-                navigate(`/services/${matchedService[0]}/freelancers`);
+            // Check for exact service name match
+            const serviceId = SERVICE_NAME_TO_ID[queryLower];
+            if (serviceId) {
+                // Exact match found, navigate to search results for that service
+                navigate(`/search?service=${serviceId}&q=${encodeURIComponent(LOCAL_SERVICE_NAMES[serviceId])}`);
             } else {
-                navigate(`/search?q=${encodeURIComponent(query)}&type=services`);
+                // Check for partial match
+                const matchedService = Object.entries(LOCAL_SERVICE_NAMES).find(
+                    ([id, name]) => name.toLowerCase().includes(queryLower)
+                );
+                
+                if (matchedService) {
+                    // Partial match found
+                    navigate(`/search?service=${matchedService[0]}&q=${encodeURIComponent(matchedService[1])}`);
+                } else {
+                    // No service match, do general search
+                    navigate(`/search?q=${encodeURIComponent(query)}`);
+                }
             }
             setShowSuggestions(false);
         }
     };
 
-    const handleSuggestionClick = (serviceId) => {
-        navigate(`/services/${serviceId}/freelancers`);
+    const handleSuggestionClick = (serviceId, serviceName) => {
+        navigate(`/search?service=${serviceId}&q=${encodeURIComponent(serviceName)}`);
         setQuery('');
         setShowSuggestions(false);
     };
 
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            handleSearch(e);
+        }
+    };
+
     useEffect(() => {
         if (query.trim()) {
-            const filtered = Object.entries(SERVICE_NAMES)
+            const queryLower = query.toLowerCase();
+            const filtered = Object.entries(LOCAL_SERVICE_NAMES)
                 .filter(([id, name]) => 
-                    name.toLowerCase().includes(query.toLowerCase())
+                    name.toLowerCase().includes(queryLower) ||
+                    id.toLowerCase().includes(queryLower) ||
+                    name.toLowerCase().split(' ').some(word => word.includes(queryLower))
                 )
                 .slice(0, 5);
             setSuggestions(filtered);
             setShowSuggestions(true);
         } else {
+            setSuggestions([]);
             setShowSuggestions(false);
         }
     }, [query]);
+
+    const handleFocus = () => {
+        if (query.trim()) {
+            setShowSuggestions(true);
+        }
+    };
+
+    const handleBlur = () => {
+        // Delay hiding to allow clicking on suggestions
+        setTimeout(() => setShowSuggestions(false), 200);
+    };
 
     return (
         <div className={`search-bar-wrapper ${className}`}>
             <form onSubmit={handleSearch} className="search-bar-form">
                 <div className="search-bar-input-group">
-                    <FaSearch className="search-icon" />
+                    {/* <FaSearch className="search-icon" /> */}
                     <input
                         type="text"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
-                        onFocus={() => query.trim() && setShowSuggestions(true)}
-                        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                        onFocus={handleFocus}
+                        onBlur={handleBlur}
+                        onKeyPress={handleKeyPress}
                         placeholder={placeholder}
                         className="search-bar-input"
                     />
@@ -73,8 +126,10 @@ const SearchBar = ({ className = '', placeholder = "Search services (e.g., Web D
                     {suggestions.map(([id, name]) => (
                         <button
                             key={id}
-                            onClick={() => handleSuggestionClick(id)}
+                            type="button"
+                            onClick={() => handleSuggestionClick(id, name)}
                             className="suggestion-item"
+                            onMouseDown={(e) => e.preventDefault()} 
                         >
                             <FaSearch className="suggestion-icon" />
                             <span className="suggestion-text">{name}</span>
@@ -88,6 +143,8 @@ const SearchBar = ({ className = '', placeholder = "Search services (e.g., Web D
                 .search-bar-wrapper {
                     position: relative;
                     width: 100%;
+                    max-width: 800px;
+                    margin: 0 auto;
                 }
                 
                 .search-bar-form {
@@ -114,6 +171,7 @@ const SearchBar = ({ className = '', placeholder = "Search services (e.g., Web D
                     margin-left: 20px;
                     color: #6b7280;
                     font-size: 18px;
+                    flex-shrink: 0;
                 }
                 
                 .search-bar-input {
@@ -123,6 +181,7 @@ const SearchBar = ({ className = '', placeholder = "Search services (e.g., Web D
                     outline: none;
                     font-size: 16px;
                     color: #374151;
+                    min-width: 0;
                 }
                 
                 .search-bar-input::placeholder {
@@ -138,6 +197,8 @@ const SearchBar = ({ className = '', placeholder = "Search services (e.g., Web D
                     font-weight: 600;
                     cursor: pointer;
                     transition: all 0.3s ease;
+                    flex-shrink: 0;
+                    white-space: nowrap;
                 }
                 
                 .search-bar-button:hover {
@@ -156,6 +217,8 @@ const SearchBar = ({ className = '', placeholder = "Search services (e.g., Web D
                     border: 1px solid #e5e7eb;
                     overflow: hidden;
                     z-index: 1000;
+                    max-height: 300px;
+                    overflow-y: auto;
                 }
                 
                 .suggestion-item {
@@ -169,6 +232,11 @@ const SearchBar = ({ className = '', placeholder = "Search services (e.g., Web D
                     cursor: pointer;
                     transition: all 0.2s ease;
                     text-align: left;
+                    border-bottom: 1px solid #f3f4f6;
+                }
+                
+                .suggestion-item:last-child {
+                    border-bottom: none;
                 }
                 
                 .suggestion-item:hover {
@@ -178,12 +246,17 @@ const SearchBar = ({ className = '', placeholder = "Search services (e.g., Web D
                 .suggestion-icon {
                     color: #6b7280;
                     font-size: 16px;
+                    flex-shrink: 0;
                 }
                 
                 .suggestion-text {
                     flex: 1;
                     color: #374151;
                     font-weight: 500;
+                    text-align: left;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
                 }
                 
                 .suggestion-type {
@@ -193,6 +266,7 @@ const SearchBar = ({ className = '', placeholder = "Search services (e.g., Web D
                     padding: 4px 8px;
                     border-radius: 6px;
                     font-weight: 600;
+                    flex-shrink: 0;
                 }
             `}</style>
         </div>

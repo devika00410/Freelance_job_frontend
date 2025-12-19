@@ -51,6 +51,13 @@ const UnifiedLogin = () => {
             return;
         }
         
+        // Clear any existing role data before login
+        const roleKeys = ['client', 'freelancer', 'admin'];
+        roleKeys.forEach(role => {
+            localStorage.removeItem(`${role}_token`);
+            localStorage.removeItem(`${role}_user`);
+        });
+        
         // The backend will automatically detect if it's admin or user
         const result = await loginUser(formData);
 

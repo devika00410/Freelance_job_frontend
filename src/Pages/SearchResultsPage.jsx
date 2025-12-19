@@ -56,6 +56,20 @@ const SearchResultsPage = () => {
 
     const LOCAL_SERVICES = Object.keys(LOCAL_SERVICE_NAMES);
 
+    // Map service IDs to dummyData categories
+    const serviceCategoryMap = {
+        'fsd-001': 'web-development',
+        'mad-002': 'mobile-development',
+        'uxd-003': 'ui-ux-design',
+        'seo-004': 'seo-services',
+        'dma-005': 'digital-marketing',
+        'ved-006': 'video-editing',
+        'grd-007': 'graphic-design',
+        'cwr-008': 'content-writing',
+        'wpd-009': 'web-development',
+        'dat-010': 'seo-services' // Fallback since analytics doesn't exist
+    };
+
     // Search states
     const [searchType, setSearchType] = useState('freelancers');
     const [results, setResults] = useState([]);
@@ -125,40 +139,168 @@ const SearchResultsPage = () => {
         }
     };
 
-   const getDummyFreelancers = (serviceId) => {
-    const serviceCategoryMap = {
-        'fsd-001': 'web-development',
-        'mad-002': 'mobile-development',
-        'uxd-003': 'ui-ux-design',
-        'seo-004': 'seo-services',
-        'dma-005': 'digital-marketing',
-        'ved-006': 'video-editing',
-        'grd-007': 'graphic-design',
-        'cwr-008': 'content-writing',
-        'wpd-009': 'web-development',
-        'dat-010': 'analytics'
+    // Get dummy freelancers based on service or query
+    const getDummyFreelancers = (serviceId, searchQuery = '') => {
+        let freelancers = [];
+        
+        if (serviceId && serviceCategoryMap[serviceId]) {
+            const category = serviceCategoryMap[serviceId];
+            freelancers = dummyData.freelancers[category] || [];
+        } else if (searchQuery) {
+            // Search across all categories
+            freelancers = Object.values(dummyData.freelancers).flat();
+        } else {
+            // Return all freelancers when no service or query
+            freelancers = Object.values(dummyData.freelancers).flat();
+        }
+
+        // Filter by search query if provided
+        if (searchQuery && freelancers.length > 0) {
+            const queryLower = searchQuery.toLowerCase();
+            freelancers = freelancers.filter(freelancer => 
+                freelancer.name.toLowerCase().includes(queryLower) ||
+                freelancer.title.toLowerCase().includes(queryLower) ||
+                freelancer.skills.some(skill => skill.toLowerCase().includes(queryLower)) ||
+                freelancer.description.toLowerCase().includes(queryLower)
+            );
+        }
+
+        return freelancers;
     };
 
-    if (serviceId && serviceCategoryMap[serviceId]) {
-        const category = serviceCategoryMap[serviceId];
-        return dummyData.freelancers[category] || [];
-    }
+    // Get dummy services based on query
+    const getDummyServices = (searchQuery = '') => {
+        let services = dummyData.services || [];
+        
+        if (searchQuery && services.length > 0) {
+            const queryLower = searchQuery.toLowerCase();
+            services = services.filter(service => 
+                service.name.toLowerCase().includes(queryLower) ||
+                service.description.toLowerCase().includes(queryLower) ||
+                (service.tags && service.tags.some(tag => tag.toLowerCase().includes(queryLower)))
+            );
+        }
 
-    // When no service ID, return ALL freelancers
-    if (!serviceId || serviceId === '') {
-        // Flatten all freelancers from all categories
-        const allFreelancers = Object.values(dummyData.freelancers).flat();
-        console.log('Returning all freelancers:', allFreelancers.length);
-        return allFreelancers;
-    }
+        return services;
+    };
 
-    // Return all freelancers as fallback
-    return Object.values(dummyData.freelancers).flat();
-};
+    // Apply filters to results
+    const applyFilters = (items, isFreelancer = true) => {
+        let filtered = [...items];
+
+        if (isFreelancer) {
+            // Filter by rate
+            if (filters.minRate) {
+                const minRate = parseInt(filters.minRate);
+                filtered = filtered.filter(f => {
+                    const rate = parseInt(f.rate.replace('$', '').replace('/hr', ''));
+                    return rate >= minRate;
+                });
+            }
+            if (filters.maxRate) {
+                const maxRate = parseInt(filters.maxRate);
+                filtered = filtered.filter(f => {
+                    const rate = parseInt(f.rate.replace('$', '').replace('/hr', ''));
+                    return rate <= maxRate;
+                });
+            }
+
+            // Filter by experience level
+            if (filters.experienceLevel.length > 0) {
+                filtered = filtered.filter(f => 
+                    filters.experienceLevel.includes(f.experienceLevel)
+                );
+            }
+
+            // Filter by availability
+            if (filters.availability) {
+                filtered = filtered.filter(f => 
+                    f.availability.toLowerCase().replace(' ', '-').includes(filters.availability)
+                );
+            }
+
+            // Filter by verification
+            if (filters.verifiedOnly) {
+                filtered = filtered.filter(f => f.verified);
+            }
+
+            // Sort results
+            switch(filters.sortBy) {
+                case 'rating':
+                    filtered.sort((a, b) => b.rating - a.rating);
+                    break;
+                case 'rate-low':
+                    filtered.sort((a, b) => {
+                        const rateA = parseInt(a.rate.replace('$', '').replace('/hr', ''));
+                        const rateB = parseInt(b.rate.replace('$', '').replace('/hr', ''));
+                        return rateA - rateB;
+                    });
+                    break;
+                case 'rate-high':
+                    filtered.sort((a, b) => {
+                        const rateA = parseInt(a.rate.replace('$', '').replace('/hr', ''));
+                        const rateB = parseInt(b.rate.replace('$', '').replace('/hr', ''));
+                        return rateB - rateA;
+                    });
+                    break;
+                case 'experience':
+                    const expOrder = { expert: 3, intermediate: 2, beginner: 1 };
+                    filtered.sort((a, b) => {
+                        const expA = a.experience ? parseInt(a.experience) : expOrder[a.experienceLevel] || 0;
+                        const expB = b.experience ? parseInt(b.experience) : expOrder[b.experienceLevel] || 0;
+                        return expB - expA;
+                    });
+                    break;
+                case 'projects':
+                    filtered.sort((a, b) => b.projects - a.projects);
+                    break;
+                default: // relevance
+                    // Keep original order for relevance
+                    break;
+            }
+        } else {
+            // For services
+            // Sort services
+            switch(filters.sortBy) {
+                case 'rating':
+                    filtered.sort((a, b) => b.rating - a.rating);
+                    break;
+                case 'rate-low':
+                    filtered.sort((a, b) => a.price.min - b.price.min);
+                    break;
+                case 'rate-high':
+                    filtered.sort((a, b) => b.price.max - a.price.max);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return filtered;
+    };
 
     const fetchResults = useCallback(async () => {
+        // If no search parameters at all
         if (!query && !service && !skills && !location) {
-            setResults([]);
+            // Show some default results based on search type
+            if (searchType === 'freelancers') {
+                const defaultFreelancers = Object.values(dummyData.freelancers).flat().slice(0, 12);
+                setResults(defaultFreelancers);
+                setPagination(prev => ({
+                    ...prev,
+                    total: defaultFreelancers.length,
+                    totalPages: Math.ceil(defaultFreelancers.length / pagination.limit)
+                }));
+            } else {
+                const defaultServices = dummyData.services.slice(0, 12);
+                setResults(defaultServices);
+                setPagination(prev => ({
+                    ...prev,
+                    total: defaultServices.length,
+                    totalPages: Math.ceil(defaultServices.length / pagination.limit)
+                }));
+            }
+            setLoading(false);
             return;
         }
 
@@ -166,119 +308,111 @@ const SearchResultsPage = () => {
         setError(null);
 
         try {
-            const params = {
-                page: pagination.page,
-                limit: pagination.limit,
-                ...filters
-            };
-
-            if (query) params.q = query;
-            if (service) params.service = service;
-            if (skills) params.skills = skills;
-            if (location) params.location = location;
-
-            let response;
             if (searchType === 'services') {
                 // Search services
-                const allServices = await api.getAllServices();
-                if (allServices.success) {
-                    let filtered = allServices.data;
-
-                    // Apply search query
-                    if (query) {
-                        const q = query.toLowerCase();
-                        filtered = filtered.filter(s =>
-                            s.name.toLowerCase().includes(q) ||
-                            s.description.toLowerCase().includes(q) ||
-                            s.tags?.some(tag => tag.toLowerCase().includes(q))
-                        );
-                    }
-
-                    // Apply service filter
-                    if (service) {
-                        filtered = filtered.filter(s => s._id === service);
-                    }
-
-                    // Apply category filter from skills
-                    if (skills) {
-                        const skillsArray = skills.toLowerCase().split(',');
-                        filtered = filtered.filter(s =>
-                            skillsArray.some(skill =>
-                                s.category?.toLowerCase().includes(skill) ||
-                                s.tags?.some(tag => tag.toLowerCase().includes(skill))
-                            )
-                        );
-                    }
-
-                    setResults(filtered);
-                    setPagination(prev => ({
-                        ...prev,
-                        total: filtered.length,
-                        totalPages: Math.ceil(filtered.length / pagination.limit)
-                    }));
+                let services = getDummyServices(query);
+                
+                // If a specific service ID is provided, filter by it
+                if (service && LOCAL_SERVICE_NAMES[service]) {
+                    const serviceName = LOCAL_SERVICE_NAMES[service];
+                    services = services.filter(s => 
+                        s.name.toLowerCase().includes(serviceName.toLowerCase())
+                    );
                 }
+
+                // Apply filters
+                const filteredServices = applyFilters(services, false);
+                
+                // Paginate
+                const startIndex = (pagination.page - 1) * pagination.limit;
+                const endIndex = startIndex + pagination.limit;
+                const paginatedServices = filteredServices.slice(startIndex, endIndex);
+                
+                setResults(paginatedServices);
+                setPagination(prev => ({
+                    ...prev,
+                    total: filteredServices.length,
+                    totalPages: Math.ceil(filteredServices.length / pagination.limit)
+                }));
             } else {
                 // Search freelancers
-                try {
-                    let response;
-                    if (service) {
-                        response = await api.getFreelancersByServiceEnhanced(service, params);
-                    } else {
-                        response = await api.searchFreelancersEnhanced(params);
-                    }
-
-                    let realFreelancers = [];
-                    if (response.success && response.data && response.data.length > 0) {
-                        realFreelancers = response.data;
-                    }
-
-                    // Get dummy freelancers
-                    const dummyFreelancers = getDummyFreelancers(service || '');
-
-                    // Combine real and dummy freelancers
-                    const combinedResults = [...realFreelancers, ...dummyFreelancers];
-
-                    // Remove duplicates by ID
-                    const uniqueResults = combinedResults.filter((freelancer, index, self) =>
-                        index === self.findIndex((f) => f.id === freelancer.id)
+                let freelancers = getDummyFreelancers(service, query);
+                
+                // Apply additional filters from URL params
+                if (skills) {
+                    const skillsArray = skills.toLowerCase().split(',');
+                    freelancers = freelancers.filter(f => 
+                        skillsArray.some(skill => 
+                            f.skills.some(s => s.toLowerCase().includes(skill))
+                        )
                     );
-
-                    setResults(uniqueResults);
-                    setPagination(prev => ({
-                        ...prev,
-                        total: uniqueResults.length,
-                        totalPages: Math.ceil(uniqueResults.length / pagination.limit)
-                    }));
-                } catch (apiError) {
-                    console.error('API Error:', apiError);
-                    // Fallback to dummy data
-                    const filteredDummy = getDummyFreelancers(service || '');
-                    setResults(filteredDummy);
-                    setPagination({
-                        page: 1,
-                        limit: 12,
-                        total: filteredDummy.length,
-                        totalPages: Math.ceil(filteredDummy.length / 12)
-                    });
                 }
+                
+                if (location) {
+                    freelancers = freelancers.filter(f => 
+                        f.location.toLowerCase().includes(location.toLowerCase())
+                    );
+                }
+
+                // Apply filters
+                const filteredFreelancers = applyFilters(freelancers, true);
+                
+                // Paginate
+                const startIndex = (pagination.page - 1) * pagination.limit;
+                const endIndex = startIndex + pagination.limit;
+                const paginatedFreelancers = filteredFreelancers.slice(startIndex, endIndex);
+                
+                setResults(paginatedFreelancers);
+                setPagination(prev => ({
+                    ...prev,
+                    total: filteredFreelancers.length,
+                    totalPages: Math.ceil(filteredFreelancers.length / pagination.limit)
+                }));
             }
         } catch (err) {
             console.error('Search error:', err);
             setError('Failed to fetch search results. Please try again.');
-            setResults(getDummyFreelancers(service || ''));
+            
+            // Fallback to dummy data
+            if (searchType === 'freelancers') {
+                const fallbackData = getDummyFreelancers(service, query).slice(0, 12);
+                setResults(fallbackData);
+            } else {
+                const fallbackData = getDummyServices(query).slice(0, 12);
+                setResults(fallbackData);
+            }
         } finally {
             setLoading(false);
         }
     }, [query, service, skills, location, filters, pagination.page, searchType]);
 
+    // Fetch results when dependencies change
+    useEffect(() => {
+        fetchResults();
+    }, [fetchResults]);
+
     // Handle filter changes
     const handleFilterChange = (newFilters) => {
         setFilters(prev => ({ ...prev, ...newFilters }));
         setPagination(prev => ({ ...prev, page: 1 }));
+        
+        // Update URL params
+        const params = new URLSearchParams(searchParams);
+        Object.entries(newFilters).forEach(([key, value]) => {
+            if (Array.isArray(value) && value.length > 0) {
+                params.set(key, value.join(','));
+            } else if (value !== '' && value !== false) {
+                params.set(key, value);
+            } else {
+                params.delete(key);
+            }
+        });
+        params.set('page', '1');
+        setSearchParams(params);
     };
 
     const clearFilters = () => {
-        setFilters({
+        const newFilters = {
             minRate: '',
             maxRate: '',
             experienceLevel: [],
@@ -287,12 +421,26 @@ const SearchResultsPage = () => {
             sortBy: 'relevance',
             language: '',
             category: ''
-        });
+        };
+        
+        setFilters(newFilters);
         setPagination(prev => ({ ...prev, page: 1 }));
+        
+        // Clear filter params from URL
+        const params = new URLSearchParams(searchParams);
+        Object.keys(newFilters).forEach(key => params.delete(key));
+        params.set('page', '1');
+        setSearchParams(params);
     };
 
     const handlePageChange = (page) => {
         setPagination(prev => ({ ...prev, page }));
+        
+        // Update page in URL
+        const params = new URLSearchParams(searchParams);
+        params.set('page', page.toString());
+        setSearchParams(params);
+        
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -343,9 +491,13 @@ const SearchResultsPage = () => {
             }
         });
 
-        // Skill suggestions
-        const commonSkills = ['JavaScript', 'React', 'Node.js', 'UI/UX', 'SEO', 'Marketing', 'Content', 'Design'];
-        commonSkills.forEach(skill => {
+        // Skill suggestions from dummy data
+        const allSkills = new Set();
+        Object.values(dummyData.freelancers).flat().forEach(freelancer => {
+            freelancer.skills.forEach(skill => allSkills.add(skill));
+        });
+        
+        Array.from(allSkills).forEach(skill => {
             if (skill.toLowerCase().includes(query.toLowerCase())) {
                 suggestions.push({
                     type: 'skill',
@@ -361,6 +513,14 @@ const SearchResultsPage = () => {
 
     const searchSuggestions = getSearchSuggestions();
 
+    // Handle search from the page's search bar
+    const handleSearch = (searchTerm) => {
+        const params = new URLSearchParams();
+        params.set('q', searchTerm);
+        setSearchParams(params);
+        setPagination(prev => ({ ...prev, page: 1 }));
+    };
+
     return (
         <div className="search-results-container">
             {/* Search Header */}
@@ -369,8 +529,10 @@ const SearchResultsPage = () => {
                     <div className="search-title-section">
                         <h1 className="search-main-title">
                             {query ? `Search Results for "${query}"` :
-                                service ? `Browse ${LOCAL_SERVICE_NAMES[service] || SERVICE_NAMES[service] || 'Service'} Talent` :
-                                    'Find Top Talent'}
+                                service ? `${LOCAL_SERVICE_NAMES[service] || SERVICE_NAMES[service] || 'Service'} Professionals` :
+                                skills ? `Talents with ${skills}` :
+                                location ? `Talents in ${location}` :
+                                'Find Top Talent'}
                         </h1>
                         <p className="search-subtitle">
                             {results.length > 0
@@ -381,7 +543,7 @@ const SearchResultsPage = () => {
 
                     {/* Main Search Bar */}
                     <div className="main-search-wrapper">
-                        <SearchBar />
+                        <SearchBar onSearch={handleSearch} initialValue={query} />
                     </div>
 
                     {/* Search Type Toggle */}
@@ -585,7 +747,7 @@ const SearchResultsPage = () => {
                                     <option value="">Any Availability</option>
                                     <option value="full-time">Full Time</option>
                                     <option value="part-time">Part Time</option>
-                                    <option value="not-available">Not Available</option>
+                                    <option value="available">Available</option>
                                 </select>
                             </div>
 
@@ -665,9 +827,13 @@ const SearchResultsPage = () => {
                                                 >
                                                     <option value="">All Categories</option>
                                                     <option value="web-development">Web Development</option>
-                                                    <option value="design-creative">Design & Creative</option>
+                                                    <option value="ui-ux-design">UI/UX Design</option>
+                                                    <option value="mobile-development">Mobile Development</option>
                                                     <option value="digital-marketing">Digital Marketing</option>
-                                                    <option value="writing-translation">Writing & Translation</option>
+                                                    <option value="content-writing">Content Writing</option>
+                                                    <option value="graphic-design">Graphic Design</option>
+                                                    <option value="video-editing">Video Editing</option>
+                                                    <option value="seo-services">SEO Services</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -709,6 +875,7 @@ const SearchResultsPage = () => {
                                                 <option value="rating">Sort by: Rating</option>
                                                 <option value="rate-low">Sort by: Price Low to High</option>
                                                 <option value="rate-high">Sort by: Price High to Low</option>
+                                                <option value="experience">Sort by: Experience</option>
                                             </select>
                                         </div>
                                     </div>
@@ -724,10 +891,16 @@ const SearchResultsPage = () => {
                                                     key={index}
                                                     onClick={() => {
                                                         if (suggestion.type === 'service') {
-                                                            navigate(`/services/${suggestion.value}/freelancers`);
+                                                            // Navigate to service search
+                                                            const params = new URLSearchParams();
+                                                            params.set('service', suggestion.value);
+                                                            params.set('q', suggestion.label);
+                                                            setSearchParams(params);
                                                         } else {
-                                                            const params = new URLSearchParams(searchParams);
+                                                            // Navigate to skill search
+                                                            const params = new URLSearchParams();
                                                             params.set('skills', suggestion.value);
+                                                            params.set('q', suggestion.label);
                                                             setSearchParams(params);
                                                         }
                                                     }}
@@ -786,7 +959,12 @@ const SearchResultsPage = () => {
                                         columns={2}
                                         emptyMessage="No services found. Try adjusting your search criteria."
                                         onBrowseTalent={(serviceId, serviceName) => {
-                                            navigate(`/services/${serviceId}/freelancers`);
+                                            // Navigate to freelancer search for this service
+                                            const params = new URLSearchParams();
+                                            params.set('service', serviceId);
+                                            params.set('q', serviceName);
+                                            setSearchParams(params);
+                                            setSearchType('freelancers');
                                         }}
                                     />
                                 )}
@@ -881,12 +1059,18 @@ const SearchResultsPage = () => {
                     <div className="related-searches-section">
                         <h3 className="related-title">You might also be interested in</h3>
                         <div className="related-grid">
-                            {LOCAL_SERVICES.filter(s => s !== service)
+                            {LOCAL_SERVICES
+                                .filter(s => s !== service)
                                 .slice(0, 4)
                                 .map(serviceId => (
                                     <button
                                         key={serviceId}
-                                        onClick={() => navigate(`/services/${serviceId}/freelancers`)}
+                                        onClick={() => {
+                                            const params = new URLSearchParams();
+                                            params.set('service', serviceId);
+                                            params.set('q', LOCAL_SERVICE_NAMES[serviceId]);
+                                            setSearchParams(params);
+                                        }}
                                         className="related-service-card"
                                     >
                                         {getServiceIcon(serviceId)}
