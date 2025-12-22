@@ -162,7 +162,7 @@ return ()=>{
                   
                   {/* Testimonial Box Overlay */}
                   <div className="testimonial-overlay">
-                    <div className="company-logo">
+                    <div className="companys-logo">
                       {testimonial.company.split(' ')[0]}
                     </div>
                     <div className="testimonial-quote">

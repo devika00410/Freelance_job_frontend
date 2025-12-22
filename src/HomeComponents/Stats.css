@@ -5,7 +5,7 @@
 }
 
 /* Background */
-.stats-wrapper {
+.stats-wrappers {
   position: relative;
   padding: 100px 20px;
   background: radial-gradient(
@@ -21,7 +21,7 @@
 }
 
 /* Card */
-.stats-card {
+.stats-cards {
   max-width: 1200px;
   margin: 0 auto;
   background: white;
@@ -34,7 +34,7 @@
   transition: all 0.7s ease;
 }
 
-.stats-card.visible {
+.stats-cards.visible {
   opacity: 1;
   transform: translateY(0);
 }

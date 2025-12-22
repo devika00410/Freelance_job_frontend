@@ -13,8 +13,8 @@ export default function Stats() {
   }, []);
 
   return (
-    <section className="stats-wrapper">
-      <div className="stats-card" ref={ref}>
+    <section className="stats-wrappers">
+      <div className="stats-cards" ref={ref}>
         <h2 className="stats-title">Our results in numbers</h2>
 
         <div className="stats-grid">
