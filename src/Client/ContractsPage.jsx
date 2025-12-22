@@ -590,7 +590,6 @@ const ContractsPage = () => {
     );
 };
 
-// Contract Card Component - UPDATED
 const ContractCard = ({
     contract,
     onSign,
@@ -607,19 +606,25 @@ const ContractCard = ({
     const currentPhase = getCurrentPhase(contract.phases);
     const navigate = useNavigate();
 
-    // Check if contract has valid workspace ID
-    const hasValidWorkspaceId = contract.workspaceId &&
-        contract.workspaceId !== 'null' &&
-        contract.workspaceId !== null &&
-        contract.workspaceId !== undefined &&
-        contract.workspaceId !== '';
+    const hasValidWorkspaceId = () => {
+        const wsId = contract.workspaceId;
 
-    console.log('📝 Contract details for navigation:', {
-        _id: contract._id,
-        contractId: contract.contractId,
-        workspaceId: contract.workspaceId,
-        title: contract.title
-    });
+        if (!wsId) return false;
+
+        if (typeof wsId === 'string') {
+            return wsId.trim() !== '' &&
+                wsId !== 'null' &&
+                wsId !== 'undefined';
+        }
+
+        if (typeof wsId === 'object' && wsId !== null) {
+            return wsId._id || wsId.workspaceId || wsId.id;
+        }
+
+        return false;
+    };
+
+    const hasWorkspace = hasValidWorkspaceId();
 
     return (
         <div className="contract-card-item">
@@ -704,10 +709,31 @@ const ContractCard = ({
                 )}
 
                 {/* Workspace buttons */}
-                {contract.status === 'active' && hasValidWorkspaceId && (
+                {/* {contract.status === 'active' && hasValidWorkspaceId && (
                     <button
                         className="workspace-btn"
                         onClick={() => navigate(`/client/workspace/${contract.workspaceId}`)}>
+                        <FaFolderOpen /> Open Workspace
+                    </button>
+                )} */}
+
+                {contract.status === 'active' && hasWorkspace && (
+                    <button
+                        className="workspace-btn"
+                        onClick={() => {
+                            // Safely get the workspace ID for navigation
+                            let workspaceIdToNavigate = '';
+                            if (typeof contract.workspaceId === 'string') {
+                                workspaceIdToNavigate = contract.workspaceId;
+                            } else if (contract.workspaceId?._id) {
+                                workspaceIdToNavigate = contract.workspaceId._id;
+                            } else if (contract.workspaceId?.workspaceId) {
+                                workspaceIdToNavigate = contract.workspaceId.workspaceId;
+                            } else {
+                                workspaceIdToNavigate = contract._id; // fallback
+                            }
+                            navigate(`/client/workspace/${workspaceIdToNavigate}`);
+                        }}>
                         <FaFolderOpen /> Open Workspace
                     </button>
                 )}
@@ -737,12 +763,54 @@ const ContractDetailModal = ({
     const totalPaid = calculateTotalPaid(contract.phases);
     const currentPhase = getCurrentPhase(contract.phases);
 
-    // Check if contract has valid workspace ID
-    const hasValidWorkspaceId = contract.workspaceId &&
-        contract.workspaceId !== 'null' &&
-        contract.workspaceId !== null &&
-        contract.workspaceId !== undefined &&
-        contract.workspaceId !== '';
+    // Helper function to safely render workspace ID
+    const renderWorkspaceId = (workspaceId) => {
+        if (!workspaceId) return '';
+
+        // If it's a string
+        if (typeof workspaceId === 'string') {
+            return `(ID: ${workspaceId.substring(0, 10)}...)`;
+        }
+
+        // If it's an object with an _id property
+        if (workspaceId._id && typeof workspaceId._id === 'string') {
+            return `(ID: ${workspaceId._id.substring(0, 10)}...)`;
+        }
+
+        // If it's an object with a workspaceId property
+        if (workspaceId.workspaceId && typeof workspaceId.workspaceId === 'string') {
+            return `(ID: ${workspaceId.workspaceId.substring(0, 10)}...)`;
+        }
+
+        // If we can't determine the ID format
+        return '(Workspace available)';
+    };
+
+    // Update the hasValidWorkspaceId check to be more robust
+    const hasValidWorkspaceId = () => {
+        const wsId = contract.workspaceId;
+
+        if (!wsId) return false;
+
+        // Check if it's a non-empty string
+        if (typeof wsId === 'string') {
+            return wsId.trim() !== '' &&
+                wsId !== 'null' &&
+                wsId !== 'undefined' &&
+                wsId !== null;
+        }
+
+        // Check if it's an object with an ID
+        if (typeof wsId === 'object' && wsId !== null) {
+            return wsId._id || wsId.workspaceId || wsId.id;
+        }
+
+        return false;
+    };
+
+    // Use the function instead of the inline check
+    const hasWorkspace = hasValidWorkspaceId();
+
 
     return (
         <div className="contract-modal-overlay">
@@ -777,7 +845,7 @@ const ContractDetailModal = ({
                                 <p>
                                     {hasValidWorkspaceId ? (
                                         <span className="workspace-status-active">
-                                            ✅ Available (ID: {contract.workspaceId.substring(0, 10)}...)
+                                            ✅ Available {renderWorkspaceId(contract.workspaceId)}
                                         </span>
                                     ) : (
                                         <span className="workspace-status-missing">

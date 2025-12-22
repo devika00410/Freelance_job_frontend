@@ -789,6 +789,96 @@
   justify-content: center;
 }
 
+/* Contact Management Styles */
+.admin-contact-management {
+  padding: 1rem;
+}
+
+.contact-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.contact-detail-grid .detail-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-detail-grid .detail-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.contact-detail-grid label {
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.message-content {
+  background: #f5f5f5;
+  padding: 1rem;
+  border-radius: 4px;
+  border-left: 3px solid #4361ee;
+  white-space: pre-wrap;
+}
+
+.subject-cell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-badge-new {
+  background: #ffebee;
+  color: #c62828;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+}
+
+.admin-badge-in_progress {
+  background: #fff3e0;
+  color: #ef6c00;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+}
+
+.admin-badge-resolved {
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+}
+
+.admin-badge-closed {
+  background: #f5f5f5;
+  color: #616161;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+}
+
+/* Nav badge */
+.admin-nav-badge {
+  background: #ff4757;
+  color: white;
+  font-size: 0.75rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 10px;
+  margin-left: auto;
+}
+
+.admin-nav-item.active .admin-nav-badge {
+  background: white;
+  color: #4361ee;
+}
+
+
 /* Footer */
 .admin-footer {
   background: var(--white);

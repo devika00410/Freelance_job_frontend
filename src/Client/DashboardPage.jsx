@@ -25,7 +25,7 @@ const DashboardPage = () => {
   const { user: authUser, token } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Stats states
   const [stats, setStats] = useState({
     totalProjects: 24,
@@ -48,7 +48,7 @@ const DashboardPage = () => {
   const [recommendedFreelancers, setRecommendedFreelancers] = useState([]);
   const [workspaces, setWorkspaces] = useState([]);
   const [contracts, setContracts] = useState([]);
-  
+
   // Proposal states
   const [proposalCount, setProposalCount] = useState(0);
   const [proposalsLoading, setProposalsLoading] = useState(true);
@@ -85,7 +85,7 @@ const DashboardPage = () => {
       navigate('/client/profile');
       return;
     }
-    
+
     if (!isProfileComplete()) {
       alert('Please complete your profile before accessing dashboard features.');
       navigate('/client/profile');
@@ -432,8 +432,8 @@ const DashboardPage = () => {
       icon: FaSearch,
       label: 'Browse Freelancers',
       description: 'Find skilled professionals',
-      action: () => guardedNavigate('/find-work'), 
-      path: '/find-work' 
+      action: () => guardedNavigate('/find-work'),
+      path: '/find-work'
     },
     {
       icon: FaRobot,
@@ -455,7 +455,7 @@ const DashboardPage = () => {
 
   // Notifications Dropdown Component
   const NotificationsDropdown = () => {
-    const todayNotifications = notifications.slice(0, 3); // Show only 3 latest
+    const todayNotifications = notifications.slice(0, 3);
 
     return (
       <div className="notifications-dropdown" ref={notificationsRef}>
@@ -605,14 +605,14 @@ const DashboardPage = () => {
         </div>
 
         <div className="dropdown-menu">
+    
           <Link
-            to={`/profile/${profileId}`}
+            to={`/profile/my-profile`}  
             className="dropdown-item"
             onClick={() => setShowProfileDropdown(false)}
           >
             <FaUser /> Public Profile
           </Link>
-
           <Link
             to="/client/profile"
             className="dropdown-item"
@@ -708,7 +708,7 @@ const DashboardPage = () => {
               <span>Payments</span>
             </button>
 
-            <button className="nav-button" onClick={() => guardedNavigate("/billing")}>
+            <button className="nav-button" onClick={() => guardedNavigate("/client/billing")}>
               <FaMoneyBillWave />
               <span>Billing & Invoices</span>
             </button>
@@ -1097,7 +1097,7 @@ const DashboardPage = () => {
               </button>
             </div>
           </section>
-          
+
           <section className="workspaces-display-panel">
             <div className="panel-header">
               <h2>Active Workspaces</h2>

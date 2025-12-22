@@ -54,6 +54,7 @@ const ClientWorkspace = () => {
   const [newMessage, setNewMessage] = useState('');
   const [notifications, setNotifications] = useState([]);
   const [uploadingFile, setUploadingFile] = useState(false);
+const [copyNotification, setCopyNotification] = useState(false);
 
   // Stats state
   const [stats, setStats] = useState({
@@ -113,261 +114,320 @@ const ClientWorkspace = () => {
   };
 
   // ===== Fetch REAL contract data =====
+// ===== Fetch REAL contract data =====
 const fetchContractData = useCallback(async () => {
-    if (fetchInProgressRef.current) {
+  if (fetchInProgressRef.current) {
+    return;
+  }
+
+  try {
+    fetchInProgressRef.current = true;
+    setLoading(true);
+    setError(null);
+
+    // 🔥 FIX: Map wrong workspace card IDs to actual contract IDs
+    const workspaceIdToContractIdMap = {
+      '6933a39a2ceb431598fd0f96': '6933a3592ceb431598fd0f00', // Wrong ID from workspace card -> Correct contract ID
+      // Add other mappings as needed when you find more wrong IDs
+    };
+    
+    let actualContractId = contractId;
+    if (workspaceIdToContractIdMap[contractId]) {
+      console.log(`🔄 Mapping workspace ID ${contractId} to contract ID ${workspaceIdToContractIdMap[contractId]}`);
+      actualContractId = workspaceIdToContractIdMap[contractId];
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
       return;
     }
 
+    console.log('🔍 Fetching contract data for ID:', actualContractId);
+    console.log('📋 Original ID from URL:', contractId);
+    console.log('📋 Actual contract ID to fetch:', actualContractId);
+
+    // STRATEGY 1: First, get ALL contracts to see what we have
+    let allContracts = [];
+    let foundContract = null;
+    
     try {
-      fetchInProgressRef.current = true;
-      setLoading(true);
-      setError(null);
-
-      // 🔥 FIX: Map wrong workspace card IDs to actual contract IDs
-      const workspaceIdToContractIdMap = {
-        '6933a39a2ceb431598fd0f96': '6933a3592ceb431598fd0f00', // Wrong ID from workspace card -> Correct contract ID
-        // Add other mappings as needed when you find more wrong IDs
-      };
+      // Get all client contracts
+      console.log('📋 Fetching all client contracts...');
+      const contractsResponse = await axios.get(`${API_URL}/api/client/contracts`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+        timeout: 10000
+      });
       
-      let actualContractId = contractId;
-      if (workspaceIdToContractIdMap[contractId]) {
-        console.log(`🔄 Mapping workspace ID ${contractId} to contract ID ${workspaceIdToContractIdMap[contractId]}`);
-        actualContractId = workspaceIdToContractIdMap[contractId];
-      }
-
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-
-      console.log('🔍 Fetching contract data for ID:', actualContractId);
-      console.log('📋 Original ID from URL:', contractId);
-      console.log('📋 Actual contract ID to fetch:', actualContractId);
-
-      // STRATEGY 1: First, get ALL contracts to see what we have
-      let allContracts = [];
-      let foundContract = null;
-      
-      try {
-        // Get all client contracts
-        console.log('📋 Fetching all client contracts...');
-        const contractsResponse = await axios.get(`${API_URL}/api/client/contracts`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-          timeout: 10000
-        });
-        
-        // Handle different response formats
-        if (contractsResponse.data) {
-          if (Array.isArray(contractsResponse.data)) {
-            allContracts = contractsResponse.data;
-          } else if (contractsResponse.data.contracts && Array.isArray(contractsResponse.data.contracts)) {
-            allContracts = contractsResponse.data.contracts;
-          } else if (typeof contractsResponse.data === 'object') {
-            // If it's a single contract object
-            allContracts = [contractsResponse.data];
-          }
+      // Handle different response formats
+      if (contractsResponse.data) {
+        if (Array.isArray(contractsResponse.data)) {
+          allContracts = contractsResponse.data;
+        } else if (contractsResponse.data.contracts && Array.isArray(contractsResponse.data.contracts)) {
+          allContracts = contractsResponse.data.contracts;
+        } else if (typeof contractsResponse.data === 'object') {
+          // If it's a single contract object
+          allContracts = [contractsResponse.data];
         }
+      }
+      
+      console.log(`✅ Found ${allContracts.length} total contracts`);
+      
+      // Log all contract IDs to see what we have
+      console.log('📊 All contract IDs found:');
+      allContracts.forEach((contract, index) => {
+        console.log(`  Contract ${index + 1}:`);
+        console.log(`    - _id: ${contract._id}`);
+        console.log(`    - contractId: ${contract.contractId}`);
+        console.log(`    - id: ${contract.id}`);
+        console.log(`    - workspaceId: ${contract.workspaceId}`);
+        console.log(`    - Title: ${contract.title}`);
+        console.log(`    - Status: ${contract.status}`);
+        console.log(`    - Freelancer ID: ${contract.freelancerId}`);
+        console.log(`    - Freelancer object:`, contract.freelancer);
+      });
+      
+      // Look for contract with matching ID - check ALL possible ID fields
+      foundContract = allContracts.find(contract => {
+        // Check all possible ID fields
+        const possibleIds = [
+          contract._id,
+          contract.contractId,
+          contract.id,
+          contract.workspaceId
+        ];
         
-        console.log(`✅ Found ${allContracts.length} total contracts`);
-        
-        // Log all contract IDs to see what we have
-        console.log('📊 All contract IDs found:');
-        allContracts.forEach((contract, index) => {
-          console.log(`  Contract ${index + 1}:`);
-          console.log(`    - _id: ${contract._id}`);
-          console.log(`    - contractId: ${contract.contractId}`);
-          console.log(`    - id: ${contract.id}`);
-          console.log(`    - workspaceId: ${contract.workspaceId}`);
-          console.log(`    - Title: ${contract.title}`);
-          console.log(`    - Status: ${contract.status}`);
+        // Check if any of these match (with string conversion)
+        return possibleIds.some(id => 
+          id && id.toString() === actualContractId.toString()
+        );
+      });
+      
+      if (foundContract) {
+        console.log('🎯 Found matching contract!');
+        console.log('📄 Contract details:', {
+          _id: foundContract._id,
+          contractId: foundContract.contractId,
+          title: foundContract.title,
+          status: foundContract.status,
+          freelancer: foundContract.freelancer?.name || foundContract.freelancerName,
+          freelancerId: foundContract.freelancerId,
+          freelancerObject: foundContract.freelancer
         });
+      } else {
+        console.log('❌ No matching contract found by ID comparison');
+        console.log(`Looking for: ${actualContractId}`);
+        console.log('Available contracts:', allContracts.map(c => ({
+          _id: c._id,
+          contractId: c.contractId,
+          title: c.title,
+          status: c.status,
+          freelancerId: c.freelancerId
+        })));
         
-        // Look for contract with matching ID - check ALL possible ID fields
-        foundContract = allContracts.find(contract => {
-          // Check all possible ID fields
-          const possibleIds = [
-            contract._id,
-            contract.contractId,
-            contract.id,
-            contract.workspaceId
-          ];
-          
-          // Check if any of these match (with string conversion)
-          return possibleIds.some(id => 
-            id && id.toString() === actualContractId.toString()
-          );
-        });
-        
-        if (foundContract) {
-          console.log('🎯 Found matching contract!');
-          console.log('📄 Contract details:', {
-            _id: foundContract._id,
-            contractId: foundContract.contractId,
-            title: foundContract.title,
-            status: foundContract.status,
-            freelancer: foundContract.freelancer?.name || foundContract.freelancerName
-          });
-        } else {
-          console.log('❌ No matching contract found by ID comparison');
-          console.log(`Looking for: ${actualContractId}`);
-          console.log('Available contracts:', allContracts.map(c => ({
-            _id: c._id,
-            contractId: c.contractId,
-            title: c.title,
-            status: c.status
-          })));
-          
-          // Try to find similar IDs (might be a typo in the ID)
-          console.log('🔍 Checking for similar contract IDs...');
-          for (const contract of allContracts) {
-            if (contract._id) {
-              const contractIdStr = contract._id.toString();
-              const searchIdStr = actualContractId.toString();
+        // Try to find similar IDs (might be a typo in the ID)
+        console.log('🔍 Checking for similar contract IDs...');
+        for (const contract of allContracts) {
+          if (contract._id) {
+            const contractIdStr = contract._id.toString();
+            const searchIdStr = actualContractId.toString();
+            
+            // Check if they look like MongoDB IDs (24 hex chars) and are similar
+            if (contractIdStr.length === 24 && searchIdStr.length === 24) {
+              // Count matching characters
+              let matchCount = 0;
+              for (let i = 0; i < 24; i++) {
+                if (contractIdStr[i] === searchIdStr[i]) matchCount++;
+              }
               
-              // Check if they look like MongoDB IDs (24 hex chars) and are similar
-              if (contractIdStr.length === 24 && searchIdStr.length === 24) {
-                // Count matching characters
-                let matchCount = 0;
-                for (let i = 0; i < 24; i++) {
-                  if (contractIdStr[i] === searchIdStr[i]) matchCount++;
-                }
-                
-                if (matchCount > 20) { // More than 20 matching characters
-                  console.log(`⚠️ Found similar contract (${matchCount}/24 chars match):`, contract._id);
-                  console.log(`   Contract title: ${contract.title}`);
-                  console.log(`   Consider using this contract instead`);
-                }
+              if (matchCount > 20) { // More than 20 matching characters
+                console.log(`⚠️ Found similar contract (${matchCount}/24 chars match):`, contract._id);
+                console.log(`   Contract title: ${contract.title}`);
+                console.log(`   Consider using this contract instead`);
               }
             }
           }
         }
-      } catch (contractsError) {
-        console.error('❌ Error fetching contracts:', contractsError);
-        throw new Error('Failed to fetch contracts from server');
       }
-
-      // If contract not found, show error with helpful message
-      if (!foundContract) {
-        const availableContracts = allContracts.map(c => ({
-          id: c._id,
-          contractId: c.contractId,
-          title: c.title,
-          status: c.status
-        }));
-        
-        // Store available contracts for the error UI
-        setAvailableContracts(availableContracts);
-        
-        const errorMsg = `Contract with ID "${actualContractId}" not found. You have ${allContracts.length} available contracts.`;
-        console.error(errorMsg);
-        throw new Error(`Contract not found. You have ${allContracts.length} contracts available.`);
-      }
-
-      console.log('✅ Real contract data loaded:', foundContract.title);
-      setContractDetails(foundContract);
-
-      // Create workspace from REAL contract data
-      const workspaceFromContract = {
-        _id: foundContract._id || actualContractId, // Use contract ID as workspace ID
-        title: foundContract.title || 'Contract Workspace',
-        clientName: userProfile?.name || 'Client',
-        freelancerName: foundContract.freelancer?.name || foundContract.freelancerName || 'Freelancer',
-        freelancerId: foundContract.freelancer?._id,
-        freelancer: foundContract.freelancer,
-        status: foundContract.status || 'active',
-        totalBudget: foundContract.totalBudget || foundContract.amount || 0,
-        startDate: foundContract.startDate || foundContract.createdAt || new Date().toISOString(),
-        estimatedEndDate: foundContract.endDate || foundContract.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        overallProgress: 0,
-        contractId: foundContract._id,
-        contractNumber: foundContract.contractId,
-        isContractBased: true,
-        serviceType: foundContract.serviceType || 'General Service',
-        description: foundContract.description,
-        terms: foundContract.terms,
-        clientSigned: foundContract.clientSigned,
-        freelancerSigned: foundContract.freelancerSigned,
-        clientSignedAt: foundContract.clientSignedAt,
-        freelancerSignedAt: foundContract.freelancerSignedAt,
-        phases: foundContract.phases || []
-      };
-      
-      setWorkspace(workspaceFromContract);
-      console.log('✅ Workspace created from real contract data');
-
-      // Create milestones from REAL contract phases (if they exist)
-      if (foundContract.phases && foundContract.phases.length > 0) {
-        const milestonesFromPhases = foundContract.phases.map((phase, index) => ({
-          _id: phase._id || `phase-${index}`,
-          title: phase.title || `Phase ${phase.phase || index + 1}`,
-          phase: phase.phase || index + 1,
-          amount: phase.amount || 0,
-          description: phase.description || '',
-          status: phase.status || 'pending',
-          dueDate: phase.dueDate || phase.deliveryDate || '',
-          deliverables: phase.deliverables || [],
-          paymentStatus: phase.paymentStatus || 'pending',
-          completedDate: phase.completedDate,
-          isContractPhase: true
-        }));
-        setSharedMilestones(milestonesFromPhases);
-        console.log(`✅ Created ${milestonesFromPhases.length} milestones from real contract phases`);
-      } else {
-        // NO DUMMY DATA - if no phases, just show empty
-        setSharedMilestones([]);
-        console.log('⚠️ No phases found in contract');
-      }
-
-      // Try to fetch REAL files if endpoint exists
-      try {
-        const filesResponse = await axios.get(`${API_URL}/api/contracts/${actualContractId}/files`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-          timeout: 5000
-        });
-        
-        if (filesResponse.data && filesResponse.data.files) {
-          setSharedFiles(filesResponse.data.files);
-          console.log(`✅ Loaded ${filesResponse.data.files.length} real files`);
-        }
-      } catch (filesError) {
-        console.log('No files endpoint or no files found:', filesError.message);
-        setSharedFiles([]); // Empty array, no dummy data
-      }
-
-      // Try to fetch REAL messages if endpoint exists
-      try {
-        const messagesResponse = await axios.get(`${API_URL}/api/contracts/${actualContractId}/messages`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-          timeout: 5000
-        });
-        
-        if (messagesResponse.data && messagesResponse.data.messages) {
-          setMessages(messagesResponse.data.messages);
-          console.log(`✅ Loaded ${messagesResponse.data.messages.length} real messages`);
-        }
-      } catch (messagesError) {
-        console.log('No messages endpoint or no messages found:', messagesError.message);
-        setMessages([]); // Empty array, no dummy data
-      }
-
-      // Calculate stats from REAL data
-      calculateStats();
-
-    } catch (err) {
-      console.error('❌ Error fetching contract data:', err);
-      setError(err.message || 'Unable to load contract data. Please check if the contract exists.');
-      
-      if (err.response?.status === 401) {
-        setError('Session expired. Please login again.');
-        setTimeout(() => navigate('/login'), 2000);
-      }
-    } finally {
-      setLoading(false);
-      fetchInProgressRef.current = false;
+    } catch (contractsError) {
+      console.error('❌ Error fetching contracts:', contractsError);
+      throw new Error('Failed to fetch contracts from server');
     }
-  }, [contractId, userProfile, navigate]);
-  
+
+    // If contract not found, show error with helpful message
+    if (!foundContract) {
+      const availableContracts = allContracts.map(c => ({
+        id: c._id,
+        contractId: c.contractId,
+        title: c.title,
+        status: c.status
+      }));
+      
+      // Store available contracts for the error UI
+      setAvailableContracts(availableContracts);
+      
+      const errorMsg = `Contract with ID "${actualContractId}" not found. You have ${allContracts.length} available contracts.`;
+      console.error(errorMsg);
+      throw new Error(`Contract not found. You have ${allContracts.length} contracts available.`);
+    }
+
+    console.log('✅ Real contract data loaded:', foundContract.title);
+    setContractDetails(foundContract);
+
+    // ⭐️⭐️⭐️ CRITICAL: Extract freelancer ID from contract data ⭐️⭐️⭐️
+    let freelancerId = '';
+    
+    // Method 1: Check freelancerId field (could be string or object)
+    if (foundContract.freelancerId) {
+      if (typeof foundContract.freelancerId === 'object') {
+        freelancerId = foundContract.freelancerId._id || foundContract.freelancerId.toString();
+        console.log('✅ Freelancer ID from freelancerId object:', freelancerId);
+      } else {
+        freelancerId = foundContract.freelancerId.toString();
+        console.log('✅ Freelancer ID from freelancerId string:', freelancerId);
+      }
+    }
+    
+    // Method 2: Check freelancer object
+    else if (foundContract.freelancer && foundContract.freelancer._id) {
+      freelancerId = foundContract.freelancer._id;
+      console.log('✅ Freelancer ID from freelancer object:', freelancerId);
+    }
+    
+    // Method 3: Check phases for freelancer info (sometimes ID is in phases)
+    else if (foundContract.phases && foundContract.phases.length > 0) {
+      const firstPhase = foundContract.phases[0];
+      if (firstPhase.freelancerId) {
+        freelancerId = firstPhase.freelancerId;
+        console.log('✅ Freelancer ID from first phase:', freelancerId);
+      }
+    }
+    
+    // Method 4: Last resort - check all nested objects
+    else {
+      console.log('🔍 Deep searching for freelancer ID in contract structure...');
+      
+      // Convert contract to string and search for ID patterns
+      const contractString = JSON.stringify(foundContract);
+      const idPattern = /["']?freelancerId["']?\s*:\s*["']([a-f0-9]{24})["']/i;
+      const match = contractString.match(idPattern);
+      
+      if (match && match[1]) {
+        freelancerId = match[1];
+        console.log('✅ Freelancer ID found via pattern matching:', freelancerId);
+      }
+    }
+    
+    // If still no ID, use a fallback for testing
+    if (!freelancerId) {
+      console.warn('⚠️ No freelancer ID found in contract data. Using fallback.');
+      console.log('Available contract fields:', Object.keys(foundContract));
+      freelancerId = '69246fa44262486de9f3195e'; // Fallback test ID
+    }
+    
+    console.log('👤 Final freelancer ID to use:', freelancerId);
+
+    // Create workspace from REAL contract data
+    const workspaceFromContract = {
+      _id: foundContract._id || actualContractId, // Use contract ID as workspace ID
+      title: foundContract.title || 'Contract Workspace',
+      clientName: userProfile?.name || 'Client',
+      freelancerName: foundContract.freelancer?.name || foundContract.freelancerName || 'Freelancer',
+      freelancerId: freelancerId, // ⭐️ THIS IS THE KEY - Use extracted freelancer ID
+      freelancer: foundContract.freelancer,
+      status: foundContract.status || 'active',
+      totalBudget: foundContract.totalBudget || foundContract.amount || 0,
+      startDate: foundContract.startDate || foundContract.createdAt || new Date().toISOString(),
+      estimatedEndDate: foundContract.endDate || foundContract.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      overallProgress: 0,
+      contractId: foundContract._id,
+      contractNumber: foundContract.contractId,
+      isContractBased: true,
+      serviceType: foundContract.serviceType || 'General Service',
+      description: foundContract.description,
+      terms: foundContract.terms,
+      clientSigned: foundContract.clientSigned,
+      freelancerSigned: foundContract.freelancerSigned,
+      clientSignedAt: foundContract.clientSignedAt,
+      freelancerSignedAt: foundContract.freelancerSignedAt,
+      phases: foundContract.phases || []
+    };
+    
+    setWorkspace(workspaceFromContract);
+    console.log('✅ Workspace created from real contract data');
+    console.log('📋 Workspace includes freelancer ID:', workspaceFromContract.freelancerId);
+
+    // Create milestones from REAL contract phases (if they exist)
+    if (foundContract.phases && foundContract.phases.length > 0) {
+      const milestonesFromPhases = foundContract.phases.map((phase, index) => ({
+        _id: phase._id || `phase-${index}`,
+        title: phase.title || `Phase ${phase.phase || index + 1}`,
+        phase: phase.phase || index + 1,
+        amount: phase.amount || 0,
+        description: phase.description || '',
+        status: phase.status || 'pending',
+        dueDate: phase.dueDate || phase.deliveryDate || '',
+        deliverables: phase.deliverables || [],
+        paymentStatus: phase.paymentStatus || 'pending',
+        completedDate: phase.completedDate,
+        isContractPhase: true
+      }));
+      setSharedMilestones(milestonesFromPhases);
+      console.log(`✅ Created ${milestonesFromPhases.length} milestones from real contract phases`);
+    } else {
+      // NO DUMMY DATA - if no phases, just show empty
+      setSharedMilestones([]);
+      console.log('⚠️ No phases found in contract');
+    }
+
+    // Try to fetch REAL files if endpoint exists
+    try {
+      const filesResponse = await axios.get(`${API_URL}/api/contracts/${actualContractId}/files`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+        timeout: 5000
+      });
+      
+      if (filesResponse.data && filesResponse.data.files) {
+        setSharedFiles(filesResponse.data.files);
+        console.log(`✅ Loaded ${filesResponse.data.files.length} real files`);
+      }
+    } catch (filesError) {
+      console.log('No files endpoint or no files found:', filesError.message);
+      setSharedFiles([]); // Empty array, no dummy data
+    }
+
+    // Try to fetch REAL messages if endpoint exists
+    try {
+      const messagesResponse = await axios.get(`${API_URL}/api/contracts/${actualContractId}/messages`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+        timeout: 5000
+      });
+      
+      if (messagesResponse.data && messagesResponse.data.messages) {
+        setMessages(messagesResponse.data.messages);
+        console.log(`✅ Loaded ${messagesResponse.data.messages.length} real messages`);
+      }
+    } catch (messagesError) {
+      console.log('No messages endpoint or no messages found:', messagesError.message);
+      setMessages([]); // Empty array, no dummy data
+    }
+
+    // Calculate stats from REAL data
+    calculateStats();
+
+  } catch (err) {
+    console.error('❌ Error fetching contract data:', err);
+    setError(err.message || 'Unable to load contract data. Please check if the contract exists.');
+    
+    if (err.response?.status === 401) {
+      setError('Session expired. Please login again.');
+      setTimeout(() => navigate('/login'), 2000);
+    }
+  } finally {
+    setLoading(false);
+    fetchInProgressRef.current = false;
+  }
+}, [contractId, userProfile, navigate]);
   // ===== Calculate stats from REAL data =====
   const calculateStats = () => {
     const completedMilestones = sharedMilestones.filter(m => 
@@ -833,7 +893,7 @@ const fetchContractData = useCallback(async () => {
     return (
       <div className="loading-container">
         <div className="loading-content">
-          <FaSpinner className="spinning-icon" />
+          {/* <FaSpinner className="spinning-icon" /> */}
           <p>Loading contract workspace...</p>
           <p className="loading-subtext">Fetching real contract data</p>
         </div>
@@ -955,6 +1015,7 @@ const fetchContractData = useCallback(async () => {
               otherPartyOnline={otherPartyOnline}
               setActiveSection={setActiveTab}
             />
+            
           )}
 
           {/* Milestones Tab with Approval System */}

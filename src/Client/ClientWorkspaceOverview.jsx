@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   FaTasks,
   FaChartLine,
@@ -20,12 +20,13 @@ import {
   FaStar,
   FaPercentage,
   FaRocket,
-  FaChartBar
+  FaChartBar, FaCopy
 } from 'react-icons/fa';
 import './ClientWorkspaceOverview.css';
 
 const ClientWorkspaceOverview = ({ workspace, milestones = [], otherParty, otherPartyOnline, setActiveSection }) => {
-  
+
+const [copyNotification, setCopyNotification] = useState(false);
   // Calculate statistics
   const calculateStats = () => {
     const totalMilestones = milestones.length || 0;
@@ -417,7 +418,61 @@ const ClientWorkspaceOverview = ({ workspace, milestones = [], otherParty, other
           </button>
         </div>
       )}
+   
+<div className="freelancer-id-section">
+  <div className="freelancer-id-header">
+    <FaUser />
+    <h4>Freelancer Information</h4>
+  </div>
+  <div className="freelancer-id-display">
+    <input
+      type="text"
+      value={otherParty?.id || workspace?.freelancerId || 'No ID available'}
+      readOnly
+      className="freelancer-id-value"
+      id="freelancer-id-input"
+    />
+    <button
+      className="copy-id-btn"
+      onClick={async () => {
+        const id = otherParty?.id || workspace?.freelancerId;
+        if (id) {
+          try {
+            await navigator.clipboard.writeText(id);
+            const btn = event.target;
+            btn.innerHTML = '<FaCheck /> Copied!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+              btn.innerHTML = '<FaCopy /> Copy ID';
+              btn.classList.remove('copied');
+            }, 2000);
+            
+            // Show notification
+            setCopyNotification(true);
+            setTimeout(() => setCopyNotification(false), 3000);
+          } catch (err) {
+            console.error('Failed to copy:', err);
+          }
+        }
+      }}
+      disabled={!otherParty?.id && !workspace?.freelancerId}
+    >
+      <FaCopy /> Copy ID
+    </button>
+  </div>
+  <p className="freelancer-info-note">
+    Use this ID to make payments to the freelancer. Click "Copy ID" and paste it in the payment form.
+  </p>
+</div>
+
+
+{copyNotification && (
+  <div className="copy-notification">
+    <FaCheck /> Freelancer ID copied to clipboard!
+  </div>
+)}
     </div>
+    
   );
 };
 

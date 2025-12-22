@@ -1,32 +1,5 @@
 import React, { useState, useEffect } from 'react';
-// import {
-//   Box,
-//   Paper,
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableContainer,
-//   TableHead,
-//   TableRow,
-//   Typography,
-//   Chip,
-//   IconButton,
-//   TextField,
-//   MenuItem,
-//   Button,
-//   Dialog,
-//   DialogTitle,
-//   DialogContent,
-//   DialogActions,
-//   TablePagination,
-//   Grid
-// } from '@mui/material';
-// import {
-//   Edit as EditIcon,
-//   Delete as DeleteIcon,
-//   Block as BlockIcon,
-//   CheckCircle as VerifyIcon
-// } from '@mui/icons-material';
+import './UserManagement.css';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -132,183 +105,223 @@ const UserManagement = () => {
   };
 
   return (
-    <Box>
-      <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-        User Management
-      </Typography>
+    <div className="user-management-container">
+      <h2 className="page-title">User Management</h2>
 
       {/* Filters */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              select
-              label="Role"
+      <div className="filters-section">
+        <div className="filters-grid">
+          <div className="filter-field">
+            <label htmlFor="role-filter">Role</label>
+            <select
+              id="role-filter"
+              className="filter-select"
               value={filters.role}
               onChange={(e) => setFilters({ ...filters, role: e.target.value, page: 0 })}
             >
-              <MenuItem value="all">All Roles</MenuItem>
-              <MenuItem value="client">Client</MenuItem>
-              <MenuItem value="freelancer">Freelancer</MenuItem>
-              <MenuItem value="admin">Admin</MenuItem>
-            </TextField>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              select
-              label="Status"
+              <option value="all">All Roles</option>
+              <option value="client">Client</option>
+              <option value="freelancer">Freelancer</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div className="filter-field">
+            <label htmlFor="status-filter">Status</label>
+            <select
+              id="status-filter"
+              className="filter-select"
               value={filters.status}
               onChange={(e) => setFilters({ ...filters, status: e.target.value, page: 0 })}
             >
-              <MenuItem value="all">All Status</MenuItem>
-              <MenuItem value="active">Active</MenuItem>
-              <MenuItem value="suspended">Suspended</MenuItem>
-              <MenuItem value="pending">Pending</MenuItem>
-            </TextField>
-          </Grid>
-          <Grid item xs={12} sm={6} md={4}>
-            <TextField
-              fullWidth
-              label="Search"
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="suspended">Suspended</option>
+              <option value="pending">Pending</option>
+            </select>
+          </div>
+          <div className="filter-field search-field">
+            <label htmlFor="search">Search</label>
+            <input
+              id="search"
+              type="text"
+              className="search-input"
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value, page: 0 })}
               placeholder="Search by name or email..."
             />
-          </Grid>
-        </Grid>
-      </Paper>
+          </div>
+        </div>
+      </div>
 
       {/* Users Table */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>User</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Role</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Verified</TableCell>
-              <TableCell>Joined</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {users.map((user) => (
-              <TableRow key={user._id}>
-                <TableCell>
-                  <Typography variant="body1" fontWeight="bold">
-                    {user.profile?.name}
-                  </Typography>
-                  {user.profile?.company && (
-                    <Typography variant="body2" color="textSecondary">
-                      {user.profile.company}
-                    </Typography>
-                  )}
-                </TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>
-                  <Chip 
-                    label={user.role} 
-                    size="small" 
-                    color={getRoleColor(user.role)}
-                  />
-                </TableCell>
-                <TableCell>
-                  <Chip 
-                    label={user.status || 'active'} 
-                    size="small" 
-                    color={getStatusColor(user.status)}
-                  />
-                </TableCell>
-                <TableCell>
-                  <Chip 
-                    label={user.verification?.status || 'pending'} 
-                    size="small" 
-                    color={user.verification?.status === 'verified' ? 'success' : 'default'}
-                  />
-                </TableCell>
-                <TableCell>
-                  {new Date(user.createdAt).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                  <IconButton 
-                    size="small" 
-                    onClick={() => {
-                      setSelectedUser(user);
-                      setActionDialog({ open: true, action: 'verify' });
-                    }}
-                    disabled={user.verification?.status === 'verified'}
-                  >
-                    <VerifyIcon />
-                  </IconButton>
-                  <IconButton 
-                    size="small" 
-                    onClick={() => {
-                      setSelectedUser(user);
-                      setActionDialog({ open: true, action: 'suspend' });
-                    }}
-                    disabled={user.status === 'suspended'}
-                  >
-                    <BlockIcon />
-                  </IconButton>
-                  <IconButton 
-                    size="small" 
-                    onClick={() => {
-                      setSelectedUser(user);
-                      setActionDialog({ open: true, action: 'delete' });
-                    }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <div className="table-container">
+        <table className="users-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Verified</th>
+              <th>Joined</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan="7" className="loading-cell">
+                  Loading users...
+                </td>
+              </tr>
+            ) : users.length === 0 ? (
+              <tr>
+                <td colSpan="7" className="empty-cell">
+                  No users found
+                </td>
+              </tr>
+            ) : (
+              users.map((user) => (
+                <tr key={user._id} className="user-row">
+                  <td>
+                    <div className="user-info">
+                      <div className="user-name">{user.profile?.name}</div>
+                      {user.profile?.company && (
+                        <div className="user-company">{user.profile.company}</div>
+                      )}
+                    </div>
+                  </td>
+                  <td>{user.email}</td>
+                  <td>
+                    <span className={`role-chip role-${user.role}`}>
+                      {user.role}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`status-chip status-${user.status || 'active'}`}>
+                      {user.status || 'active'}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`verification-chip ${user.verification?.status === 'verified' ? 'verified' : 'pending'}`}>
+                      {user.verification?.status || 'pending'}
+                    </span>
+                  </td>
+                  <td>
+                    {new Date(user.createdAt).toLocaleDateString()}
+                  </td>
+                  <td>
+                    <div className="action-buttons">
+                      <button
+                        className="action-btn verify-btn"
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setActionDialog({ open: true, action: 'verify' });
+                        }}
+                        disabled={user.verification?.status === 'verified'}
+                        title="Verify User"
+                      >
+                        ✓
+                      </button>
+                      <button
+                        className="action-btn suspend-btn"
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setActionDialog({ open: true, action: user.status === 'suspended' ? 'activate' : 'suspend' });
+                        }}
+                        title={user.status === 'suspended' ? 'Activate User' : 'Suspend User'}
+                      >
+                        {user.status === 'suspended' ? '↻' : '⏸'}
+                      </button>
+                      <button
+                        className="action-btn delete-btn"
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setActionDialog({ open: true, action: 'delete' });
+                        }}
+                        title="Delete User"
+                      >
+                        🗑
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
-      <TablePagination
-        component="div"
-        count={totalUsers}
-        page={filters.page}
-        onPageChange={(e, newPage) => setFilters({ ...filters, page: newPage })}
-        rowsPerPage={filters.limit}
-        onRowsPerPageChange={(e) => setFilters({ 
-          ...filters, 
-          limit: parseInt(e.target.value, 10), 
-          page: 0 
-        })}
-      />
+      {/* Pagination */}
+      <div className="pagination">
+        <div className="pagination-controls">
+          <button
+            className="pagination-btn"
+            onClick={() => setFilters({ ...filters, page: filters.page - 1 })}
+            disabled={filters.page === 0}
+          >
+            Previous
+          </button>
+          <span className="page-info">
+            Page {filters.page + 1} of {Math.ceil(totalUsers / filters.limit)}
+          </span>
+          <button
+            className="pagination-btn"
+            onClick={() => setFilters({ ...filters, page: filters.page + 1 })}
+            disabled={(filters.page + 1) * filters.limit >= totalUsers}
+          >
+            Next
+          </button>
+        </div>
+        <div className="rows-per-page">
+          <label htmlFor="rows-per-page">Rows per page:</label>
+          <select
+            id="rows-per-page"
+            value={filters.limit}
+            onChange={(e) => setFilters({
+              ...filters,
+              limit: parseInt(e.target.value, 10),
+              page: 0
+            })}
+          >
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+      </div>
 
       {/* Action Confirmation Dialog */}
-      <Dialog
-        open={actionDialog.open}
-        onClose={() => setActionDialog({ open: false, action: '' })}
-      >
-        <DialogTitle>
-          Confirm {actionDialog.action}
-        </DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to {actionDialog.action} user {selectedUser?.profile?.name}?
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setActionDialog({ open: false, action: '' })}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={() => handleUserAction(actionDialog.action)}
-            color={actionDialog.action === 'delete' ? 'error' : 'primary'}
-            variant="contained"
-          >
-            Confirm
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+      {actionDialog.open && (
+        <div className="dialog-overlay">
+          <div className="dialog">
+            <div className="dialog-header">
+              <h3>Confirm {actionDialog.action}</h3>
+            </div>
+            <div className="dialog-body">
+              <p>
+                Are you sure you want to {actionDialog.action} user {selectedUser?.profile?.name}?
+              </p>
+            </div>
+            <div className="dialog-footer">
+              <button
+                className="dialog-btn cancel-btn"
+                onClick={() => setActionDialog({ open: false, action: '' })}
+              >
+                Cancel
+              </button>
+              <button
+                className={`dialog-btn confirm-btn ${actionDialog.action === 'delete' ? 'delete-confirm' : ''}`}
+                onClick={() => handleUserAction(actionDialog.action)}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
